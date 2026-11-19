@@ -44,6 +44,10 @@ ALLOWED_MENTIONS = {
     "example-owner", "example-bot",
     "claude",  # the @claude review trigger of the claude_review module
 }
+# A machine account's GitHub noreply identity: the display name equals the login
+# in the address (decision D29). A person's name on a noreply address is rejected.
+NOREPLY_DOMAIN = "users.noreply.github" + ".com"  # split so this file holds no address shape
+NOREPLY_IDENTITY_RE = re.compile(r"^([A-Za-z0-9-]+) <\d+\+([A-Za-z0-9-]+)" + re.escape("@" + NOREPLY_DOMAIN) + ">$")
 # Identities allowed as commit author / committer (exact "Name <email>").
 ALLOWED_AUTHORS = {"Claude <noreply@anthropic.com>"}
 ALLOWED_COMMITTERS = {"Claude <noreply@anthropic.com>", "GitHub <noreply@github.com>"}
@@ -108,6 +112,12 @@ def scan_files(paths: list[str]) -> list[str]:
     return findings
 
 
+def machine_identity(identity: str) -> bool:
+    """True for a machine account's commit identity: "login <id+login at the GitHub noreply domain>"."""
+    match = NOREPLY_IDENTITY_RE.match(identity)
+    return bool(match) and match.group(1) == match.group(2)
+
+
 def scan_commits(rev_range: str) -> list[str]:
     findings = []
     fmt = "%H%x1f%an <%ae>%x1f%cn <%ce>%x1f%B%x1e"
@@ -117,9 +127,9 @@ def scan_commits(rev_range: str) -> list[str]:
             continue
         sha, author, committer, message = record.split("\x1f", 3)
         short = sha[:7]
-        if author not in ALLOWED_AUTHORS:
+        if author not in ALLOWED_AUTHORS and not machine_identity(author):
             findings.append(f"commit {short}: author {author!r} is not an allowed noreply identity")
-        if committer not in ALLOWED_COMMITTERS:
+        if committer not in ALLOWED_COMMITTERS and not machine_identity(committer):
             findings.append(f"commit {short}: committer {committer!r} is not an allowed noreply identity")
         findings += scan_text(message, f"commit {short} message")
     return findings

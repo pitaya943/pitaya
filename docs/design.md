@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.2, under Owner review. Steps W0–W2 are done; W3 is next (section 13).
+- Status: draft 0.2, under Owner review. Steps W0–W3 are done; W4 is next (section 13).
 - What users read instead: [`suggestion.md`](suggestion.md) explains which components each level should have and what each one achieves.
 
 ## Contents
@@ -84,12 +84,12 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 | Skill | What it does | Role (D21) | Status |
 | --- | --- | --- | --- |
 | `/setup` | Explore the repo, ask a few questions, choose a level, install the Level 1 files without overwriting anything, write the harness config; re-runs report stale copies | Owner | Done |
-| `/plan` | Split work into verifiable vertical-slice tickets with dependencies; write them where the config says once the Owner agrees | Chief | W3 |
+| `/plan` | Split work into verifiable vertical-slice tickets with dependencies; write them where the config says once the Owner agrees | Chief | Done |
 | `/build <ticket>` | Build one ticket red-then-green and open a PR with evidence | Builder | Done |
 | `/verify <PR>` | Dispatch a fresh subagent that re-runs everything cold and judges PASS or FAIL against a checklist | Verifier | Done |
-| `/report` | Summarize merged work for the Owner | Chief | W3 |
-| `/handoff` | Write hand-off notes when work stops: goal, done, in progress, next step, where the evidence is (D11) | Any | W3 |
-| `/retro` | Turn repeated mistakes into rule-to-enforcer proposals and review what can be retired; the Owner approves (D18, D19) | Chief | W3 |
+| `/report` | Summarize merged work for the Owner | Chief | Done |
+| `/handoff` | Write hand-off notes when work stops: goal, done, in progress, next step, where the evidence is (D11) | Any | Done |
+| `/retro` | Turn repeated mistakes into rule-to-enforcer proposals and review what can be retired; the Owner approves (D18, D19) | Chief | Done |
 
 **Model-invoked (disciplines)**
 
@@ -97,8 +97,8 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 | --- | --- | --- |
 | `tdd` | Red for the right reason, then green, then refactor; stub new modules first; never weaken a test | Done |
 | `evidence` | What counts as proof; the model name comes from the session's configuration | Done |
-| `ask-owner` | Escalate with two or three options, their consequences and a recommendation | W3 |
-| `learning` | Optional: the Owner answers four questions first, then compares and records (D22) | W3 |
+| `ask-owner` | Escalate with two or three options, their consequences and a recommendation | Done |
+| `learning` | Optional: the Owner answers four questions first, then compares and records (D22) | Done |
 
 Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `/setup` once and continues with safe defaults.
 
@@ -242,6 +242,7 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | D26 | The earlier CI checks become Level 2 recipes; the bootstrap gate and branch-to-ticket gate are dropped |
 | D27 | Every file in the repository is in English |
 | D28 | A new repository with a fresh history; the earlier repository keeps the full history of both earlier versions |
+| D29 | Agents commit to this repository as the machine account, with its GitHub noreply identity (display name equal to the login); the personal-data scan accepts that form and nothing else personal |
 
 ## 12. Failure modes
 
@@ -272,5 +273,5 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 
 | # | Question | Recommendation |
 | --- | --- | --- |
-| O4 | Should this repository's own commits use the machine account? | Waiting on the Owner |
+| O4 | Should this repository's own commits use the machine account? | Decided: yes (D29) |
 | O6 | Should `/setup` configure rulesets itself? | Decided: no. The machine account isn't an admin; `/setup` hands over the steps |

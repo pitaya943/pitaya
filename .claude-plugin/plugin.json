@@ -16,9 +16,15 @@
   ],
   "skills": [
     "./skills/setup",
+    "./skills/plan",
     "./skills/build",
     "./skills/verify",
+    "./skills/report",
+    "./skills/handoff",
+    "./skills/retro",
     "./skills/tdd",
-    "./skills/evidence"
+    "./skills/evidence",
+    "./skills/ask-owner",
+    "./skills/learning"
   ]
 }

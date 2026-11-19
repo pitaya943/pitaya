@@ -14,6 +14,7 @@ Rules for agents developing this repository (the pitaya plugin itself).
 - No personal data in any file, commit message or PR text: no real names, accounts or emails. Use `example-owner` and `example-bot`. The plugin's name, `pitaya`, is the one deliberate exception.
 - Write the failing test first. Never skip, delete or loosen a test to get green.
 - Work on a branch and open a pull request; only the Owner merges `main`.
+- Commit as the machine account: its login as the name and its GitHub noreply address as the email (D29). Commit messages are in English.
 - Each `SKILL.md` is at most 80 lines; put details in sibling files.
 - Skill files, templates and recipes ship to users: keep them free of anything specific to this repository.
 
