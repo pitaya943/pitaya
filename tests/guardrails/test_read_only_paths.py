@@ -51,3 +51,36 @@ def test_extra_paths_from_the_command_line(repo, tmp_path):
     head = repo.commit()
     proc = check(repo, base, head, ticket(tmp_path, Scope=["docs/**"]), "--also", "docs/spec/**")
     assert proc.returncode == 1 and "docs/spec/rules.md" in proc.stdout
+
+
+# --- ticket files are read-only, except the PR's own Status line (D35) -----------
+
+TICKET_FILE = "docs/tickets/T-001.md"
+TICKET_TEXT = "# T-001: Add login\n\nStatus: open\nIssue: #12\n\n## Scope\n\n- `src/**`\n"
+
+
+def test_ticket_files_are_read_only(repo, tmp_path):
+    repo.write(TICKET_FILE, TICKET_TEXT)
+    base = repo.commit("base")
+    repo.write("docs/tickets/T-002.md", "# T-002\n")
+    head = repo.commit()
+    proc = check(repo, base, head, ticket(tmp_path, Scope=["**"]))
+    assert proc.returncode == 1 and "docs/tickets/T-002.md" in proc.stdout
+
+
+def test_own_ticket_status_line_is_allowed(repo, tmp_path):
+    repo.write(TICKET_FILE, TICKET_TEXT)
+    base = repo.commit("base")
+    repo.write(TICKET_FILE, TICKET_TEXT.replace("Status: open", "Status: done"))
+    head = repo.commit()
+    proc = check(repo, base, head, ticket(tmp_path, Scope=["src/**"]), "--ticket-path", TICKET_FILE)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_own_ticket_other_change_is_refused(repo, tmp_path):
+    repo.write(TICKET_FILE, TICKET_TEXT)
+    base = repo.commit("base")
+    repo.write(TICKET_FILE, TICKET_TEXT + "\n## Done when\n\n1. Anything.\n")
+    head = repo.commit()
+    proc = check(repo, base, head, ticket(tmp_path, Scope=["src/**"]), "--ticket-path", TICKET_FILE)
+    assert proc.returncode == 1 and TICKET_FILE in proc.stdout

@@ -81,3 +81,15 @@ def test_owner_branch_without_ticket_is_skipped(tickets_repo, tmp_path):
 def test_machine_account_branch_without_ticket_fails(tickets_repo, tmp_path):
     proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "example-bot")
     assert proc.returncode == 1 and "To fix:" in proc.stdout
+
+
+def test_find_step_reports_the_ticket_file(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "ticket/T-1-thing", "example-bot")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "ticket_path=docs/tickets/T-1.md" in out
+
+
+@pytest.mark.parametrize("recipe", ["scope", "read-only-paths"])
+def test_ticket_path_is_passed_to_the_check(recipe):
+    text = (FILES / recipe / f"{recipe}.yml").read_text()
+    assert '--ticket-path "${{ steps.ticket.outputs.ticket_path }}"' in text

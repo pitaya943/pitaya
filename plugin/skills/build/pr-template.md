@@ -3,6 +3,7 @@
 ## What was done
 
 Ticket: <link or path>. Completion conditions: <n>, all met.
+<For a file ticket with an issue mirror: "Closes #<n>". Its Status line changes to done in this PR.>
 
 <two or three sentences on the change>
 

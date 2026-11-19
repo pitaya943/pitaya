@@ -39,7 +39,7 @@ A ticket that touches a sensitive area must have a done-when condition that cove
 
 1. Show the Owner a numbered list: title, depends on, what it delivers, scope. Mark which tickets can run in parallel: no dependency between them and no overlapping scope.
 2. Ask whether the granularity, order and conditions are right. Change the plan until the Owner approves it.
-3. Only then write the tickets where the harness file says, in its document language: issues labelled `ticket`, with "Blocked by #<n>" lines for dependencies, or `docs/tickets/<id>.md` files.
+3. Only then write the tickets where the harness file says, in its document language. See [tickets.md](tickets.md) for each mode: files with an issue mirror (the default), files only, or issues only. File tickets reach `main` through one PR the Owner merges; that merge is the approval the checks rely on.
 4. If the Owner decided something along the way, add it to `docs/decisions.md` when the project keeps one.
 5. If planning settled a new term or adds, removes or moves a module, update `docs/agents/glossary.md` or `docs/agents/architecture.md` in the same change.
 

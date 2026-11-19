@@ -1,4 +1,10 @@
-<!-- Ticket body written by /plan. Use the document language from docs/agents/harness.md. Delete optional sections that don't apply. -->
+<!-- Ticket body written by /plan. Use the document language from docs/agents/harness.md. Delete optional sections that don't apply.
+File tickets (docs/tickets/T-<nnn>.md) start with the title and the Status line; add the Issue line when the ticket has an issue mirror. Issue-only tickets start at "## Goal". -->
+
+# T-<nnn>: <title>
+
+Status: open
+Issue: #<n>
 
 ## Goal
 
@@ -11,7 +17,7 @@
 
 ## Depends on
 
-<"None", or one "Blocked by #<n>" line per ticket>
+<"None", or one "Blocked by <ticket>" line per ticket: "Blocked by T-002" for file tickets, "Blocked by #<n>" for issue-only tickets>
 
 ## Scope
 
