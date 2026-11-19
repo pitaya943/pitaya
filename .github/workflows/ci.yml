@@ -1,0 +1,78 @@
+# CI for this repository. Require the single "ci" check on main: it fails unless
+# every other job succeeded, so job names can change without touching the ruleset.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install pytest
+        run: python -m pip install pytest==9.1.1
+      - name: Run tests (no network access needed)
+        run: python -m pytest tests -q -p no:cacheprovider
+
+  skills:
+    name: plugin and SKILL.md check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/check_skills.py
+
+  personal-data:
+    name: personal-data scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the commit scan needs the pull request's commits
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Scan files
+        if: github.event_name != 'pull_request'
+        run: python tests/pii_scan.py
+      - name: Scan files and pull-request commits
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python tests/pii_scan.py --commits "$BASE_SHA..$HEAD_SHA"
+
+  ci:
+    name: ci
+    if: always()
+    needs: [tests, skills, personal-data]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every job to succeed
+        env:
+          TESTS: ${{ needs.tests.result }}
+          SKILLS: ${{ needs.skills.result }}
+          SCAN: ${{ needs.personal-data.result }}
+        run: |
+          echo "tests: $TESTS, skills: $SKILLS, personal-data scan: $SCAN"
+          test "$TESTS" = success && test "$SKILLS" = success && test "$SCAN" = success
