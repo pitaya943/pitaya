@@ -212,3 +212,21 @@ def test_learnings_template_is_append_only_with_a_source_column():
 def test_architecture_template_has_a_module_table():
     text = (TEMPLATES / "docs/agents/architecture.md").read_text()
     assert "| Module | Path | Purpose |" in text
+
+
+def test_skip_leaves_a_file_out(tmp_path):
+    # Found while installing pitaya on itself: a project that already has CI doesn't want tests.yml.
+    proc = install(tmp_path, "--level", "1", "--test-command", "pytest -q",
+                   "--skip", ".github/workflows/tests.yml", "--skip", "docs/decisions.md")
+    assert proc.returncode == 0, proc.stderr
+    assert not (tmp_path / ".github/workflows/tests.yml").exists()
+    assert not (tmp_path / "docs/decisions.md").exists()
+    assert "skipped  .github/workflows/tests.yml" in proc.stdout
+    assert (tmp_path / "AGENTS.md").exists()
+
+
+def test_skip_rejects_an_unknown_path(tmp_path):
+    proc = install(tmp_path, "--level", "1", "--test-command", "pytest -q", "--skip", "nope.txt")
+    assert proc.returncode == 2
+    assert "nope.txt" in proc.stderr
+    assert list(tmp_path.iterdir()) == []
