@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = REPO_ROOT / "plugin"
 
 SHIPPED = {".claude-plugin", "skills", "templates", "docs", "README.md", "CHANGELOG.md", "LICENSE"}
-SHIPPED_DOCS = {"suggestion.md", "concepts", "guardrails"}
+SHIPPED_DOCS = {"suggestion.md", "levels.md", "concepts", "guardrails"}
 
 
 def test_marketplace_installs_the_plugin_folder():

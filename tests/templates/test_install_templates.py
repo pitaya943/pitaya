@@ -46,9 +46,27 @@ def install(target: Path, *args: str) -> subprocess.CompletedProcess:
 
 # --- the templates themselves ------------------------------------------------
 
+# README.md files document the templates for whoever browses them; they are never copied.
+TEMPLATE_DOCS = {"docs/agents/README.md"}
+
+
 def test_level1_template_set():
     shipped = {p.relative_to(TEMPLATES).as_posix() for p in TEMPLATES.rglob("*") if p.is_file()}
-    assert shipped == LEVEL1
+    assert shipped == LEVEL1 | TEMPLATE_DOCS
+
+
+def test_memory_folder_readme_explains_where_harness_md_comes_from():
+    text = (TEMPLATES / "docs/agents/README.md").read_text()
+    assert "harness.md" in text
+    assert "skills/setup/harness-template.md" in text
+
+
+def test_template_readmes_are_not_copied(tmp_path):
+    proc = install(tmp_path, "--level", "1", "--test-command", "pytest -q")
+    assert proc.returncode == 0, proc.stderr
+    for rel in TEMPLATE_DOCS:
+        assert not (tmp_path / rel).exists(), rel
+        assert rel not in proc.stdout
 
 
 @pytest.mark.parametrize("rel", sorted(LEVEL1 - {".claude/settings.json", "CLAUDE.md"}))
