@@ -242,6 +242,7 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | D26 | The earlier CI checks become Level 2 recipes; the bootstrap gate and branch-to-ticket gate are dropped |
 | D27 | Every file in the repository is in English |
 | D28 | A new repository with a fresh history; the earlier repository keeps the full history of both earlier versions |
+| D29 | Agents commit to this repository as the machine account, with its GitHub noreply identity (display name equal to the login); the personal-data scan accepts that form and nothing else personal |
 
 ## 12. Failure modes
 
@@ -272,5 +273,5 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 
 | # | Question | Recommendation |
 | --- | --- | --- |
-| O4 | Should this repository's own commits use the machine account? | Waiting on the Owner |
+| O4 | Should this repository's own commits use the machine account? | Decided: yes (D29) |
 | O6 | Should `/setup` configure rulesets itself? | Decided: no. The machine account isn't an admin; `/setup` hands over the steps |

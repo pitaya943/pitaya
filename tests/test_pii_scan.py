@@ -105,3 +105,23 @@ def test_commit_scan_flags_personal_author(repo):
 def test_commit_scan_flags_personal_data_in_message(repo):
     _commit(repo, "Claude", "noreply@anthropic.com", "Fix bug reported by " + AT + "someone-real")
     assert any(AT + "someone-real" in f for f in pii_scan.scan_commits("HEAD~1..HEAD"))
+
+
+NOREPLY = "users.noreply.github" + ".com"
+
+
+def test_commit_scan_accepts_a_github_noreply_identity(repo):
+    # Agents commit as their machine account (decision D29): name == login, GitHub noreply email.
+    _commit(repo, "example-bot", "123+example-bot" + AT + NOREPLY, "Add x")
+    assert pii_scan.scan_commits("HEAD~1..HEAD") == []
+
+
+def test_commit_scan_rejects_noreply_with_a_different_name(repo):
+    # A personal display name on a noreply address still identifies a person.
+    _commit(repo, "Real Person", "123+someone" + AT + NOREPLY, "Add x")
+    assert any("author" in f for f in pii_scan.scan_commits("HEAD~1..HEAD"))
+
+
+def test_noreply_address_in_a_message_is_still_flagged(repo):
+    _commit(repo, "example-bot", "123+example-bot" + AT + NOREPLY, "Thanks 123+someone" + AT + NOREPLY)
+    assert any("email" in f for f in pii_scan.scan_commits("HEAD~1..HEAD"))
