@@ -34,7 +34,7 @@ When the agent finds it's signed in as someone else, `/build` stops and says so:
 
 ## Afterwards
 
-Record the login under "Machine account" in the harness file. Add the [commit-author](README.md#by-level) check when it's available, to enforce the identity at merge time.
+Record the login under "Machine account" in the harness file. Add the [commit-author](commit-author.md) check to enforce the identity at merge time, and set the repository variable `MACHINE_ACCOUNT` to the login: the ticket-based checks use it too.
 
 ## When to remove it
 

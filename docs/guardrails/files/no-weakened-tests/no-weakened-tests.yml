@@ -1,7 +1,8 @@
 # pitaya template 0.1.0 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
 # Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
-# Copy to .github/workflows/no-weakened-tests.yml and compare_junit.py to .github/guardrails/compare_junit.py.
-# Make the "no-weakened-tests" check required on main in the ruleset.
+# Copy to .github/workflows/no-weakened-tests.yml, and compare_junit.py to .github/guardrails/compare_junit.py.
+# Set the repository variable MACHINE_ACCOUNT to the agents' GitHub login, then
+# make the "no-weakened-tests" check required on main in the ruleset.
 name: no-weakened-tests
 
 on:
@@ -10,6 +11,7 @@ on:
 permissions:
   contents: read
   issues: read
+  pull-requests: read
 
 env:
   # The test command, writing JUnit XML to "$JUNIT". For pytest:
@@ -26,28 +28,40 @@ jobs:
           fetch-depth: 0
       # Add the setup steps the test command needs here (a runtime, dependencies).
       - name: Find the ticket
-        # Reads the ticket from the base branch (docs/tickets/<id>.md) or from the
-        # GitHub issue numbered in the branch name ticket/<number>-<slug>.
+        id: ticket
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD_REF: ${{ github.head_ref }}
           BASE_REF: ${{ github.base_ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
         run: |
           set -euo pipefail
-          if [ -d docs/tickets ]; then
-            for f in docs/tickets/*.md; do
-              n=$(basename "$f" .md)
-              case "$HEAD_REF" in "ticket/$n"|"ticket/$n-"*) git show "origin/$BASE_REF:$f" > "$RUNNER_TEMP/ticket.md"; exit 0;; esac
-            done
-          fi
-          num=$(printf '%s' "$HEAD_REF" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
-          if [ -z "$num" ]; then
+          # find_ticket <branch> <output file>: docs/tickets/<id>.md from the base branch,
+          # or the GitHub issue numbered in ticket/<number>-<slug>.
+          find_ticket() {
+            if [ -d docs/tickets ]; then
+              for f in docs/tickets/*.md; do
+                n=$(basename "$f" .md)
+                case "$1" in "ticket/$n"|"ticket/$n-"*) git show "origin/$BASE_REF:$f" > "$2"; return 0;; esac
+              done
+            fi
+            num=$(printf '%s' "$1" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
+            [ -n "$num" ] || return 1
+            gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$2"
+          }
+          if find_ticket "$HEAD_REF" "$RUNNER_TEMP/ticket.md"; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif [ "$PR_AUTHOR" != "$MACHINE_ACCOUNT" ]; then
+            echo "Not a ticket branch and not opened by the machine account: nothing to check."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
             echo "FAIL: the branch $HEAD_REF doesn't name a ticket."
             echo "To fix: name the branch ticket/<issue number>-<slug>, or ticket/<id>-<slug> for docs/tickets/<id>.md."
             exit 1
           fi
-          gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$RUNNER_TEMP/ticket.md"
-      - name: Run the tests on the base, with the base's own test setup
+      - name: Run the tests on the base, with the base's own setup
+        if: steps.ticket.outputs.skip != 'true'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
@@ -55,8 +69,10 @@ jobs:
           cd "$RUNNER_TEMP/base"
           JUNIT="$RUNNER_TEMP/base.xml" bash -c "$TEST_COMMAND" || true
       - name: Run the tests on the PR
+        if: steps.ticket.outputs.skip != 'true'
         run: JUNIT="$RUNNER_TEMP/head.xml" bash -c "$TEST_COMMAND" || true
       - name: Compare
+        if: steps.ticket.outputs.skip != 'true'
         run: >-
           python3 .github/guardrails/compare_junit.py
           --base "$RUNNER_TEMP/base.xml"

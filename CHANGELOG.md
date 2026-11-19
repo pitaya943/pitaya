@@ -15,4 +15,4 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 ### Recipes
 
 - Level 1: `protect-main`.
-- Level 2: `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, each check with a copyable script and workflow.
+- Level 2: `machine-account`, `commit-author`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `append-only`, `serial-resources`, `evidence`, each check with a copyable script and workflow.

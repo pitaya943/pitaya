@@ -36,7 +36,7 @@ def ticket_section(text: str, title: str) -> list[str] | None:
     items, inside = None, False
     for line in text.splitlines():
         if line.startswith("## "):
-            inside = line[3:].strip().lower() == title.lower()
+            inside = line[3:].strip().lower().replace("-", " ") == title.lower().replace("-", " ")
             if inside:
                 items = []
             continue

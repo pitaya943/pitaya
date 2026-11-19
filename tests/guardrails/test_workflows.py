@@ -1,0 +1,83 @@
+"""The copyable workflows parse, and their shared "Find the ticket" step behaves as documented."""
+
+from __future__ import annotations
+
+import os
+import re
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from helpers import FILES, Repo
+
+WORKFLOWS = sorted(FILES.glob("*/*.yml"))
+
+
+def steps(path: Path) -> list[dict]:
+    """Minimal reader: the run block of each named step (no YAML library needed)."""
+    text = path.read_text()
+    out = []
+    for match in re.finditer(r"^      - name: (.+?)\n(.*?)(?=^      - |\Z)", text, re.M | re.S):
+        name, body = match.group(1), match.group(2)
+        run = re.search(r"^        run: \|\n(.*)", body, re.M | re.S)
+        out.append({"name": name, "run": "\n".join(l[10:] for l in run.group(1).splitlines()) if run else None})
+    return out
+
+
+def find_step(path: Path) -> str | None:
+    for step in steps(path):
+        if step["name"] == "Find the ticket":
+            return step["run"]
+    return None
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_workflow_job_is_named_after_its_recipe(path):
+    recipe = path.parent.name
+    text = path.read_text()
+    assert f"name: {recipe}\n" in text and f"  {recipe}:\n    name: {recipe}\n" in text
+
+
+def test_find_steps_are_identical():
+    blocks = {p.name: find_step(p) for p in WORKFLOWS if find_step(p)}
+    assert len(blocks) >= 6
+    assert len(set(blocks.values())) == 1
+
+
+def run_find(repo: Repo, tmp_path: Path, head_ref: str, author: str) -> tuple[subprocess.CompletedProcess, str]:
+    script = find_step(FILES / "scope" / "scope.yml")
+    output = tmp_path / "github_output"
+    output.write_text("")
+    env = dict(os.environ, HEAD_REF=head_ref, BASE_REF="main", PR_AUTHOR=author,
+               MACHINE_ACCOUNT="example-bot", GITHUB_OUTPUT=str(output), RUNNER_TEMP=str(tmp_path),
+               GITHUB_REPOSITORY="example-owner/example", GH_TOKEN="")
+    proc = subprocess.run(["bash", "-c", script], cwd=repo.path, env=env, capture_output=True, text=True)
+    return proc, output.read_text()
+
+
+@pytest.fixture
+def tickets_repo(repo):
+    repo.write("docs/tickets/T-1.md", "## Scope\n\n- `src/**`\n")
+    repo.commit("tickets")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    return repo
+
+
+def test_ticket_file_is_read_from_the_base_branch(tickets_repo, tmp_path):
+    tickets_repo.write("docs/tickets/T-1.md", "## Scope\n\n- `**`\n")  # edited on the PR branch
+    tickets_repo.commit("widen my own scope")
+    proc, out = run_find(tickets_repo, tmp_path, "ticket/T-1-thing", "example-bot")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skip=false" in out
+    assert (tmp_path / "ticket.md").read_text() == "## Scope\n\n- `src/**`\n"
+
+
+def test_owner_branch_without_ticket_is_skipped(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "example-owner")
+    assert proc.returncode == 0 and "skip=true" in out
+
+
+def test_machine_account_branch_without_ticket_fails(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "example-bot")
+    assert proc.returncode == 1 and "To fix:" in proc.stdout
