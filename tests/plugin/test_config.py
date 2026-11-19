@@ -13,9 +13,10 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PLUGIN = REPO_ROOT / ".claude-plugin" / "plugin.json"
+PLUGIN_ROOT = REPO_ROOT / "plugin"
+PLUGIN = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
 MARKET = REPO_ROOT / ".claude-plugin" / "marketplace.json"
-TEMPLATE = REPO_ROOT / "skills" / "setup" / "harness-template.md"
+TEMPLATE = PLUGIN_ROOT / "skills" / "setup" / "harness-template.md"
 
 PLUGIN_NAME = "pitaya"
 

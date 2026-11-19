@@ -16,7 +16,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-HOOKS = REPO_ROOT / "templates" / ".claude" / "hooks"
+PLUGIN_ROOT = REPO_ROOT / "plugin"
+HOOKS = PLUGIN_ROOT / "templates" / ".claude" / "hooks"
 
 
 def run_hook(name: str, payload: dict, cwd: Path | None = None, env: dict | None = None) -> dict | None:

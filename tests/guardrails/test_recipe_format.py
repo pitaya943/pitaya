@@ -9,8 +9,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-GUARDRAILS = REPO_ROOT / "docs" / "guardrails"
-VERSION = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())["version"]
+PLUGIN_ROOT = REPO_ROOT / "plugin"
+GUARDRAILS = PLUGIN_ROOT / "docs" / "guardrails"
+VERSION = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text())["version"]
 
 SECTIONS = [
     "## What it guards against",
