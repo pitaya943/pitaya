@@ -19,6 +19,8 @@ Rules, so a re-run is always safe:
 * `--check` reports what would happen and writes nothing.
 * `--skip PATH` leaves out a template the project doesn't want, such as the
   tests workflow when the project already has CI.
+* `README.md` files document the templates for whoever browses them and are
+  never copied.
 
 Output: one line per file, `<status> <path>`. Exit 0 on success, 2 on bad
 arguments. Standard library only.
@@ -38,6 +40,7 @@ SETTINGS = ".claude/settings.json"
 DECISIONS = "docs/decisions.md"
 PLACEHOLDER = "<TEST_COMMAND>"
 HEADER_RE = re.compile(r"pitaya template (\S+)")
+TEMPLATE_DOC = "README.md"  # documents a templates folder; never copied
 
 
 def plugin_version() -> str:
@@ -121,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.templates.is_dir():
         parser.error(f"templates not found at {args.templates}; install the pitaya plugin or pass --templates")
 
-    sources = sorted(p for p in args.templates.rglob("*") if p.is_file())
+    sources = sorted(p for p in args.templates.rglob("*") if p.is_file() and p.name != TEMPLATE_DOC)
     known = {s.relative_to(args.templates).as_posix() for s in sources}
     unknown = [s for s in args.skip if s not in known]
     if unknown:

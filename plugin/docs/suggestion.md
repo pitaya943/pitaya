@@ -1,6 +1,6 @@
 # What each level should have
 
-Which components a project developed with coding agents should have at each level, what each component **achieves**, and what it **can't** do. It's based on the frontier labs' published harness guidance and three public harnesses ([sources](#sources)), and it's maintained as that research and the levels evolve.
+Which components a project developed with coding agents should have at each level, what each component **achieves**, and what it **can't** do. It's based on the frontier labs' published harness guidance and three public harnesses ([sources](#sources)), and it's maintained as that research and the levels evolve. For the plain list of skills, files and recipes in each level, see [`levels.md`](levels.md).
 
 ## How to read this
 

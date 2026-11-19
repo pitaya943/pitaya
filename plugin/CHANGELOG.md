@@ -16,6 +16,11 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - Clarified from the W6 trial: hand-off notes state whether the working copy is clean and list every check that must pass; mutation evidence when a condition can't go red; mutation hygiene (no bytecode caches, clean `git status`); the verifier's checklist for behaviour-pinning tickets and reverted out-of-scope commits.
 - `install_templates.py --skip PATH` leaves out a template the project already covers.
 
+### Docs
+
+- `docs/levels.md`: every skill, template and recipe, listed by the level it belongs to.
+- `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
+
 ### Recipes
 
 - Adding a guardrail is rule work: the Owner opens it, or it's a ticket listing the exact files.

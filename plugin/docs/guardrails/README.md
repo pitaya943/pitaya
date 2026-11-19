@@ -1,6 +1,6 @@
 # Guardrail recipes
 
-Recipes add protection when a project needs it, a level at a time. Level 1 comes with `/setup`; Levels 2 and 3 come from here. [`../suggestion.md`](../suggestion.md) explains what each level achieves.
+Recipes add protection when a project needs it, a level at a time. Level 1 comes with `/setup`; Levels 2 and 3 come from here. [`../suggestion.md`](../suggestion.md) explains what each level achieves, and [`../levels.md`](../levels.md) lists everything each level includes.
 
 ## Recipe format
 
