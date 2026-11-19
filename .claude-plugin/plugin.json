@@ -1,0 +1,24 @@
+{
+  "name": "pitaya",
+  "version": "0.1.0",
+  "description": "Small, composable skills for developing with agents under human review: set up a level, plan, build red-green, verify cold, report. Guardrails grow by level, not as a gate.",
+  "author": {
+    "name": "pitaya contributors"
+  },
+  "license": "MIT-0",
+  "keywords": [
+    "skills",
+    "tdd",
+    "verification",
+    "code-review",
+    "agents",
+    "guardrails"
+  ],
+  "skills": [
+    "./skills/setup",
+    "./skills/build",
+    "./skills/verify",
+    "./skills/tdd",
+    "./skills/evidence"
+  ]
+}
