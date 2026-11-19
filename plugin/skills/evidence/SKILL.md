@@ -12,7 +12,7 @@ A claim without evidence counts as unverified. Read `docs/agents/harness.md` for
 | Claim | Evidence |
 | --- | --- |
 | A test passes or fails | The exact command, and its output in a code block. Keep the first lines, the last lines and the summary line; mark any cut with `...`. |
-| Red before green | The failing output from before the fix, with the reason visible (an assertion, not an import error). If a condition passed on its first run because earlier work covered it, a note saying so instead. |
+| Red before green | The failing output from before the fix, with the reason visible (an assertion, not an import error). If a condition can't go red (earlier work covered it, or the ticket pins existing behaviour), a note saying so, plus a mutation: the change you made, which condition's test it breaks, and the failing output. |
 | A screen or UI works | Screenshots you took yourself, saved under `docs/evidence/<ticket>/`, named for what they show, and linked from the PR. |
 | A file is unchanged or in scope | A `git diff --stat <base>...HEAD` listing. |
 | Behaviour on bad input | The command or request, with the rejection it produced. |

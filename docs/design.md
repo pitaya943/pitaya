@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.2, under Owner review. Steps W0–W5 are done; W6 is next (section 13).
+- Status: draft 0.2, under Owner review. Steps W0–W6 are done; W7, the release, is next (section 13).
 - What users read instead: [`suggestion.md`](../plugin/docs/suggestion.md) explains which components each level should have and what each one achieves.
 
 ## Contents

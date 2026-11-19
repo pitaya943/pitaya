@@ -10,14 +10,14 @@ Mark every item pass or fail, with evidence: the command and its output, or the 
    - Run the suite on the base too, and compare: every test that passed on the base still exists and passes on the head. Check out the base by its commit SHA; a worktree can't check out a branch that's checked out elsewhere.
    - The diff adds no skip or expected-failure markers.
    - The diff deletes no test or parametrized case, and loosens no assertion.
-4. **Tests are real.** Read each new or changed test: it calls the product code through its public interface, and it checks the result. A test that would pass with the feature removed fails this item.
-5. **Mutation spot-check.** Pick up to three conditions, preferring sensitive areas from the harness file, money, permissions and state changes. For each, break the implementation locally (invert a condition, drop a line, return early) and confirm the matching test fails. Revert. Never push these changes.
+4. **Tests are real.** Read each new or changed test: it calls the product code through its public interface, and it checks the result. A test that would pass with the feature removed fails this item. For a ticket that pins existing behaviour, "removed" means changed: item 5's mutations are the proof.
+5. **Mutation spot-check.** Pick up to three conditions, preferring sensitive areas from the harness file, money, permissions and state changes. For each, break the implementation locally (invert a condition, drop a line, return early) and confirm the matching test fails. Run with bytecode and build caches off (for Python, `PYTHONDONTWRITEBYTECODE=1`), revert, and confirm `git status` is clean. Never push these changes.
 6. **Error paths.** For at least one error path, the test asserts the outcome or its type, the exact message, and that nothing else changed. For code with no state (a pure function), say so instead of the last part.
 7. **Bad input through the interface.** Send the public interface one invalid input that no test covers (a missing field, out of range, wrong permissions). Confirm it's rejected.
 8. **Edge cases from the spec.** Read the spec text (with no spec file, the ticket is the spec), think of two edge cases the tests don't cover, and try them.
    - Behaviour that contradicts the spec is a fail.
    - Behaviour the spec doesn't decide isn't a fail: list it under "Spec questions".
-9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file is inside it. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md` or CI config unless the ticket names that exact file.
+9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file in that net diff is inside it; mention any out-of-scope commit that a later commit reverted. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md` or CI config unless the ticket names that exact file.
 10. **Evidence and hygiene.**
     - The PR's evidence section covers every condition, including the red output. A condition with no red needs a note saying why, and a mutation in item 5 that makes its test fail.
     - Nothing in the diff, PR or logs exposes a secret.

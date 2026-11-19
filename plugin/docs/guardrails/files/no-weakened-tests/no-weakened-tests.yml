@@ -23,7 +23,7 @@ jobs:
     name: no-weakened-tests
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       # Add the setup steps the test command needs here (a runtime, dependencies).
