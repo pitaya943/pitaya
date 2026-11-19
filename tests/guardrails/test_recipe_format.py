@@ -35,6 +35,10 @@ RECIPES = {
     "append-only": 2,
     "serial-resources": 2,
     "evidence": 2,
+    "progress-file": 3,
+    "agent-merge": 3,
+    "second-model-review": 3,
+    "project-evals": 3,
 }
 
 
@@ -63,6 +67,8 @@ def copyable_files() -> list[Path]:
 
 @pytest.mark.parametrize("path", copyable_files(), ids=lambda p: p.relative_to(GUARDRAILS).as_posix())
 def test_copyable_file_header_names_this_version(path):
+    if path.suffix == ".json":
+        return  # JSON can't carry a comment; its recipe names the version instead
     head = "\n".join(path.read_text().splitlines()[:3])
     match = re.search(r"pitaya template (\S+)", head)
     assert match and match.group(1) == VERSION

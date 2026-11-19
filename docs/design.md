@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.2, under Owner review. Steps W0–W4 are done; W5 is next (section 13).
+- Status: draft 0.2, under Owner review. Steps W0–W5 are done; W6 is next (section 13).
 - What users read instead: [`suggestion.md`](../plugin/docs/suggestion.md) explains which components each level should have and what each one achieves.
 
 ## Contents
@@ -195,9 +195,9 @@ Each recipe in `plugin/docs/guardrails/<id>.md` has eight sections:
 | 2 | Serial resources: one ticket at a time per migration or lockfile | earlier `serial-resource` check |
 | 2 | Evidence: the PR has an evidence section; screenshots when there's a UI | earlier `evidence` check |
 | 3 | Second-model review (D14) | earlier optional review module |
-| 3 | Progress file and start-up routine (D11) | new |
-| 3 | Agent merging and its prerequisites (D3) | new |
-| 3 | Project evals | new |
+| 3 | Progress file, start-up routine and a feature list where agents may only flip "passes" (D11) | Anthropic's long-running harness |
+| 3 | Agent merging, gated by a `verdict` status that only a PASS for the current head commit turns green (D3) | new |
+| 3 | Project evals | Anthropic's guidance on agent evals |
 | — | Docs lint (links, structure) | earlier docs-lint module |
 
 The earlier bootstrap gate and branch-to-ticket gate are not carried over (D26).
