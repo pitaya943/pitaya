@@ -6,6 +6,7 @@ A short map for coding agents. Details live in the files it points to; read them
 ## Start here
 
 - Read `docs/agents/harness.md` first: the level, who the Owner is, who may merge, where tickets live, how work is verified.
+- Before planning or building, read `docs/agents/learnings.md`, and the parts of `docs/agents/architecture.md` and `docs/agents/glossary.md` your work touches.
 - Work on a branch, never on `main`.
 
 ## Commands
@@ -35,5 +36,8 @@ Stop and ask the Owner, with two or three options, their consequences and your r
 ## Where things are
 
 - `docs/agents/harness.md`: this project's harness settings.
+- `docs/agents/architecture.md`: the module map. Read it before changing the structure.
+- `docs/agents/glossary.md`: the project's words. Use them in code, tests and tickets.
+- `docs/agents/learnings.md`: what earlier work learned the hard way. Read it before planning or building.
 - `docs/decisions.md`: the Owner's decisions, append only.
 - Skills (the `pitaya` plugin): `/pitaya:setup`, `/pitaya:build`, `/pitaya:verify` and the rest.

@@ -117,7 +117,8 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 | Document language | asked by `/setup` | — |
 | Verification | a fresh subagent; may become a separate session with a named model | D13 |
 | Fix rounds | 2 | D16 |
-| Decisions | `docs/decisions.md` on; pitfalls off unless asked for | D12 |
+| Decisions | `docs/decisions.md` on | D12 |
+| Glossary, learnings, architecture | `docs/agents/glossary.md`, `learnings.md` (append only), `architecture.md` | D30 |
 | Sensitive areas | asked by `/setup` | — |
 | Guardrails | the Level 1 parts, plus any recipe added later | — |
 | Learning | off | D22 |
@@ -148,6 +149,7 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
 | `.github/workflows/tests.yml` | One job running the test command; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
 | `docs/decisions.md` | Append-only decision log | D12 |
+| `docs/agents/glossary.md`, `learnings.md`, `architecture.md` | The project's words, what earlier work learned, and the module map; AGENTS.md points to them | D30 |
 
 Rules shared by the hooks:
 
@@ -242,6 +244,8 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | D26 | The earlier CI checks become Level 2 recipes; the bootstrap gate and branch-to-ticket gate are dropped |
 | D27 | Every file in the repository is in English |
 | D28 | A new repository with a fresh history; the earlier repository keeps the full history of both earlier versions |
+| D30 | Level 1 ships three memory files under `docs/agents/`: a glossary, append-only learnings and an architecture map. `/plan` keeps the glossary and map current, `/retro` adds accepted learnings, and ticket PRs only propose changes. They replace the optional pitfalls file |
+| D31 | During W6, the pitaya repository adopts pitaya itself: `/setup` on this repository, with its development memory moved into the same structure |
 | D29 | Agents commit to this repository as the machine account, with its GitHub noreply identity (display name equal to the login); the personal-data scan accepts that form and nothing else personal |
 
 ## 12. Failure modes
@@ -266,7 +270,7 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 | W3 | Skills `plan`, `report`, `handoff`, `retro`, `ask-owner`, `learning`; `docs/concepts/` | Each at most 80 lines; `/plan` and `/handoff` tried on the trial repository |
 | W4 | Level 2 recipes and copyable files, ported from the earlier checks; the "protect `main`" recipe | Every copyable file has a failing-case test; tests check that error messages give a fix |
 | W5 | Level 3 recipes; `evals/` with the first task; `CHANGELOG.md` | CI green |
-| W6 | Trial: move the trial repository to Level 1 with `/setup`, add one Level 2 recipe and prove it blocks; run the hooks in a real Claude Code session | A trial record with evidence |
+| W6 | Trial: move the trial repository to Level 1 with `/setup`, add one Level 2 recipe and prove it blocks; run the hooks in a real Claude Code session; try `/plan` and `/handoff`; run `/setup` on this repository itself (D31) | A trial record with evidence |
 | W7 | Release `v0.1.0` | The Owner creates the release |
 
 ## 14. Open questions

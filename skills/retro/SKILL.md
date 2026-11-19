@@ -14,7 +14,8 @@ argument-hint: "<optional: the period or PRs to look at>"
    - verdicts, especially FAIL reasons and which fix round passed;
    - escalations to the Owner and how they were answered;
    - PR review comments and CI failures;
-   - `docs/decisions.md` and `docs/pitfalls.md`, when the project keeps them.
+   - learning proposals from verdicts and hand-off notes, and `docs/agents/learnings.md`;
+   - `docs/decisions.md`, when the project keeps one.
 
 ## 2. Find what repeats
 
@@ -42,7 +43,7 @@ For each guardrail and hook in use, read its "When to remove" note. If the evide
 
 Show the Owner one table in the document language, with one row per proposal: cause, occurrences, proposed rule, enforcer, cost, and "add" or "remove". Ask which to accept.
 
-Apply only accepted proposals, each through a normal pull request, and record the decisions in `docs/decisions.md` when the project keeps one.
+Apply only accepted proposals, each through a normal pull request. Add accepted learnings as new rows in `docs/agents/learnings.md`, and record decisions in `docs/decisions.md` when the project keeps one.
 
 ## Don't
 

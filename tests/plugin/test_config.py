@@ -31,6 +31,9 @@ FIELDS = {
     "Verification": "fresh subagent",
     "Fix rounds": "2",
     "Decisions": "docs/decisions.md",
+    "Glossary": "docs/agents/glossary.md",
+    "Learnings": "docs/agents/learnings.md",
+    "Architecture": "docs/agents/architecture.md",
     "Learning": "off",
 }
 
