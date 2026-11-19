@@ -21,6 +21,7 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 ### Docs
 
 - `docs/levels.md`: every skill, template and recipe, listed by the level it belongs to, with what each requires and works better with. Generated from `docs/components.json`.
+- `retro` and `handoff` are part of Level 1 (they were listed under Level 3 in `suggestion.md`).
 - `docs/components.json`: every component with its level, `requires`, `recommends` and project `needs`. Levels are presets you can add to or remove from.
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 

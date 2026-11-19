@@ -56,6 +56,9 @@
     {"id": "skill:learning", "kind": "skill", "level": 1, "doc": "skills/learning/SKILL.md",
      "requires": ["harness-file"],
      "summary": "An optional review for the Owner, turned on in the harness file"},
+    {"id": "skill:retro", "kind": "skill", "level": 1, "doc": "skills/retro/SKILL.md",
+     "recommends": ["memory-files"],
+     "summary": "Repeated mistakes become proposed rules with an enforcer, and spent guardrails get retired"},
 
     {"id": "machine-account", "kind": "recipe", "level": 2, "doc": "docs/guardrails/machine-account.md",
      "requires": ["protect-main"], "needs": ["github"],
@@ -89,9 +92,6 @@
      "needs": ["tickets"],
      "summary": "A PR without an evidence section, or a UI change without screenshots, can't merge"},
 
-    {"id": "skill:retro", "kind": "skill", "level": 3, "doc": "skills/retro/SKILL.md",
-     "recommends": ["memory-files"],
-     "summary": "Repeated mistakes become proposed rules with an enforcer, and spent guardrails get retired"},
     {"id": "progress-file", "kind": "recipe", "level": 3, "doc": "docs/guardrails/progress-file.md",
      "requires": ["protect-main", "machine-account"], "recommends": ["skill:handoff"],
      "summary": "A start-up routine and a feature list where agents may only mark items as passing"},

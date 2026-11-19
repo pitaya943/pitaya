@@ -63,6 +63,8 @@ Install the plugin. Nothing in the repository changes.
 | **A fresh verifier** (`/verify`) | Prose | Every PR comes with an independent verdict and evidence before merge, so the Owner's review starts from the verdict instead of the raw diff | Same as Level 0: shared blind spots; nothing forces verification before merge |
 | **Memory files** (`docs/agents/glossary.md`, `learnings.md`, `architecture.md`) | Prose | Agents start from the project's own words, its module map and what earlier work learned the hard way, so they name things consistently, change the right module, and don't repeat a known mistake. The glossary alone makes conversations and code noticeably more concise | They're only as good as their upkeep: `/plan` and `/retro` keep them current, and a stale map misleads |
 | **`docs/decisions.md`** (append only) | Prose | The Owner's decisions have one home, so a new session neither asks the same question again nor overturns what was settled | "Append only" is checked by machine only at Level 2 |
+| **`handoff` skill** | Prose | When work stops, it leaves the goal, what's done, what's in progress, the next step and where the evidence is, so another person or session can pick it up | It needs a chance to run before the stop |
+| **`retro` skill** | Prose | Repeated mistakes become proposals of the form "rule, and what enforces it" (a test, lint, hook, CI or a doc), applied once the Owner approves, so people stop repeating the same reminder | It proposes; it doesn't change anything itself |
 
 **Stopped at this level:** agents breaking `main` directly, merges without running the tests, secrets leaking into conversations, a working tree wiped by one command, agents loosening their own rules.
 
@@ -97,12 +99,10 @@ Added from recipes. This level lets work continue across sessions and makes the 
 | Component | Enforcement | What it achieves | What it can't do |
 | --- | --- | --- | --- |
 | **Progress file and start-up routine** (read the progress, read the git log, run the tests once, then pick the next item) | Prose | A new session takes over in minutes without redoing finished work or building on a broken state. Anthropic's long-running harness relies on exactly this | A wrong progress file misleads the next session |
-| **`handoff` skill** (usable from Level 1) | Prose | When work stops, it leaves the goal, what's done, what's in progress, the next step and where the evidence is, so another person or session can pick it up | It needs a chance to run before the stop |
 | **A JSON feature list** (agents may change only the "passes" field) | Prose, checkable | Agents can't delete or rewrite unfinished requirements, only mark them passing, so long work doesn't quietly shrink its scope | A machine guarantee needs an extra check that only that field changed |
 | **Second-model review** (another vendor or model) | Prose | Another model catches the first one's blind spots on sensitive or risky PRs | It adds cost and time; two models can still be wrong together |
 | **Agent-merge policy** (agents merge after CI is green and the verdict is PASS) | Merge | Delivery continues without waiting for a person, provided every Level 2 check is on | Unreviewed code reaches `main`; people can only review afterwards |
 | **Project evals** (20–50 tasks drawn from real failures) | Tool | Before and after changing a skill, a prompt or a model, run the set and compare numbers instead of impressions | The set takes time to build and maintain; too few tasks give noisy numbers |
-| **`retro` skill** | Prose | Repeated mistakes become proposals of the form "rule, and what enforces it" (a test, lint, hook, CI or a doc), applied once the Owner approves, so people stop repeating the same reminder | It proposes; it doesn't change anything itself |
 | **"When to remove" reviews** | Prose | Every component states what evidence shows it's no longer needed, so as models improve the harness can shrink on evidence instead of only growing | It works only if retros actually happen |
 
 ---
