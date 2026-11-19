@@ -31,8 +31,14 @@ Body.
 
 
 def make_repo(tmp_path: Path, skills: dict[str, str] | None = None, listed: list[str] | None = None,
-              manifest: dict | None = None, marketplace: dict | None = None) -> Path:
-    """Write a minimal plugin repo; every argument overrides one piece of a valid default."""
+              manifest: dict | None = None, marketplace: dict | None = None, subdir: str = "") -> Path:
+    """Write a minimal plugin repo; every argument overrides one piece of a valid default.
+
+    With subdir, the plugin lives in tmp_path/subdir and the marketplace at tmp_path points there.
+    """
+    root = tmp_path
+    tmp_path = root / subdir if subdir else root
+    tmp_path.mkdir(parents=True, exist_ok=True)
     skills = {"tdd": GOOD_SKILL.format(name="tdd")} if skills is None else skills
     listed = [f"./skills/{n}" for n in skills] if listed is None else listed
     for name, text in skills.items():
@@ -53,13 +59,14 @@ def make_repo(tmp_path: Path, skills: dict[str, str] | None = None, listed: list
     market = {
         "name": "example-plugin",
         "owner": {"name": "example contributors"},
-        "plugins": [{"name": "example-plugin", "source": "./", "description": "Skills."}],
+        "plugins": [{"name": "example-plugin", "source": f"./{subdir}" if subdir else "./", "description": "Skills."}],
     }
     market.update(marketplace or {})
     (tmp_path / ".claude-plugin").mkdir()
     (tmp_path / ".claude-plugin" / "plugin.json").write_text(json.dumps(plugin))
-    (tmp_path / ".claude-plugin" / "marketplace.json").write_text(json.dumps(market))
-    return tmp_path
+    (root / ".claude-plugin").mkdir(exist_ok=True)
+    (root / ".claude-plugin" / "marketplace.json").write_text(json.dumps(market))
+    return root
 
 
 def problems(root: Path) -> list[str]:
@@ -132,6 +139,25 @@ def test_marketplace_source_must_be_repo_root(tmp_path):
 
 
 # --- listing ------------------------------------------------------------------
+
+def test_plugin_in_a_subfolder_passes(tmp_path):
+    assert problems(make_repo(tmp_path, subdir="plugin")) == []
+
+
+def test_subfolder_problems_name_the_full_path(tmp_path):
+    root = make_repo(tmp_path, subdir="plugin", listed=["./skills/tdd", "./skills/missing"])
+    assert_one(root, "plugin/skills/missing")
+
+
+def test_marketplace_source_must_hold_a_plugin(tmp_path):
+    root = make_repo(tmp_path, marketplace={"plugins": [{"name": "example-plugin", "source": "./missing"}]})
+    assert_one(root, "marketplace.json")
+
+
+def test_marketplace_source_must_stay_inside_the_repo(tmp_path):
+    root = make_repo(tmp_path, marketplace={"plugins": [{"name": "example-plugin", "source": "../elsewhere"}]})
+    assert_one(root, "marketplace.json")
+
 
 def test_listed_skill_must_exist(tmp_path):
     assert_one(make_repo(tmp_path, listed=["./skills/tdd", "./skills/missing"]), "skills/missing")

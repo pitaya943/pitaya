@@ -11,7 +11,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SKILLS = REPO_ROOT / "skills"
+PLUGIN_ROOT = REPO_ROOT / "plugin"
+SKILLS = PLUGIN_ROOT / "skills"
 GLOSSARY, LEARNINGS, ARCHITECTURE = "docs/agents/glossary.md", "docs/agents/learnings.md", "docs/agents/architecture.md"
 
 

@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+PLUGIN_ROOT = REPO_ROOT / "plugin"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import check_skills  # noqa: E402
 
@@ -28,13 +29,13 @@ CONFIG = "docs/agents/harness.md"
 
 
 def frontmatter(name: str) -> dict:
-    fields, errors = check_skills.parse_frontmatter((REPO_ROOT / "skills" / name / "SKILL.md").read_text())
+    fields, errors = check_skills.parse_frontmatter((PLUGIN_ROOT / "skills" / name / "SKILL.md").read_text())
     assert errors == []
     return fields
 
 
 def test_expected_skills_are_listed():
-    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
+    plugin = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text())
     listed = {p.removeprefix("./skills/") for p in plugin["skills"]}
     assert EXPECTED <= listed
 
@@ -47,13 +48,13 @@ def test_skill_kind(name):
 
 @pytest.mark.parametrize("name", sorted(EXPECTED))
 def test_reads_project_config_first(name):
-    text = (REPO_ROOT / "skills" / name / "SKILL.md").read_text()
+    text = (PLUGIN_ROOT / "skills" / name / "SKILL.md").read_text()
     assert CONFIG in text
     assert "/setup" in text or name == "setup"  # points at setup when the config is missing
 
 
 @pytest.mark.parametrize("name", sorted(USER_INVOKED))
 def test_user_invoked_skills_do_not_invoke_each_other(name):
-    text = (REPO_ROOT / "skills" / name / "SKILL.md").read_text()
+    text = (PLUGIN_ROOT / "skills" / name / "SKILL.md").read_text()
     for other in USER_INVOKED - {name, "setup"}:  # suggesting /setup for missing config is allowed
         assert not re.search(rf"(?:run|invoke|call|use)\s+`?/{other}\b", text, re.I), other

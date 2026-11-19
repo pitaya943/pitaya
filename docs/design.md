@@ -1,7 +1,7 @@
 # pitaya design
 
 - Status: draft 0.2, under Owner review. Steps W0–W4 are done; W5 is next (section 13).
-- What users read instead: [`suggestion.md`](suggestion.md) explains which components each level should have and what each one achieves.
+- What users read instead: [`suggestion.md`](../plugin/docs/suggestion.md) explains which components each level should have and what each one achieves.
 
 ## Contents
 
@@ -50,7 +50,7 @@ pitaya therefore uses **levels**: a cheap, universally endorsed Level 1 installe
 
 ## 3. Levels
 
-One harness, four levels (D1). Each level includes the one before. [`suggestion.md`](suggestion.md) explains each component and what it achieves.
+One harness, four levels (D1). Each level includes the one before. [`suggestion.md`](../plugin/docs/suggestion.md) explains each component and what it achieves.
 
 | Level | For | Components | How to get it |
 | --- | --- | --- | --- |
@@ -62,17 +62,20 @@ One harness, four levels (D1). Each level includes the one before. [`suggestion.
 ## 4. Repo layout
 
 ```text
-.claude-plugin/          plugin.json (plugin "pitaya") and marketplace.json
-skills/<name>/           SKILL.md plus sibling reference files and scripts
-templates/               Level 1 files that /setup copies into a project
-docs/
-  suggestion.md          what each level should have, and what each part achieves
-  design.md              this document
-  guardrails/            Level 2-3 recipes, with copyable files under files/<id>/
-  concepts/              roles, autonomy, evidence, escalation
-evals/                   tasks for testing the harness itself (run by hand)
-scripts/check_skills.py  manifest and SKILL.md checker
-tests/                   checker, hooks, install script, docs, English, personal-data scan
+.claude-plugin/marketplace.json   the marketplace: one plugin, source "./plugin"
+plugin/                           what users install, and nothing else (D32)
+  .claude-plugin/plugin.json      plugin "pitaya"
+  skills/<name>/                  SKILL.md plus sibling reference files and scripts
+  templates/                      Level 1 files that /setup copies into a project
+  docs/suggestion.md              what each level should have, and what each part achieves
+  docs/guardrails/                Level 2-3 recipes, with copyable files under files/<id>/
+  docs/concepts/                  roles, autonomy, evidence, escalation
+  README.md, CHANGELOG.md, LICENSE
+docs/design.md                    this document
+evals/                            tasks for testing the harness itself (run by hand)
+scripts/check_skills.py           manifest and SKILL.md checker
+tests/                            checker, hooks, install script, recipes, docs, layout, English, personal data
+AGENTS.md, CLAUDE.md              rules for developing this repository
 ```
 
 Users install the plugin and run `/setup`; the copied files then belong to their project (D4).
@@ -118,7 +121,8 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 | Verification | a fresh subagent; may become a separate session with a named model | D13 |
 | Fix rounds | 2 | D16 |
 | Decisions | `docs/decisions.md` on | D12 |
-| Glossary, learnings, architecture | `docs/agents/glossary.md`, `learnings.md` (append only), `architecture.md` | D30 |
+| Glossary, learnings, architecture | `docs/agents/glossary.md`, `learnings.md` (append only), `architecture.md` | D32 | What ships lives in `plugin/`; the marketplace installs that folder alone, so development files never reach users |
+| D30 |
 | Sensitive areas | asked by `/setup` | — |
 | Guardrails | the Level 1 parts, plus any recipe added later | — |
 | Learning | off | D22 |
@@ -165,11 +169,11 @@ The install script never overwrites: an existing file is reported as `unchanged`
 
 ### 9.1 Format
 
-Each recipe in `docs/guardrails/<id>-<name>.md` has eight sections:
+Each recipe in `plugin/docs/guardrails/<id>.md` has eight sections:
 
 1. What it guards against: the concrete incident without it.
 2. When it's worth adding: the signal, such as a second agent working in the repo.
-3. How to add it: steps, plus copyable files under `docs/guardrails/files/<id>/`.
+3. How to add it: steps, plus copyable files under `plugin/docs/guardrails/files/<id>/`.
 4. How to prove it works: an action that makes it fail, and the expected output.
 5. Cost and false positives: time added, normal work it blocks, how to handle that.
 6. Error message: what it prints on failure, which must tell the agent how to fix it.

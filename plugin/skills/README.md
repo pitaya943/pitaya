@@ -13,4 +13,4 @@ Every directory here must be listed in `.claude-plugin/plugin.json`, and every l
 - **Short:** each `SKILL.md` is at most 80 lines. Put details in a sibling file and point to it.
 - **No personal data:** use fictional examples such as `example-owner` and `example-bot`.
 
-See [the design, section 5](../docs/design.md#5-skills) for the planned skills.
+See [the design, section 5](../../docs/design.md#5-skills) for the planned skills.

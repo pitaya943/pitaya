@@ -33,7 +33,7 @@ If an answer contradicts something you found (an account that doesn't exist, a f
 
 ## 3. Install and write
 
-1. **Level.** Recommend Level 1 (the default) unless the user only wants the skills (Level 0). Levels 2 and 3 come later from recipes; `docs/suggestion.md` in the plugin's repo says what each level achieves.
+1. **Level.** Recommend Level 1 (the default) unless the user only wants the skills (Level 0). Levels 2 and 3 come later from recipes; the plugin's `docs/suggestion.md` (`../../docs/suggestion.md` from this file) says what each level achieves.
 2. **Preview, then install.** From the repo root, run [scripts/install_templates.py](scripts/install_templates.py) with `--level`, `--test-command "<the confirmed command>"`, `--no-decisions` if the user declined the decision log, and `--check`. Show the user the output, then run it again without `--check`.
    - `created` and `merged` are done. `merged` means `.claude/settings.json` gained rules and hooks; nothing of theirs was removed.
    - `differs` and `stale` files were left alone. Show the diff against `../../templates/<path>` (relative to this file) and let the user choose. Never overwrite one yourself.
@@ -50,7 +50,7 @@ The machine account can't change repo settings, so list these steps for the Owne
 - A ruleset on `main`: require a pull request, block force pushes and deletions, require the `tests` check, and let only the Owner bypass.
 - If there's a machine account: it's a collaborator with Write, not Admin.
 
-Then name the next step up, from `docs/suggestion.md`: usually nothing until a second agent works in the repo (Level 2).
+Then name the next step up, from the plugin's `docs/suggestion.md`: usually nothing until a second agent works in the repo (Level 2).
 
 ## Don't
 

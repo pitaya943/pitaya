@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "pitaya",
-      "source": "./",
+      "source": "./plugin",
       "description": "Small, composable skills for developing with agents under human review.",
       "category": "engineering",
       "keywords": [

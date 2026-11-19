@@ -5,8 +5,8 @@ What it guarantees, so the plugin installs the skills we think it does:
 
 * ``.claude-plugin/plugin.json`` has a kebab-case name, a semver version, a
   description, and ``skills`` as a list of ``./skills/<dir>`` paths.
-* ``.claude-plugin/marketplace.json`` lists exactly this plugin, sourced from
-  the repo root.
+* ``.claude-plugin/marketplace.json`` lists exactly this plugin, and its
+  ``source`` is the plugin's folder inside the repository (``./`` or ``./plugin``).
 * Every listed directory has a SKILL.md, and every directory under
   ``skills/`` is listed (no shipped-by-accident or forgotten skills).
 * Each SKILL.md has frontmatter that a strict YAML parser accepts: only known
@@ -61,10 +61,26 @@ def _load_json(path: Path, label: str, out: list[str]) -> dict | None:
     return data
 
 
-def check_manifest(root: Path, out: list[str]) -> list[str] | None:
-    """Check plugin.json and marketplace.json; return the listed skill paths when usable."""
-    plugin = _load_json(root / ".claude-plugin" / "plugin.json", "plugin.json", out)
+def plugin_root(root: Path, out: list[str]) -> Path | None:
+    """Follow marketplace.json's single plugin entry to the plugin's folder (e.g. "./plugin")."""
     market = _load_json(root / ".claude-plugin" / "marketplace.json", "marketplace.json", out)
+    if market is None:
+        return None
+    entries = market.get("plugins")
+    if not (isinstance(entries, list) and len(entries) == 1 and isinstance(entries[0], dict)):
+        out.append("marketplace.json: plugins must be exactly one entry")
+        return None
+    source = entries[0].get("source")
+    folder = (root / source).resolve() if isinstance(source, str) and source.startswith("./") else None
+    if folder is None or not folder.is_relative_to(root.resolve()) or not folder.is_dir():
+        out.append(f'marketplace.json: source must be "./" or "./<folder>" inside the repository, got {source!r}')
+        return None
+    return folder
+
+
+def check_manifest(root: Path, folder: Path, out: list[str]) -> list[str] | None:
+    """Check plugin.json against the marketplace entry; return the listed skill paths when usable."""
+    plugin = _load_json(folder / ".claude-plugin" / "plugin.json", "plugin.json", out)
     if plugin is None:
         return None
 
@@ -78,12 +94,9 @@ def check_manifest(root: Path, out: list[str]) -> list[str] | None:
     if not isinstance(description, str) or not description.strip():
         out.append("plugin.json: description is required")
 
-    if market is not None:
-        entries = market.get("plugins")
-        ok = (isinstance(entries, list) and len(entries) == 1 and isinstance(entries[0], dict)
-              and entries[0].get("name") == name and entries[0].get("source") == "./")
-        if not ok:
-            out.append(f'marketplace.json: plugins must be exactly one entry named {name!r} with source "./"')
+    market = json.loads((root / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+    if market["plugins"][0].get("name") != name:
+        out.append(f"marketplace.json: the plugin entry must be named {name!r}, like plugin.json")
 
     listed = plugin.get("skills")
     if not isinstance(listed, list) or not all(isinstance(p, str) for p in listed):
@@ -146,8 +159,8 @@ def _scalar(raw: str, key: str, number: int, errors: list[str]) -> str | bool | 
     return raw
 
 
-def check_skill(root: Path, dirname: str, out: list[str]) -> None:
-    where = f"skills/{dirname}/SKILL.md"
+def check_skill(root: Path, dirname: str, out: list[str], prefix: str = "") -> None:
+    where = f"{prefix}skills/{dirname}/SKILL.md"
     path = root / "skills" / dirname / "SKILL.md"
     if not path.is_file():
         out.append(f"{where}: missing")
@@ -173,9 +186,16 @@ def check_skill(root: Path, dirname: str, out: list[str]) -> None:
 def check(root: Path) -> list[str]:
     """Return every problem found under root; an empty list means everything passes."""
     out: list[str] = []
-    listed = check_manifest(root, out)
+    folder = plugin_root(root, out)
+    if folder is None:
+        if (root / ".claude-plugin" / "marketplace.json").is_file():
+            return out
+        folder = root  # no marketplace: check a plugin at the root, and report the missing file
+    listed = check_manifest(root, folder, out) if not out else None
     if listed is None:
         return out
+    prefix = folder.relative_to(root.resolve()).as_posix() if folder != root else "."
+    prefix = "" if prefix == "." else prefix + "/"
 
     seen: set[str] = set()
     for entry in listed:
@@ -188,16 +208,16 @@ def check(root: Path) -> list[str]:
             out.append(f"plugin.json: {entry!r} is listed twice")
             continue
         seen.add(dirname)
-        if not (root / "skills" / dirname).is_dir():
-            out.append(f"plugin.json: skills/{dirname} is listed but the directory does not exist")
+        if not (folder / "skills" / dirname).is_dir():
+            out.append(f"plugin.json: {prefix}skills/{dirname} is listed but the directory does not exist")
             continue
-        check_skill(root, dirname, out)
+        check_skill(folder, dirname, out, prefix)
 
-    skills_dir = root / "skills"
+    skills_dir = folder / "skills"
     if skills_dir.is_dir():
         for child in sorted(skills_dir.iterdir()):
             if child.is_dir() and child.name not in seen:
-                out.append(f"skills/{child.name}: not listed in plugin.json (add it, or move it out of skills/)")
+                out.append(f"{prefix}skills/{child.name}: not listed in plugin.json (add it, or move it out of skills/)")
     return out
 
 

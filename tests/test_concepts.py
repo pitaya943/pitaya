@@ -3,7 +3,8 @@
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CONCEPTS = REPO_ROOT / "docs" / "concepts"
+PLUGIN_ROOT = REPO_ROOT / "plugin"
+CONCEPTS = PLUGIN_ROOT / "docs" / "concepts"
 PAGES = ("roles.md", "autonomy.md", "escalation.md")
 
 

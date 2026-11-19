@@ -21,5 +21,6 @@ Rules for agents developing this repository (the pitaya plugin itself).
 ## Where things are
 
 - `docs/design.md`: the design, decisions and plan.
-- `docs/suggestion.md`: what each level should have, for users.
-- `skills/`, `templates/`, `.claude-plugin/`: what ships.
+- `plugin/`: everything that ships, and only that (D32): skills, templates, recipes, user docs. The marketplace installs this folder alone.
+- `plugin/docs/suggestion.md`: what each level should have, for users.
+- Everything outside `plugin/` is for developing pitaya and never reaches users.

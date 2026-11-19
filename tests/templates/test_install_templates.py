@@ -18,9 +18,10 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TEMPLATES = REPO_ROOT / "templates"
-SCRIPT = REPO_ROOT / "skills" / "setup" / "scripts" / "install_templates.py"
-VERSION = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())["version"]
+PLUGIN_ROOT = REPO_ROOT / "plugin"
+TEMPLATES = PLUGIN_ROOT / "templates"
+SCRIPT = PLUGIN_ROOT / "skills" / "setup" / "scripts" / "install_templates.py"
+VERSION = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text())["version"]
 HEADER_RE = re.compile(r"pitaya template (\S+)")
 
 LEVEL1 = {
