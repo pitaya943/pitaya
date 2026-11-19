@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.2, under Owner review. Steps W0–W2 are done; W3 is next (section 13).
+- Status: draft 0.2, under Owner review. Steps W0–W3 are done; W4 is next (section 13).
 - What users read instead: [`suggestion.md`](suggestion.md) explains which components each level should have and what each one achieves.
 
 ## Contents
@@ -84,12 +84,12 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 | Skill | What it does | Role (D21) | Status |
 | --- | --- | --- | --- |
 | `/setup` | Explore the repo, ask a few questions, choose a level, install the Level 1 files without overwriting anything, write the harness config; re-runs report stale copies | Owner | Done |
-| `/plan` | Split work into verifiable vertical-slice tickets with dependencies; write them where the config says once the Owner agrees | Chief | W3 |
+| `/plan` | Split work into verifiable vertical-slice tickets with dependencies; write them where the config says once the Owner agrees | Chief | Done |
 | `/build <ticket>` | Build one ticket red-then-green and open a PR with evidence | Builder | Done |
 | `/verify <PR>` | Dispatch a fresh subagent that re-runs everything cold and judges PASS or FAIL against a checklist | Verifier | Done |
-| `/report` | Summarize merged work for the Owner | Chief | W3 |
-| `/handoff` | Write hand-off notes when work stops: goal, done, in progress, next step, where the evidence is (D11) | Any | W3 |
-| `/retro` | Turn repeated mistakes into rule-to-enforcer proposals and review what can be retired; the Owner approves (D18, D19) | Chief | W3 |
+| `/report` | Summarize merged work for the Owner | Chief | Done |
+| `/handoff` | Write hand-off notes when work stops: goal, done, in progress, next step, where the evidence is (D11) | Any | Done |
+| `/retro` | Turn repeated mistakes into rule-to-enforcer proposals and review what can be retired; the Owner approves (D18, D19) | Chief | Done |
 
 **Model-invoked (disciplines)**
 
@@ -97,8 +97,8 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 | --- | --- | --- |
 | `tdd` | Red for the right reason, then green, then refactor; stub new modules first; never weaken a test | Done |
 | `evidence` | What counts as proof; the model name comes from the session's configuration | Done |
-| `ask-owner` | Escalate with two or three options, their consequences and a recommendation | W3 |
-| `learning` | Optional: the Owner answers four questions first, then compares and records (D22) | W3 |
+| `ask-owner` | Escalate with two or three options, their consequences and a recommendation | Done |
+| `learning` | Optional: the Owner answers four questions first, then compares and records (D22) | Done |
 
 Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `/setup` once and continues with safe defaults.
 

@@ -6,7 +6,7 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
-- `setup`, `build`, `verify`, `tdd` and `evidence`.
+- `setup`, `plan`, `build`, `verify`, `report`, `handoff`, `retro`, `tdd`, `evidence`, `ask-owner` and `learning`.
 
 ### Templates
 

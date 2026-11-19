@@ -2,7 +2,7 @@
 
 Small, composable skills for developing with coding agents under human review: plan work into tickets, build red-then-green, verify cold in a fresh session, and report. Protection grows by **level** instead of a gate: `/setup` installs a cheap Level 1 default (an AGENTS.md map, permissions, three hooks and a tests workflow), and higher levels come from guardrail recipes when a project needs them.
 
-> **Status: in development (0.1.0, unreleased).** Five core skills exist: `setup`, `build`, `verify`, `tdd` and `evidence`. Progress: [design, section 13](docs/design.md#13-implementation-plan). Which components each level should have, and what each one achieves: [`docs/suggestion.md`](docs/suggestion.md).
+> **Status: in development (0.1.0, unreleased).** All eleven skills exist; guardrail recipes come next. Progress: [design, section 13](docs/design.md#13-implementation-plan). Which components each level should have, and what each one achieves: [`docs/suggestion.md`](docs/suggestion.md).
 
 ## Install
 
@@ -36,10 +36,17 @@ Then run `/pitaya:setup` in your project.
 | Skill | Invoked by | What it does |
 | --- | --- | --- |
 | `/setup` | you | Ask a few questions, install the level's files without overwriting anything, write the harness config |
+| `/plan` | you | Turn a request into vertical-slice tickets with done-when conditions; the Owner approves before they're written |
 | `/build` | you | Build one ticket red-then-green and open a PR with evidence |
 | `/verify` | you | A fresh subagent re-runs everything cold and judges PASS or FAIL |
+| `/report` | you | Summarize merged work for the Owner from sources anyone can open |
+| `/handoff` | you | Leave hand-off notes so another session picks up in minutes |
+| `/retro` | you | Turn repeated mistakes into rule-and-enforcer proposals; check what can be retired |
 | `tdd`, `evidence` | the agent | Red-then-green discipline; what counts as evidence |
-| `/plan`, `/report`, `/handoff`, `/retro`, `ask-owner`, `learning` | | Planned ([design, section 5](docs/design.md#5-skills)) |
+| `ask-owner` | the agent | Stop and hand a decision to the Owner with options and a recommendation |
+| `learning` | the agent, when turned on | The Owner answers four questions first, then compares with the agent's answers |
+
+The ideas behind them: [`docs/concepts/`](docs/concepts/README.md).
 
 ## Developing this repository
 
