@@ -3,7 +3,7 @@
   "about": "Every part of the pitaya harness: its level, what it requires first, what it works better with, and what it needs from the project. Levels 0-3 are presets: every component up to that level. levels.md is generated from this file, and skills/setup/scripts/select_components.py reads it.",
   "needs": {
     "github": "A GitHub repository, so rulesets and required checks exist",
-    "tickets": "Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug> (/plan writes tickets, /build names branches)",
+    "tickets": "Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug>: docs/tickets/T-<nnn>.md files (recommended, optionally mirrored by issues) or issues (/plan writes tickets, /build names branches)",
     "ticket-scope": "Each ticket lists the paths it may change under \"## Scope\"",
     "ticket-test-ids": "Each ticket names one test per completion condition under \"## Test IDs\"",
     "junit-xml": "The test command can write JUnit XML",

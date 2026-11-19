@@ -25,7 +25,7 @@ Read what exists. Don't assume.
 Lead each question with your recommendation, so the user can accept it in a word. Skip any question that exploring already settled.
 
 1. **Owner and machine account.** Who merges `main`? Is there a separate machine account the agents act as? Recommend one if several agents will work in parallel: then every push, PR and comment can be traced to an agent by its GitHub account. "None" is a valid answer.
-2. **Where tickets live.** GitHub Issues labelled `ticket` (recommended when there's a GitHub remote) or `docs/tickets/<id>.md` files.
+2. **Where tickets live.** Recommend `docs/tickets/T-<nnn>.md` files mirrored by issues labelled `ticket`: the file is the source of truth (checks read it from the base branch, so a PR can't edit its own ticket), and the issue gives discussion and notifications. Alternatives: files only, or issues only (lightest; an issue body can be edited by anyone with write access).
 3. **Test command.** Confirm one that actually runs here, as typed: if the test tool lives in a virtualenv, record that path (for example `.venv/bin/python -m pytest -q`). Otherwise ask for it. If nothing runs yet, record "none yet" and say that `/build` needs one.
 4. **Language, records and sensitive areas.** Which language documents are written in (PRs, issues, reports); whether to keep `docs/decisions.md` (recommended); which areas need a covering test before anyone changes them (money, permissions, migrations). "None" is fine.
 

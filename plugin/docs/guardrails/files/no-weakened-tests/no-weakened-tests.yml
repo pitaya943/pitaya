@@ -43,7 +43,11 @@ jobs:
             if [ -d docs/tickets ]; then
               for f in docs/tickets/*.md; do
                 n=$(basename "$f" .md)
-                case "$1" in "ticket/$n"|"ticket/$n-"*) git show "origin/$BASE_REF:$f" > "$2"; return 0;; esac
+                case "$1" in "ticket/$n"|"ticket/$n-"*)
+                  git show "origin/$BASE_REF:$f" > "$2"
+                  echo "ticket_path=$f" >> "$GITHUB_OUTPUT"
+                  return 0;;
+                esac
               done
             fi
             num=$(printf '%s' "$1" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')

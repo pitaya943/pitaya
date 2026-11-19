@@ -6,6 +6,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- Tickets have three modes (`plan/tickets.md`): `docs/tickets/T-<nnn>.md` files with an issue mirror (recommended), files only, issues only. File tickets carry `Status: open`; `/build`'s PR sets it to `done`.
+
 - `setup`, `plan`, `build`, `verify`, `report`, `handoff`, `retro`, `tdd`, `evidence`, `ask-owner` and `learning`.
 
 ### Templates
@@ -26,6 +28,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes
+
+- `scope` and `read-only-paths` take `--ticket-path`; a PR may change only its own ticket file's `Status:` line. `docs/tickets/**` is read-only by default. The shared "Find the ticket" step outputs `ticket_path`.
 
 - Adding a guardrail is rule work: the Owner opens it, or it's a ticket listing the exact files.
 - Every workflow uses `actions/checkout@v6` and `actions/setup-python@v7`.

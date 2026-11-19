@@ -16,7 +16,7 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 ## Work
 
 - Issue tracker: GitHub Issues in this repo.
-- Tickets: GitHub Issues labelled `ticket`. (Without a GitHub remote: `docs/tickets/<id>.md`.)
+- Tickets: `docs/tickets/T-<nnn>.md` files, each mirrored by a GitHub issue labelled `ticket` that links to the file. The file is the source of truth; checks read it from the base branch. (Alternatives: "files only", or "GitHub Issues labelled `ticket`" for the lightest setup.)
 - Test command: `pytest -q`. Recorded exactly as it runs here. From Level 2 it must also write JUnit XML.
 - Document language: en. Used for PRs, issues, comments and reports. Code, identifiers and commit messages stay in English.
 

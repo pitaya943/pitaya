@@ -72,7 +72,7 @@ Some components need something from the project itself, not from another compone
 | Need | Meaning | Needed by |
 | --- | --- | --- |
 | `github` | A GitHub repository, so rulesets and required checks exist | `protect-main`, `machine-account` |
-| `tickets` | Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug> (/plan writes tickets, /build names branches) | `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `append-only`, `serial-resources`, `evidence` |
+| `tickets` | Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug>: docs/tickets/T-<nnn>.md files (recommended, optionally mirrored by issues) or issues (/plan writes tickets, /build names branches) | `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `append-only`, `serial-resources`, `evidence` |
 | `ticket-scope` | Each ticket lists the paths it may change under "## Scope" | `scope` |
 | `ticket-test-ids` | Each ticket names one test per completion condition under "## Test IDs" | `done-when` |
 | `junit-xml` | The test command can write JUnit XML | `no-weakened-tests`, `done-when` |

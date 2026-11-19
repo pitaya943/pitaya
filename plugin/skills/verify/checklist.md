@@ -17,7 +17,7 @@ Mark every item pass or fail, with evidence: the command and its output, or the 
 8. **Edge cases from the spec.** Read the spec text (with no spec file, the ticket is the spec), think of two edge cases the tests don't cover, and try them.
    - Behaviour that contradicts the spec is a fail.
    - Behaviour the spec doesn't decide isn't a fail: list it under "Spec questions".
-9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file in that net diff is inside it; mention any out-of-scope commit that a later commit reverted. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md` or CI config unless the ticket names that exact file.
+9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file in that net diff is inside it; mention any out-of-scope commit that a later commit reverted. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md` or CI config unless the ticket names that exact file. A file ticket's own PR changes only its `Status:` line, to `done`.
 10. **Evidence and hygiene.**
     - The PR's evidence section covers every condition, including the red output. A condition with no red needs a note saying why, and a mutation in item 5 that makes its test fail.
     - Nothing in the diff, PR or logs exposes a secret.

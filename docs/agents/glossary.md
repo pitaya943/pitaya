@@ -19,3 +19,4 @@ The project's own words, so people, agents and code use the same name for the sa
 | Owner | The person who approves plans and, by default, merges `main` | admin, maintainer |
 | component | One selectable part of the harness in `components.json`: a skill, a group of template files, the harness file or a recipe | module, plugin, feature |
 | preset | A level used as a starting selection: every component at or below it | profile, bundle |
+| ticket mirror | A GitHub issue that links to a `docs/tickets/T-<nnn>.md` file, for discussion and notifications; the file stays the source of truth | linked issue, copy |
