@@ -17,3 +17,5 @@ The project's own words, so people, agents and code use the same name for the sa
 | verdict | The verifier's PASS or FAIL comment for one head commit | review, approval |
 | machine account | The GitHub account agents act and commit as | bot user |
 | Owner | The person who approves plans and, by default, merges `main` | admin, maintainer |
+| component | One selectable part of the harness in `components.json`: a skill, a group of template files, the harness file or a recipe | module, plugin, feature |
+| preset | A level used as a starting selection: every component at or below it | profile, bundle |
