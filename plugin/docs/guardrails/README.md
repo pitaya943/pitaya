@@ -31,6 +31,10 @@ The copyable checks use only Python's standard library and git, one standalone f
 | An old decision or changelog entry was edited | [append-only](append-only.md) |
 | Two PRs were each fine but broke `main` once both merged (migrations, lockfile) | [serial-resources](serial-resources.md) |
 | A PR said "done" and showed nothing | [evidence](evidence.md) |
+| Long work lost track between sessions, or requirements shrank | [progress-file](progress-file.md) |
+| The verifier missed what the builder missed | [second-model-review](second-model-review.md) |
+| Waiting for a person to merge is the bottleneck | [agent-merge](agent-merge.md) |
+| A harness change made agents better or worse, and nobody could tell which | [project-evals](project-evals.md) |
 
 ## By level
 
@@ -38,7 +42,7 @@ The copyable checks use only Python's standard library and git, one standalone f
 | --- | --- |
 | 1 | [protect-main](protect-main.md) (the steps `/setup` hands to the Owner) |
 | 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md) |
-| 3 (later) | second-model review, progress file, agent merging, project evals |
+| 3 | [progress-file](progress-file.md), [second-model-review](second-model-review.md), [agent-merge](agent-merge.md), [project-evals](project-evals.md) |
 
 ## How the checks find the ticket
 

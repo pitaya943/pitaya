@@ -1,0 +1,30 @@
+# pitaya template 0.1.0 · docs/guardrails/files/progress-file/progress-file.yml
+# Fails a pull request that changes the feature list beyond the "passes" flags.
+# Copy to .github/workflows/progress-file.yml, and check_feature_list.py to .github/guardrails/check_feature_list.py.
+# Set the repository variable MACHINE_ACCOUNT to the agents' GitHub login, then
+# make the "progress-file" check required on main in the ruleset.
+name: progress-file
+
+on:
+  pull_request:
+    paths: [docs/agents/features.json]
+
+permissions:
+  contents: read
+
+jobs:
+  progress-file:
+    name: progress-file
+    runs-on: ubuntu-24.04
+    # The Owner edits requirements in their own pull requests; agents may only flip "passes".
+    if: github.event.pull_request.user.login == vars.MACHINE_ACCOUNT
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check the feature list
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git show "origin/$BASE_REF:docs/agents/features.json" > "$RUNNER_TEMP/base.json"
+          python3 .github/guardrails/check_feature_list.py --base "$RUNNER_TEMP/base.json" --head docs/agents/features.json

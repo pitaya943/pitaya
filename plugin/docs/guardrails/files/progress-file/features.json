@@ -1,0 +1,13 @@
+{
+  "features": [
+    {
+      "id": "F-1",
+      "description": "A user can split a bill evenly between people, in whole cents",
+      "steps": [
+        "Run the app's split command with 1000 cents and 4 people",
+        "See 250 cents per person"
+      ],
+      "passes": false
+    }
+  ]
+}

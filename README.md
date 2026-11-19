@@ -2,7 +2,7 @@
 
 Small, composable skills for developing with coding agents under human review: plan work into tickets, build red-then-green, verify cold in a fresh session, and report. Protection grows by **level** instead of a gate: `/setup` installs a cheap Level 1 default (an AGENTS.md map, permissions, three hooks and a tests workflow), and higher levels come from guardrail recipes when a project needs them.
 
-> **Status: in development (0.1.0, unreleased).** All eleven skills exist; ten guardrail recipes are in [`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md). Progress: [design, section 13](docs/design.md#13-implementation-plan). Which components each level should have, and what each one achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
+> **Status: in development (0.1.0, unreleased).** All eleven skills exist; fourteen guardrail recipes are in [`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md). Progress: [design, section 13](docs/design.md#13-implementation-plan). Which components each level should have, and what each one achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
 
 ## Install
 
@@ -51,7 +51,7 @@ The ideas behind them: [`plugin/docs/concepts/`](plugin/docs/concepts/README.md)
 ## What's in this repository
 
 - `plugin/` is what users install: the skills, the Level 1 templates, the guardrail recipes and the user docs. The marketplace installs this folder alone.
-- Everything else is for developing pitaya: `docs/design.md` (the design, decisions and plan), `tests/`, `scripts/`, CI, and this repository's own `AGENTS.md`.
+- Everything else is for developing pitaya: `docs/design.md` (the design, decisions and plan), `evals/` (tasks that measure the harness itself), `tests/`, `scripts/`, CI, and this repository's own `AGENTS.md`.
 
 ## Developing this repository
 
