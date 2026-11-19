@@ -27,7 +27,7 @@ Lead each question with your recommendation, so the user can accept it in a word
 1. **Owner and machine account.** Who merges `main`? Is there a separate machine account the agents act as? Recommend one if several agents will work in parallel: then every push, PR and comment can be traced to an agent by its GitHub account. "None" is a valid answer.
 2. **Where tickets live.** GitHub Issues labelled `ticket` (recommended when there's a GitHub remote) or `docs/tickets/<id>.md` files.
 3. **Test command.** Confirm one that actually runs here, as typed: if the test tool lives in a virtualenv, record that path (for example `.venv/bin/python -m pytest -q`). Otherwise ask for it. If nothing runs yet, record "none yet" and say that `/build` needs one.
-4. **Language, records and sensitive areas.** Which language documents are written in (PRs, issues, reports); whether to keep `docs/decisions.md` (recommended; add a `Pitfalls:` line only if they also want `docs/pitfalls.md`); which areas need a covering test before anyone changes them (money, permissions, migrations). "None" is fine.
+4. **Language, records and sensitive areas.** Which language documents are written in (PRs, issues, reports); whether to keep `docs/decisions.md` (recommended); which areas need a covering test before anyone changes them (money, permissions, migrations). "None" is fine.
 
 If an answer contradicts something you found (an account that doesn't exist, a failing test command), say what you found and ask again. Never fill in an answer yourself.
 
@@ -39,8 +39,9 @@ If an answer contradicts something you found (an account that doesn't exist, a f
    - `differs` and `stale` files were left alone. Show the diff against `../../templates/<path>` (relative to this file) and let the user choose. Never overwrite one yourself.
    - If `AGENTS.md` differs, add a short "Agent harness" section to theirs instead, pointing to `docs/agents/harness.md`.
 3. **Harness file.** Copy [harness-template.md](harness-template.md) to `docs/agents/harness.md` and fill it in: the answers, the level, and under "Guardrails" the Level 1 parts that are now installed. Delete lines that don't apply rather than leaving placeholders.
-4. **CI.** Add to `.github/workflows/tests.yml` the setup steps the test command needs (a language runtime, installing dependencies). The first pull request must show the `tests` check passing.
-5. Show the user the diff, then commit with the message `Configure pitaya skills`. Open a PR only if the user asks.
+4. **Memory.** From what you explored, draft `docs/agents/architecture.md` (the main modules, their paths, one line each) and seed `docs/agents/glossary.md` with the few terms the code and docs use most. Ask the Owner to correct both; leave `docs/agents/learnings.md` empty.
+5. **CI.** Add to `.github/workflows/tests.yml` the setup steps the test command needs (a language runtime, installing dependencies). The first pull request must show the `tests` check passing.
+6. Show the user the diff, then commit with the message `Configure pitaya skills`. Open a PR only if the user asks.
 
 ## 4. Hand the Owner the repo settings
 

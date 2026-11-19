@@ -25,7 +25,7 @@ Fill in [handoff-template.md](handoff-template.md) in the document language. Wri
 - **In progress:** what was half-way, and what's known about it.
 - **Next step:** the exact first command or action, specific enough to start without reading anything else.
 - **Open questions:** anything waiting on the Owner, with the issue link.
-- **Gotchas:** what cost time and would cost the next session time too.
+- **Gotchas:** what cost time and would cost the next session time too. If it's worth keeping beyond this work, also propose it as a learning for `/retro`.
 
 Post the notes as a comment on the ticket. Without a tracker, put them in the PR description, or in `docs/handoff/<branch>.md` on the branch itself.
 

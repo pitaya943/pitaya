@@ -29,6 +29,9 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 ## Records
 
 - Decisions: `docs/decisions.md`. Append only: add new entries, never rewrite old ones.
+- Glossary: `docs/agents/glossary.md`. The project's words; `/plan` keeps it current.
+- Learnings: `docs/agents/learnings.md`. Append only; `/retro` adds what the Owner accepts.
+- Architecture: `docs/agents/architecture.md`. The module map; `/plan` keeps it current.
 
 ## Sensitive areas
 

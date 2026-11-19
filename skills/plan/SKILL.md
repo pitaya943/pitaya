@@ -11,7 +11,7 @@ argument-hint: "<what to build: a description, a spec path or an issue>"
 
 1. Read `docs/agents/harness.md`: where tickets live, the level, the "Guardrails" list and the sensitive areas. If it's missing, suggest `/setup` once, then continue with GitHub Issues labelled `ticket`.
 2. Read the request in full. If it's an issue or spec reference, fetch it with its comments.
-3. Explore the code the request touches, so tickets use the project's own names and fit its structure.
+3. Read `docs/agents/learnings.md`, then the parts of `docs/agents/architecture.md` and `docs/agents/glossary.md` the request touches. Explore that code too, so tickets use the glossary's terms and fit the structure.
 
 ## Ask until the goal is clear
 
@@ -41,6 +41,7 @@ A ticket that touches a sensitive area must have a done-when condition that cove
 2. Ask whether the granularity, order and conditions are right. Change the plan until the Owner approves it.
 3. Only then write the tickets where the harness file says, in its document language: issues labelled `ticket`, with "Blocked by #<n>" lines for dependencies, or `docs/tickets/<id>.md` files.
 4. If the Owner decided something along the way, add it to `docs/decisions.md` when the project keeps one.
+5. If planning settled a new term or adds, removes or moves a module, update `docs/agents/glossary.md` or `docs/agents/architecture.md` in the same change.
 
 ## Don't
 

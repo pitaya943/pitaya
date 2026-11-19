@@ -32,6 +32,9 @@ LEVEL1 = {
     ".claude/hooks/no_destructive.py",
     ".claude/hooks/ask_on_rule_files.py",
     ".github/workflows/tests.yml",
+    "docs/agents/glossary.md",
+    "docs/agents/learnings.md",
+    "docs/agents/architecture.md",
 }
 
 
@@ -184,3 +187,27 @@ def test_installed_hooks_work_in_the_target(tmp_path):
     proc = subprocess.run([sys.executable, str(tmp_path / ".claude/hooks/no_destructive.py")],
                           input=json.dumps(payload), capture_output=True, text=True)
     assert json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+MEMORY = ("docs/agents/glossary.md", "docs/agents/learnings.md", "docs/agents/architecture.md")
+
+
+def test_agents_md_points_to_every_memory_file():
+    text = (TEMPLATES / "AGENTS.md").read_text()
+    for rel in MEMORY + ("docs/agents/harness.md", "docs/decisions.md"):
+        assert f"`{rel}`" in text, rel
+
+
+def test_glossary_template_has_a_term_table():
+    text = (TEMPLATES / "docs/agents/glossary.md").read_text()
+    assert "| Term | Meaning | Avoid |" in text
+
+
+def test_learnings_template_is_append_only_with_a_source_column():
+    text = (TEMPLATES / "docs/agents/learnings.md").read_text()
+    assert "Append only" in text and "| Source |" in text
+
+
+def test_architecture_template_has_a_module_table():
+    text = (TEMPLATES / "docs/agents/architecture.md").read_text()
+    assert "| Module | Path | Purpose |" in text
