@@ -18,6 +18,10 @@ Rules for agents developing this repository (the pitaya plugin itself).
 - Each `SKILL.md` is at most 80 lines; put details in sibling files.
 - Skill files, templates and recipes ship to users: keep them free of anything specific to this repository.
 
+## Harness
+
+This repository uses pitaya on itself (D31). Read `docs/agents/harness.md` first, then `docs/agents/learnings.md`, and the parts of `docs/agents/architecture.md` and `docs/agents/glossary.md` your work touches. New decisions go in `docs/decisions.md`.
+
 ## Where things are
 
 - `docs/design.md`: the design, decisions and plan.

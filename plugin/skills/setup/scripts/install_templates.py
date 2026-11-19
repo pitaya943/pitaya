@@ -17,6 +17,8 @@ Rules, so a re-run is always safe:
 * `.claude/settings.json` is the exception: it's merged additively. Missing
   permission rules and hook entries are added; nothing is removed or changed.
 * `--check` reports what would happen and writes nothing.
+* `--skip PATH` leaves out a template the project doesn't want, such as the
+  tests workflow when the project already has CI.
 
 Output: one line per file, `<status> <path>`. Exit 0 on success, 2 on bad
 arguments. Standard library only.
@@ -105,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="0 copies nothing; 1 copies the Level 1 defaults. Levels 2-3 come from recipes.")
     parser.add_argument("--test-command", help="the project's test command, exactly as it runs (required for level 1)")
     parser.add_argument("--no-decisions", action="store_true", help="don't create docs/decisions.md")
+    parser.add_argument("--skip", action="append", default=[], metavar="PATH",
+                        help="a template path to leave out, such as .github/workflows/tests.yml; repeatable")
     parser.add_argument("--templates", type=Path, default=DEFAULT_TEMPLATES)
     parser.add_argument("--check", action="store_true", help="report only; write nothing")
     args = parser.parse_args(argv)
@@ -117,10 +121,18 @@ def main(argv: list[str] | None = None) -> int:
     if not args.templates.is_dir():
         parser.error(f"templates not found at {args.templates}; install the pitaya plugin or pass --templates")
 
+    sources = sorted(p for p in args.templates.rglob("*") if p.is_file())
+    known = {s.relative_to(args.templates).as_posix() for s in sources}
+    unknown = [s for s in args.skip if s not in known]
+    if unknown:
+        parser.error(f"--skip names no template file: {', '.join(unknown)}")
+    skip = set(args.skip) | ({DECISIONS} if args.no_decisions else set())
+
     print(f"pitaya templates {plugin_version()} -> {args.target.resolve()}")
-    for src in sorted(p for p in args.templates.rglob("*") if p.is_file()):
+    for src in sources:
         rel = src.relative_to(args.templates).as_posix()
-        if args.no_decisions and rel == DECISIONS:
+        if rel in skip:
+            print(f"{'skipped'.ljust(8)} {rel}")
             continue
         dest = args.target / rel
         wanted = render(rel, src.read_text(), args.test_command)

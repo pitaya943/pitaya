@@ -34,7 +34,7 @@ If an answer contradicts something you found (an account that doesn't exist, a f
 ## 3. Install and write
 
 1. **Level.** Recommend Level 1 (the default) unless the user only wants the skills (Level 0). Levels 2 and 3 come later from recipes; the plugin's `docs/suggestion.md` (`../../docs/suggestion.md` from this file) says what each level achieves.
-2. **Preview, then install.** From the repo root, run [scripts/install_templates.py](scripts/install_templates.py) with `--level`, `--test-command "<the confirmed command>"`, `--no-decisions` if the user declined the decision log, and `--check`. Show the user the output, then run it again without `--check`.
+2. **Preview, then install.** From the repo root, run [scripts/install_templates.py](scripts/install_templates.py) with `--level`, `--test-command "<the confirmed command>"`, `--no-decisions` if the user declined the decision log, `--skip <path>` for any template the project already covers (such as the tests workflow when CI exists), and `--check`. Show the user the output, then run it again without `--check`.
    - `created` and `merged` are done. `merged` means `.claude/settings.json` gained rules and hooks; nothing of theirs was removed.
    - `differs` and `stale` files were left alone. Show the diff against `../../templates/<path>` (relative to this file) and let the user choose. Never overwrite one yourself.
    - If `AGENTS.md` differs, add a short "Agent harness" section to theirs instead, pointing to `docs/agents/harness.md`.
