@@ -27,14 +27,17 @@ The copyable checks use only Python's standard library and git, one standalone f
 | An agent edited the rules, the spec or CI to get its work through | [read-only-paths](read-only-paths.md) |
 | A test disappeared or was skipped and CI stayed green | [no-weakened-tests](no-weakened-tests.md) |
 | A ticket was called done but one of its conditions had no passing test | [done-when](done-when.md) |
+| Commits show up under a person's name or an unknown email | [commit-author](commit-author.md) |
+| An old decision or changelog entry was edited | [append-only](append-only.md) |
+| Two PRs were each fine but broke `main` once both merged (migrations, lockfile) | [serial-resources](serial-resources.md) |
+| A PR said "done" and showed nothing | [evidence](evidence.md) |
 
 ## By level
 
 | Level | Recipe |
 | --- | --- |
 | 1 | [protect-main](protect-main.md) (the steps `/setup` hands to the Owner) |
-| 2 | [machine-account](machine-account.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md) |
-| 2 (next) | commit-author, append-only, serial-resources, evidence |
+| 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md) |
 | 3 (later) | second-model review, progress file, agent merging, project evals |
 
 ## How the checks find the ticket
@@ -43,5 +46,7 @@ Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" ste
 
 - `docs/tickets/<id>.md` on the **base** branch, when the PR branch is named `ticket/<id>-<slug>`;
 - otherwise, the GitHub issue whose number is in the branch name, `ticket/<number>-<slug>`.
+
+Pull requests the Owner opens from a branch without a ticket are skipped, with a note. Pull requests opened by the machine account must use a ticket branch, or the check fails, so an agent can't avoid the checks by naming its branch differently. This needs the repository variable `MACHINE_ACCOUNT` set to the agents' login (Settings → Secrets and variables → Actions → Variables).
 
 Reading from the base branch matters: a PR can't widen its own scope by editing its ticket file. An issue body has no such protection, because anyone with write access can edit it. If agents have write access and you need the stronger guarantee, keep tickets as files.

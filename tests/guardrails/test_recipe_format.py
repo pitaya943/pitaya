@@ -30,6 +30,10 @@ RECIPES = {
     "read-only-paths": 2,
     "no-weakened-tests": 2,
     "done-when": 2,
+    "commit-author": 2,
+    "append-only": 2,
+    "serial-resources": 2,
+    "evidence": 2,
 }
 
 

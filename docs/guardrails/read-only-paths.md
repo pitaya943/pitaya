@@ -12,6 +12,8 @@ With [scope](scope.md), when agents work without someone reading every diff, or 
 
 ## How to add it
 
+Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it isn't set yet: the workflow uses it to tell agent PRs from the Owner's ([details](README.md#how-the-checks-find-the-ticket)).
+
 1. Copy `files/read-only-paths/check_read_only.py` to `.github/guardrails/check_read_only.py`.
 2. Copy `files/read-only-paths/read-only-paths.yml` to `.github/workflows/read-only-paths.yml`, and add your spec paths to `--also` (for example `docs/spec/**`).
 3. After the first run, make `read-only-paths` a required check.

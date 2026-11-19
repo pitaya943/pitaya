@@ -1,0 +1,37 @@
+# pitaya template 0.1.0 · docs/guardrails/files/commit-author/commit-author.yml
+# Fails a pull request with a commit not authored by the machine account (by GitHub login).
+# Copy to .github/workflows/commit-author.yml, and check_commit_author.py to .github/guardrails/check_commit_author.py.
+# Set the repository variable MACHINE_ACCOUNT to the agents' GitHub login, then
+# make the "commit-author" check required on main in the ruleset.
+name: commit-author
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  commit-author:
+    name: commit-author
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch the pull request's commits
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/commits" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/commits.json"
+      - name: Check the authors
+        # Skipped for pull requests opened by someone other than the machine account.
+        if: github.event.pull_request.user.login == vars.MACHINE_ACCOUNT
+        # --also-allow: logins allowed besides the machine account, such as the Owner's for "Update branch" merges.
+        run: >-
+          python3 .github/guardrails/check_commit_author.py
+          --expected "${{ vars.MACHINE_ACCOUNT }}"
+          --commits "$RUNNER_TEMP/commits.json"
+          --also-allow ""

@@ -12,6 +12,8 @@ With [no-weakened-tests](no-weakened-tests.md), once tickets are planned with `/
 
 ## How to add it
 
+Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it isn't set yet: the workflow uses it to tell agent PRs from the Owner's ([details](README.md#how-the-checks-find-the-ticket)).
+
 1. Add a "## Test IDs" section to tickets: one `classname::name` per done-when condition, in order. `/plan` writes it when this guardrail is listed in the harness file.
 2. Copy `files/done-when/check_done_when.py` to `.github/guardrails/check_done_when.py`.
 3. Copy `files/done-when/done-when.yml` to `.github/workflows/done-when.yml`, and set `TEST_COMMAND` so it writes JUnit XML.

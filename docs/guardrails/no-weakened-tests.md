@@ -12,6 +12,8 @@ As soon as agents fix failing builds without a person reading every diff, or the
 
 ## How to add it
 
+Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it isn't set yet: the workflow uses it to tell agent PRs from the Owner's ([details](README.md#how-the-checks-find-the-ticket)).
+
 1. Make the test command write JUnit XML. Most tools can: pytest `--junitxml`, Jest `jest-junit`, Go `go-junit-report`, JUnit natively, cargo-nextest `--profile ci`.
 2. Copy `files/no-weakened-tests/compare_junit.py` to `.github/guardrails/compare_junit.py`.
 3. Copy `files/no-weakened-tests/no-weakened-tests.yml` to `.github/workflows/no-weakened-tests.yml`. Set `TEST_COMMAND`, and add your runtime setup steps.

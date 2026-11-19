@@ -12,6 +12,8 @@ When two or more agents work at the same time, or when a review finds out-of-sco
 
 ## How to add it
 
+Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it isn't set yet: the workflow uses it to tell agent PRs from the Owner's ([details](README.md#how-the-checks-find-the-ticket)).
+
 1. Make sure tickets have a "## Scope" section listing paths or globs, one per bullet. `/plan` writes it. `*` matches inside one directory; `**` matches across directories.
 2. Copy `files/scope/check_scope.py` to `.github/guardrails/check_scope.py`.
 3. Copy `files/scope/scope.yml` to `.github/workflows/scope.yml`.
