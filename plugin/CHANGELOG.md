@@ -29,6 +29,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Recipes
 
+- Plan PRs (`plan/<slug>` branches) skip the ticket checks and may change only ticket and planning files; anything else fails the shared "Find the ticket" step.
+
 - `scope` and `read-only-paths` take `--ticket-path`; a PR may change only its own ticket file's `Status:` line. `docs/tickets/**` is read-only by default. The shared "Find the ticket" step outputs `ticket_path`.
 
 - Adding a guardrail is rule work: the Owner opens it, or it's a ticket listing the exact files.

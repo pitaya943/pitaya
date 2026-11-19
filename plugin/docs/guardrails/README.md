@@ -57,6 +57,8 @@ Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" ste
 
 Pull requests the Owner opens from a branch without a ticket are skipped, with a note. Pull requests opened by the machine account must use a ticket branch, or the check fails, so an agent can't avoid the checks by naming its branch differently. This needs the repository variable `MACHINE_ACCOUNT` set to the agents' login (Settings → Secrets and variables → Actions → Variables).
 
+A branch named `plan/<slug>` is a plan PR: it adds ticket files for the Owner to merge. The step skips the ticket checks for it, but fails it if it changes anything besides `docs/tickets/*.md`, `docs/agents/glossary.md`, `docs/agents/architecture.md` and `docs/decisions.md`.
+
 When a ticket file is found, the step also outputs its path, `ticket_path`. The scope and read-only checks use it for one exception: the PR may change its own ticket's `Status:` line, to mark it done, and nothing else in any ticket file (`docs/tickets/**` is read-only by default).
 
 Reading from the base branch matters: a PR can't widen its own scope by editing its ticket file. An issue body has no such protection, because anyone with write access can edit it. If agents have write access and you need the stronger guarantee, keep tickets as files; an issue can still mirror each one for discussion (the `plan` skill's `tickets.md` describes the modes).
