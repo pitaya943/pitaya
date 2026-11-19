@@ -201,3 +201,16 @@ def test_agent_merge_requires_the_checks_its_prerequisites_name():
     c = components()["agent-merge"]
     assert {"scope", "read-only-paths", "no-weakened-tests", "done-when",
             "second-model-review", "skill:verify"} <= set(c["requires"])
+
+
+def test_skill_levels_match_suggestion_md():
+    """A skill with its own row in suggestion.md sits in that row's level section."""
+    text = (PLUGIN / "docs" / "suggestion.md").read_text()
+    marks = list(re.finditer(r"^## Level (\d)\b", text, re.MULTILINE))
+    found = {}
+    for i, m in enumerate(marks):
+        body = text[m.start(): marks[i + 1].start() if i + 1 < len(marks) else len(text)]
+        for name in re.findall(r"^\| \*\*`([-\w]+)` skill\*\*", body, re.MULTILINE):
+            found[f"skill:{name}"] = int(m.group(1))
+    assert found, "no skill rows found in suggestion.md"
+    assert {cid: components()[cid]["level"] for cid in found} == found

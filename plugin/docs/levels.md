@@ -36,6 +36,7 @@ Includes everything in Level 0. Run `/setup`; it copies the files and fills in t
 | Recipe | [`protect-main`](guardrails/protect-main.md) | - | `tests-workflow` | A ruleset: changes reach main only through PRs, tests must pass, only the Owner merges |
 | Skill | [`skill:handoff`](../skills/handoff/SKILL.md) | - | - | Notes that let another session take over stopped work |
 | Skill | [`skill:learning`](../skills/learning/SKILL.md) | `harness-file` | - | An optional review for the Owner, turned on in the harness file |
+| Skill | [`skill:retro`](../skills/retro/SKILL.md) | - | `memory-files` | Repeated mistakes become proposed rules with an enforcer, and spent guardrails get retired |
 
 ## Level 2: parallel agents
 
@@ -59,7 +60,6 @@ Includes everything in Level 2. `agent-merge` comes last: it requires the main L
 
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
-| Skill | [`skill:retro`](../skills/retro/SKILL.md) | - | `memory-files` | Repeated mistakes become proposed rules with an enforcer, and spent guardrails get retired |
 | Recipe | [`progress-file`](guardrails/progress-file.md) | `protect-main`, `machine-account` | `skill:handoff` | A start-up routine and a feature list where agents may only mark items as passing |
 | Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | - | Another model reviews sensitive or risky PRs |
 | Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge after CI is green and the latest verdict on the current commit is PASS |
