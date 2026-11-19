@@ -19,7 +19,7 @@ jobs:
     name: tests
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # Add the setup steps the test command needs here, for example
       # actions/setup-python or actions/setup-node and installing dependencies.
       - name: Run the test command from docs/agents/harness.md

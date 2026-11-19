@@ -20,10 +20,10 @@ Use it when work stops before it's done: the session is ending, the context is f
 Fill in [handoff-template.md](handoff-template.md) in the document language. Write pointers, not copies: link the ticket, PRs, commits and verdicts instead of pasting them.
 
 - **Goal:** the ticket link and one sentence.
-- **State:** branch, head commit, whether the tests pass right now (run them, and paste the summary line).
+- **State:** branch, head commit, whether the tests pass right now (run them, and paste the summary line), and whether the working copy is clean: no leftover generated files, caches or local edits.
 - **Done:** each finished done-when condition with its evidence.
 - **In progress:** what was half-way, and what's known about it.
-- **Next step:** the exact first command or action, specific enough to start without reading anything else.
+- **Next step:** the exact first command or action, specific enough to start without reading anything else, plus every check that must be green afterwards and where the hand-off comment goes.
 - **Open questions:** anything waiting on the Owner, with the issue link.
 - **Gotchas:** what cost time and would cost the next session time too. If it's worth keeping beyond this work, also propose it as a learning for `/retro`.
 
@@ -31,7 +31,7 @@ Post the notes as a comment on the ticket. Without a tracker, put them in the PR
 
 ## 3. Starting from someone's notes
 
-1. Read the notes, then check them against reality: `git log` on the branch, the head commit, the test command. If they disagree, trust the repository and say so.
+1. Read the notes, then check them against reality: `git log` on the branch, the head commit, the test command. If they disagree, trust the repository and say so. If the repository matches the notes but the results don't, look for local leftovers first (bytecode or build caches, a stale virtualenv) before assuming the code changed.
 2. Run the tests before changing anything, so you know the starting state.
 3. Continue from "Next step". If you finish, say in the PR which notes you started from.
 

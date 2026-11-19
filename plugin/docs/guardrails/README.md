@@ -44,6 +44,10 @@ The copyable checks use only Python's standard library and git, one standalone f
 | 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md) |
 | 3 | [progress-file](progress-file.md), [second-model-review](second-model-review.md), [agent-merge](agent-merge.md), [project-evals](project-evals.md) |
 
+## Adding a guardrail is rule work
+
+Installing a recipe changes `.github/` and the harness file, which agents don't change on their own. Either the Owner opens that pull request, or it's a ticket whose "## Scope" lists the exact files, so the ticket-based checks, including the one being installed, can pass on it.
+
 ## How the checks find the ticket
 
 Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" step looks in two places:

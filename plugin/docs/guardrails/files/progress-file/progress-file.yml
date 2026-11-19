@@ -19,7 +19,7 @@ jobs:
     # The Owner edits requirements in their own pull requests; agents may only flip "passes".
     if: github.event.pull_request.user.login == vars.MACHINE_ACCOUNT
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Check the feature list
