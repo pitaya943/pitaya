@@ -1,0 +1,64 @@
+# pitaya template 0.1.0 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
+# Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
+# Copy to .github/workflows/no-weakened-tests.yml and compare_junit.py to .github/guardrails/compare_junit.py.
+# Make the "no-weakened-tests" check required on main in the ruleset.
+name: no-weakened-tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  issues: read
+
+env:
+  # The test command, writing JUnit XML to "$JUNIT". For pytest:
+  #   python -m pytest -q --junitxml="$JUNIT"
+  TEST_COMMAND: python -m pytest -q --junitxml="$JUNIT"
+
+jobs:
+  no-weakened-tests:
+    name: no-weakened-tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Add the setup steps the test command needs here (a runtime, dependencies).
+      - name: Find the ticket
+        # Reads the ticket from the base branch (docs/tickets/<id>.md) or from the
+        # GitHub issue numbered in the branch name ticket/<number>-<slug>.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [ -d docs/tickets ]; then
+            for f in docs/tickets/*.md; do
+              n=$(basename "$f" .md)
+              case "$HEAD_REF" in "ticket/$n"|"ticket/$n-"*) git show "origin/$BASE_REF:$f" > "$RUNNER_TEMP/ticket.md"; exit 0;; esac
+            done
+          fi
+          num=$(printf '%s' "$HEAD_REF" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
+          if [ -z "$num" ]; then
+            echo "FAIL: the branch $HEAD_REF doesn't name a ticket."
+            echo "To fix: name the branch ticket/<issue number>-<slug>, or ticket/<id>-<slug> for docs/tickets/<id>.md."
+            exit 1
+          fi
+          gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$RUNNER_TEMP/ticket.md"
+      - name: Run the tests on the base, with the base's own test setup
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add "$RUNNER_TEMP/base" "$BASE_SHA"
+          cd "$RUNNER_TEMP/base"
+          JUNIT="$RUNNER_TEMP/base.xml" bash -c "$TEST_COMMAND" || true
+      - name: Run the tests on the PR
+        run: JUNIT="$RUNNER_TEMP/head.xml" bash -c "$TEST_COMMAND" || true
+      - name: Compare
+        run: >-
+          python3 .github/guardrails/compare_junit.py
+          --base "$RUNNER_TEMP/base.xml"
+          --head "$RUNNER_TEMP/head.xml"
+          --ticket "$RUNNER_TEMP/ticket.md"

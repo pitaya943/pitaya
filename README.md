@@ -2,7 +2,7 @@
 
 Small, composable skills for developing with coding agents under human review: plan work into tickets, build red-then-green, verify cold in a fresh session, and report. Protection grows by **level** instead of a gate: `/setup` installs a cheap Level 1 default (an AGENTS.md map, permissions, three hooks and a tests workflow), and higher levels come from guardrail recipes when a project needs them.
 
-> **Status: in development (0.1.0, unreleased).** All eleven skills exist; guardrail recipes come next. Progress: [design, section 13](docs/design.md#13-implementation-plan). Which components each level should have, and what each one achieves: [`docs/suggestion.md`](docs/suggestion.md).
+> **Status: in development (0.1.0, unreleased).** All eleven skills exist; the first guardrail recipes are in [`docs/guardrails/`](docs/guardrails/README.md). Progress: [design, section 13](docs/design.md#13-implementation-plan). Which components each level should have, and what each one achieves: [`docs/suggestion.md`](docs/suggestion.md).
 
 ## Install
 

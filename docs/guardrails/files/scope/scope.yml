@@ -1,0 +1,49 @@
+# pitaya template 0.1.0 · docs/guardrails/files/scope/scope.yml
+# Fails a pull request that changes files outside its ticket's "## Scope".
+# Copy to .github/workflows/scope.yml and check_scope.py to .github/guardrails/check_scope.py.
+# Make the "scope" check required on main in the ruleset.
+name: scope
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  scope:
+    name: scope
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find the ticket
+        # Reads the ticket from the base branch (docs/tickets/<id>.md) or from the
+        # GitHub issue numbered in the branch name ticket/<number>-<slug>.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [ -d docs/tickets ]; then
+            for f in docs/tickets/*.md; do
+              n=$(basename "$f" .md)
+              case "$HEAD_REF" in "ticket/$n"|"ticket/$n-"*) git show "origin/$BASE_REF:$f" > "$RUNNER_TEMP/ticket.md"; exit 0;; esac
+            done
+          fi
+          num=$(printf '%s' "$HEAD_REF" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
+          if [ -z "$num" ]; then
+            echo "FAIL: the branch $HEAD_REF doesn't name a ticket."
+            echo "To fix: name the branch ticket/<issue number>-<slug>, or ticket/<id>-<slug> for docs/tickets/<id>.md."
+            exit 1
+          fi
+          gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$RUNNER_TEMP/ticket.md"
+      - name: Check the scope
+        run: >-
+          python3 .github/guardrails/check_scope.py
+          --base "${{ github.event.pull_request.base.sha }}"
+          --head "${{ github.event.pull_request.head.sha }}"
+          --ticket "$RUNNER_TEMP/ticket.md"

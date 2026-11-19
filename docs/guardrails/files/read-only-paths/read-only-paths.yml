@@ -1,0 +1,51 @@
+# pitaya template 0.1.0 · docs/guardrails/files/read-only-paths/read-only-paths.yml
+# Fails a pull request that changes rule files, specs or CI, unless its ticket lists the exact file.
+# Copy to .github/workflows/read-only-paths.yml and check_read_only.py to .github/guardrails/check_read_only.py.
+# Make the "read-only-paths" check required on main in the ruleset.
+name: read-only-paths
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  read-only-paths:
+    name: read-only-paths
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find the ticket
+        # Reads the ticket from the base branch (docs/tickets/<id>.md) or from the
+        # GitHub issue numbered in the branch name ticket/<number>-<slug>.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [ -d docs/tickets ]; then
+            for f in docs/tickets/*.md; do
+              n=$(basename "$f" .md)
+              case "$HEAD_REF" in "ticket/$n"|"ticket/$n-"*) git show "origin/$BASE_REF:$f" > "$RUNNER_TEMP/ticket.md"; exit 0;; esac
+            done
+          fi
+          num=$(printf '%s' "$HEAD_REF" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
+          if [ -z "$num" ]; then
+            echo "FAIL: the branch $HEAD_REF doesn't name a ticket."
+            echo "To fix: name the branch ticket/<issue number>-<slug>, or ticket/<id>-<slug> for docs/tickets/<id>.md."
+            exit 1
+          fi
+          gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$RUNNER_TEMP/ticket.md"
+      - name: Check read-only paths
+        # Add the project's spec paths to --also, comma separated, e.g. "docs/spec/**".
+        run: >-
+          python3 .github/guardrails/check_read_only.py
+          --base "${{ github.event.pull_request.base.sha }}"
+          --head "${{ github.event.pull_request.head.sha }}"
+          --ticket "$RUNNER_TEMP/ticket.md"
+          --also ""

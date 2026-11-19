@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.2, under Owner review. Steps W0–W3 are done; W4 is next (section 13).
+- Status: draft 0.2, under Owner review. Steps W0–W3 are done; W4 is half done: the recipe format, protect-main, machine-account, scope, read-only-paths, no-weakened-tests and done-when (section 13).
 - What users read instead: [`suggestion.md`](suggestion.md) explains which components each level should have and what each one achieves.
 
 ## Contents
