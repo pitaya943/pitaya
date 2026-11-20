@@ -12,6 +12,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Templates
 
+- New hook `ask_on_merge.py` asks before an agent merges a PR unless the harness file lets agents merge. `AGENTS.md` says so under "Never".
+
 - `setup/scripts/select_components.py` resolves a custom selection (a level plus or minus components): adds what is required, refuses to drop what is still required, warns about missing recommendations, prints the steps in order and the `--skip` arguments for `install_templates.py`. It only prints a plan.
 
 - Workflows use `actions/checkout@v6` and `actions/setup-python@v7` (Node 24).
@@ -28,6 +30,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes
+
+- `protect-main` requires 1 approval, dismissed on new pushes; `agent-merge` lowers it to 0 because the `verdict` status replaces it.
 
 - Plan PRs (`plan/<slug>` branches) skip the ticket checks and may change only ticket and planning files; anything else fails the shared "Find the ticket" step.
 

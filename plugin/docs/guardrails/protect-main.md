@@ -22,7 +22,7 @@ In the repository: **Settings → Rules → Rulesets → New ruleset → New bra
 | Target branches | **Add target → Include default branch**. An empty target list protects nothing |
 | Restrict deletions | On |
 | Block force pushes | On |
-| Require a pull request before merging | On, with **Required approvals: 0** when the Owner works alone (GitHub won't let authors approve their own PRs) |
+| Require a pull request before merging | On, with **Required approvals: 1** and **Dismiss stale pull request approvals when new commits are pushed** on. Agents open PRs as the machine account, so the Owner can approve them; that approval is what stops an agent with Write access from merging its own green PR. The Owner's own PRs merge through the bypass. Set approvals to 0 only if no agent account can open PRs, or at Level 3 with [agent-merge](agent-merge.md), where the `verdict` status takes its place |
 | Require status checks to pass | On. Add the `tests` check from the Level 1 workflow (it appears in the list after it has run once) |
 | Require branches to be up to date | Off at Level 1; on if merges often break `main` |
 

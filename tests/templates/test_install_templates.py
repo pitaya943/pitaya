@@ -32,6 +32,7 @@ LEVEL1 = {
     ".claude/hooks/no_push_main.py",
     ".claude/hooks/no_destructive.py",
     ".claude/hooks/ask_on_rule_files.py",
+    ".claude/hooks/ask_on_merge.py",
     ".github/workflows/tests.yml",
     "docs/agents/glossary.md",
     "docs/agents/learnings.md",

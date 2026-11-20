@@ -200,7 +200,10 @@ def test_rule_hook_allows_shell_reads(repo, command):
 
 # --- shared behaviour ----------------------------------------------------------
 
-@pytest.mark.parametrize("name", ["no_push_main.py", "no_destructive.py", "ask_on_rule_files.py"])
+ALL_HOOKS = ["no_push_main.py", "no_destructive.py", "ask_on_rule_files.py", "ask_on_merge.py"]
+
+
+@pytest.mark.parametrize("name", ALL_HOOKS)
 def test_hook_lets_malformed_input_through(name):
     proc = subprocess.run([sys.executable, str(HOOKS / name)], input="not json",
                           capture_output=True, text=True, timeout=20)
@@ -210,7 +213,48 @@ def test_hook_lets_malformed_input_through(name):
     assert proc.stderr.strip()
 
 
-@pytest.mark.parametrize("name", ["no_push_main.py", "no_destructive.py", "ask_on_rule_files.py"])
+@pytest.mark.parametrize("name", ALL_HOOKS)
 def test_hook_documents_when_to_remove_it(name):
     text = (HOOKS / name).read_text()
     assert "When to remove" in text  # design principle R6
+
+
+# --- ask_on_merge.py (D37) -------------------------------------------------------
+
+def write_autonomy(repo: Path, line: str) -> None:
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(f"# Harness\n\n- Autonomy: {line}\n")
+
+
+@pytest.mark.parametrize("command", [
+    "gh pr merge 12 --squash",
+    "gh pr merge --auto --merge",
+    "cd x && gh pr merge 3",
+    "gh api -X PUT repos/o/r/pulls/12/merge",
+])
+def test_merge_hook_asks_by_default(repo, command):
+    out = run_hook("ask_on_merge.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "ask"
+    assert "Autonomy" in out["permissionDecisionReason"]
+
+
+def test_merge_hook_asks_for_the_github_tool(repo):
+    payload = {"hook_event_name": "PreToolUse", "tool_name": "mcp__github__merge_pull_request",
+               "tool_input": {"pullNumber": 12}, "cwd": str(repo)}
+    out = run_hook("ask_on_merge.py", payload)
+    assert out and out["permissionDecision"] == "ask"
+
+
+def test_merge_hook_asks_when_only_the_owner_merges(repo):
+    write_autonomy(repo, "Only the Owner merges `main`.")
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 12", repo))["permissionDecision"] == "ask"
+
+
+def test_merge_hook_allows_when_agents_may_merge(repo):
+    write_autonomy(repo, "Agents merge after CI is green and the verdict is PASS.")
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo)) is None
+
+
+@pytest.mark.parametrize("command", ["gh pr view 12", "gh pr list", "git merge feature", "echo gh pr merge"])
+def test_merge_hook_allows_other_commands(repo, command):
+    assert run_hook("ask_on_merge.py", bash(command, repo)) is None
