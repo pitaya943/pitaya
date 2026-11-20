@@ -11,7 +11,7 @@ Adapted from pstack's `/architect`, with behaviour-driven scenarios. The design 
 
 ## Before you start
 
-1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once and continue.
+1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once and continue. Unattended (nobody in the conversation), the harness file must name a machine account and you must act as it: otherwise stop and say so (the plugin's `docs/concepts/autonomy.md`, "Unattended work needs a machine account").
 2. Read `docs/milestones/M<n>.md` (goal, exit criteria, what's left out), `docs/agents/architecture.md`, the glossary and `learnings.md`.
 3. Explore how and why the code the milestone touches works today, as in the `plan` skill's `sharpen.md`.
 

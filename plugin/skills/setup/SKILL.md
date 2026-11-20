@@ -34,7 +34,7 @@ If an answer contradicts something you found (an account that doesn't exist, a f
 
 ## 3. Install and write
 
-1. **Level.** Recommend Level 1 (the default) unless the user only wants the skills (Level 0). With no machine account, don't record Level 2 or higher and leave "Autopilot" off: say that both wait for the account, and stay at Level 1. If the harness file already records either with no account, say so and ask which one changes. The plugin's `docs/levels.md` (`../../docs/levels.md` from this file) lists every component by level; `docs/suggestion.md` says what each achieves. The levels are a spectrum from close control (Level 0, like Matt Pocock's skills) to the most agent authority (Level 4, like pstack): ask how much control the Owner wants to keep.
+1. **Level.** Recommend Level 1 (the default) unless the user only wants the skills (Level 0). With no machine account, don't record Level 2 or higher and leave "Autopilot" off: say that both wait for the account, and stay at Level 1. If the harness file already records either with no account, say so, ask which one changes, and change nothing else until the Owner answers. The plugin's `docs/levels.md` (`../../docs/levels.md` from this file) lists every component by level; `docs/suggestion.md` says what each achieves. The levels are a spectrum from close control (Level 0, like Matt Pocock's skills) to the most agent authority (Level 4, like pstack): ask how much control the Owner wants to keep.
 2. **Preview, then install.** From the repo root, run [scripts/install_templates.py](scripts/install_templates.py) with `--level`, `--test-command "<the confirmed command>"`, `--no-decisions` if the user declined the decision log, `--skip <path>` for any template the project already covers (such as the tests workflow when CI exists), and `--check`. Show the user the output, then run it again without `--check`.
    - `created` and `merged` are done. `merged` means `.claude/settings.json` gained rules and hooks; nothing of theirs was removed.
    - `withdrawn` names an allow rule in `.claude/settings.json` that an earlier version installed and this one no longer does, with the reason. The install only adds rules: show the line and let the user delete the rule.
@@ -47,12 +47,12 @@ If an answer contradicts something you found (an account that doesn't exist, a f
 
 ## 4. Hand the Owner the repo settings
 
-The machine account can't change repo settings, so list these steps for the Owner, and check them afterwards where you can read them. With no machine account the session is signed in as the Owner and could change them: still don't, and say what that means: the ruleset's bypass is the agent's too, the hooks are the only thing before a merge, and agents must not act unattended until there is a machine account.
+The machine account can't change repo settings, so list these steps for the Owner, and check them afterwards where you can read them. With no machine account the session usually acts as the Owner and could change them: still don't, and say what that means: the ruleset's bypass is the agent's too, the hooks are the only thing before a merge, and agents must not act unattended until there is a machine account.
 
 - A ruleset on `main`: require a pull request with 1 approval (dismissed on new pushes), block force pushes and deletions, require the `tests` check, and let only the Owner bypass. A machine account can't approve its own PR, so only the Owner merges `main`. With milestones, a second ruleset on `milestone/*`, with the same bypass and 1 approval below Level 3 (the plugin's `docs/guardrails/protect-main.md`).
 - The machine account is a collaborator with Write, not Admin, and isn't on a bypass list (the plugin's `docs/guardrails/machine-account.md`). With "none", this is the step that is missing.
 
-Then name the next steps: `/plan --roadmap` to cut the project into milestones (or `/plan` for a single small piece of work), and the next level up from the plugin's `docs/suggestion.md`, usually nothing until a second agent works in the repo (Level 2).
+Then name the next steps: `/plan --roadmap` to cut the project into milestones (or `/plan` for a single small piece of work), and the next level up from the plugin's `docs/suggestion.md`, usually nothing until a second agent works in the repo (Level 2). With no machine account, name that first: it comes before any unattended session.
 
 ## Don't
 

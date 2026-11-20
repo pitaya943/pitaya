@@ -12,7 +12,7 @@ Before agents act unattended, it is required: when `/autopilot`, a schedule, a G
 
 ## How to add it
 
-1. Create a GitHub account for the agents (one per role or team of agents, if you want them told apart). A GitHub App installed on the repository is a separate identity too (`<app>[bot]`), with the permissions of step 3. A token of the Owner's own account is not, however narrow: what it pushes, opens and comments is still the Owner's.
+1. Create a GitHub account for the agents (one per role or team of agents, if you want them told apart). A token of the Owner's own account is not a machine account, however narrow: what it pushes, opens and comments is still the Owner's. A GitHub App is a separate identity (`<app>[bot]`), but pitaya's skills and checks have only been used with a user account: they confirm the login with `gh api user`, which an App's token can't call.
 2. Invite it as a collaborator with **Write**. Never Admin, and never on the ruleset's bypass list.
 3. Give the agent environment a token for that account: a fine-grained token limited to this repository, with Contents, Pull requests and Issues set to read and write, and nothing else. In particular no Workflows (it could change CI), Commit statuses (it could forge a required status), Actions or Administration permission. In the ruleset, pick **GitHub Actions** as the source of each required check, so only statuses that CI sets count.
 4. Set the commit author in the agent's checkout: the account's login as the name, and its GitHub noreply address as the email (`<numeric id>+<login>` at `users.noreply.github.com`). `/build` does this when the harness file names a machine account.

@@ -9,7 +9,7 @@ argument-hint: "<what to cover: a milestone, a list of PRs or tickets, or a date
 
 ## Before you start
 
-1. Read `docs/agents/harness.md` for the document language and whether "Learning" is on. If it's missing, suggest `/setup` once and write in the language of the conversation.
+1. Read `docs/agents/harness.md` for the document language and whether "Learning" is on. If it's missing, suggest `/setup` once and write in the language of the conversation. Unattended (nobody in the conversation), the harness file must name a machine account and you must act as it: otherwise stop and say so (the plugin's `docs/concepts/autonomy.md`, "Unattended work needs a machine account").
 2. Settle the range with the user if the argument doesn't make it exact: which PRs or tickets, from when to when.
 3. For a milestone (`/report M<n>`), the range is the tickets listed in `docs/milestones/M<n>.md`, read on `milestone/M<n>` when that branch exists and on `main` when it doesn't (the plugin's `docs/concepts/states.md`). Check each exit criterion with evidence, and say which ones aren't met. When `docs/milestones/M<n>-design.md` exists, also check every scenario: the test it names passes, or it's listed as not met. At Level 4, add the swarm and the decision-log audit in [milestone-level4.md](milestone-level4.md). Closing the milestone is under [Deliver](#deliver).
 

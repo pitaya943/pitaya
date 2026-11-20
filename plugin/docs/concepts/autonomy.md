@@ -37,13 +37,13 @@ Without one, a session acts as the account it is signed in with, usually the Own
 - **The ticket checks pass it.** They apply to pull requests the machine account opened, so one opened from the Owner's account counts as a person's and needs no ticket.
 - **Its comments are the Owner's.** A comment the agent posts has the Owner's login and `author_association` `OWNER`, which is exactly what makes a comment a decision ([who can answer](escalation.md#who-can-answer)).
 
-What is left is the hooks alone, and a hook is a question, not a wall: while the harness file's "Machine account" line says "none", `ask_on_merge.py` asks before every merge, whatever the Autonomy line says, and it asks before `gh pr merge --admin` in every project. A question needs someone to answer it. So "none" fits only while a person watches every step and merges by hand; it is the Level 1 solo setup, and nothing more.
+What is left is the hooks alone, and a hook is a question, not a wall: while the harness file's "Machine account" line names no account ("none", an empty value, or anything that doesn't start with a login), `ask_on_merge.py` asks before every merge, whatever the Autonomy line says, and it asks before `gh pr merge --admin` in every project. A question needs someone to answer it. So "none" fits only while a person watches every step and merges by hand; it is the Level 1 solo setup, and nothing more.
 
 What each part does about it:
 
 - `/setup` recommends a machine account in every project, asks for one from Level 2 and before it turns "Autopilot" on, and with "none" says in the harness file and in its output that merge protection is the hooks alone.
 - `/autopilot` stops before its first tick when the harness file names no machine account, or the session isn't signed in as it.
-- `/build` stops when it was started unattended and the harness file names none. With a person in the conversation it goes on, as that person's account.
+- `/build`, `/verify`, `/plan`, `/design` and `/report` stop when they were started unattended and the harness file names none, or the session isn't signed in as the account. With a person in the conversation they go on, as that person's account.
 - Turning permission prompts off is something the Owner does to a session, and no skill can see it: there the rule is the Owner's to keep.
 
 ## What doesn't change

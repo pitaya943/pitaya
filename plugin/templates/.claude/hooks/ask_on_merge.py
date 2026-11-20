@@ -17,16 +17,19 @@ the agent-merge recipe), because then the `verdict` status guards the merge.
 
 Two merges it asks about whatever the Autonomy line says, because they use
 the Owner's bypass of the rulesets, which no status guards: `gh pr merge
---admin`, and any merge while the harness file's "Machine account" line says
-"none" (the session then acts as the account it is signed in with, usually
-the Owner's). A harness file with no such line is read as before.
+--admin`, and any merge while the harness file's "Machine account" line
+names no account: "none", an empty value, or anything that doesn't start
+with a login (the session then acts as the account it is signed in with,
+usually the Owner's). A harness file with no such line is read as before.
 
 Limits: only Claude Code runs hooks, and a determined script can still reach
 the API another way. The ruleset's required approval on `main` is
 the guarantee; this hook stops the usual attempts early and explains why.
 
-When to remove: when the ruleset requires an approval the agents can't give
-themselves and transcripts show agents no longer try to merge.
+When to remove: when the agents act as a machine account, the ruleset
+requires an approval they can't give themselves, and transcripts show they
+no longer try to merge. Never while "Machine account" is "none": the
+session then holds the Owner's bypass, and this hook is all there is.
 
 Protocol: reads PreToolUse JSON on stdin; prints a hookSpecificOutput
 decision to stdout, or nothing to let the call through. Exits 1 with a
@@ -55,8 +58,11 @@ MERGE_API = re.compile(r"(^|/)pulls/\d+/merge$")
 HARNESS = Path("docs") / "agents" / "harness.md"
 MERGE_MUTATIONS = ("mergePullRequest", "enablePullRequestAutoMerge")
 AUTONOMY = re.compile(r"^\s*-\s*Autonomy:\s*(.*)$")
-MACHINE = re.compile(r"^\s*-\s*Machine account:\s*(.*)$")
-NO_ACCOUNT = re.compile(r"none\b(?!-)", re.IGNORECASE)  # the word, not a login that starts with it
+MACHINE = re.compile(r"^\s*[-*]\s*(?:\*\*)?Machine account:?(?:\*\*)?:?\s*(.*)$")
+# The value names an account when it starts with a word shaped like a GitHub login that isn't one of
+# the ways people write "nobody". Anything else ("n/a", "-", "(none yet)") is no account.
+LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\[bot\])?(?=$|[\s.,;:)\"`*_])")
+NO_ACCOUNT = ("none", "no", "nobody", "not", "na", "nil", "null", "tbd", "todo", "unknown")
 FALSE_VALUES = ("0", "f", "false")  # what gh reads as "off" in `--admin=<value>`
 
 
@@ -119,13 +125,14 @@ def agents_may_merge(lines: list[str]) -> bool:
 
 
 def no_machine_account(lines: list[str]) -> bool:
-    """True when the harness file has a "Machine account" line whose value is "none" or empty.
-    No such line at all is not "none": a harness file written by hand may leave it out."""
+    """True when the harness file has a "Machine account" line that names no account: "none", an
+    empty value, or anything that doesn't start with a login. No such line at all is not "none":
+    a harness file written by hand may leave it out."""
     value = field(lines, MACHINE)
     if value is None:
         return False
-    value = value.lstrip("\"'`*_ ")
-    return not value or bool(NO_ACCOUNT.match(value))
+    match = LOGIN.match(value.lstrip("\"'`*_( "))
+    return match is None or match.group(0).lower() in NO_ACCOUNT
 
 
 def ask(reason: str) -> dict:

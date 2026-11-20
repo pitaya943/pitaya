@@ -596,3 +596,42 @@ def test_gh_itself_takes_no_shorter_spelling_of_admin():
     proc = subprocess.run([gh, "pr", "merge", "1", "--adm", "-R", "example-owner/none"],
                           capture_output=True, text=True, timeout=30)
     assert proc.returncode != 0 and "unknown flag" in proc.stderr, proc.stderr
+
+
+# Found by the audit before the 0.1.10 PR: the skills read "names none" as prose, the hook read one word.
+@pytest.mark.parametrize("machine", [
+    "n/a", "N/A.", "-", "(none yet)", "nobody", "No machine account", "not yet", "TBD", "Owner's account", "?",
+])
+def test_merge_hook_asks_for_every_way_of_writing_no_account(repo, machine):
+    write_harness(repo, machine, AGENTS_MERGE)
+    out = run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo))
+    assert out and out["permissionDecision"] == "ask", machine
+    assert "machine account" in out["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("line", ["- **Machine account:** none", "* Machine account: none", "- **Machine account**: none."])
+def test_merge_hook_reads_the_line_however_it_is_marked_up(repo, line):
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(f"# Harness\n\n{line}\n- Autonomy: {AGENTS_MERGE}\n")
+    out = run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo))
+    assert out and out["permissionDecision"] == "ask", line
+
+
+@pytest.mark.parametrize("machine", [
+    "example-bot[bot]. A GitHub App.",
+    "the agents' machine account (see the repository's collaborators).",  # this repository's own harness file
+    "**example-bot**",
+    "no-reply-bot",
+    "nobody-bot.",
+])
+def test_merge_hook_still_reads_a_named_account_as_one(repo, machine):
+    write_harness(repo, machine, AGENTS_MERGE)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo)) is None, machine
+
+
+def test_merge_hook_reads_this_repositorys_harness_as_naming_an_account(repo):
+    text = (REPO_ROOT / "docs" / "agents" / "harness.md").read_text()
+    text = re.sub(r"(?m)^- Autonomy: .*$", f"- Autonomy: {AGENTS_MERGE}", text)
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(text)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 5 --squash", repo)) is None

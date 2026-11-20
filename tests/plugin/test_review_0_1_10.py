@@ -135,8 +135,8 @@ def test_the_machine_account_recipe_is_required_before_unattended_work():
     guards = section("docs/guardrails/machine-account.md", "## What it guards against")
     assert "bypass" in guards
     how = section("docs/guardrails/machine-account.md", "## How to add it")
-    assert "GitHub App" in how                    # the review's other form of a separate identity
-    assert "token of the Owner's own account" in how  # and the one that isn't one
+    assert "token of the Owner's own account" in how  # the review's narrower token: still the Owner
+    assert "GitHub App" in how and "`gh api user`" in how  # a separate identity the skills can't confirm yet
     remove = section("docs/guardrails/machine-account.md", "## When to remove it")
     assert "watches every step" in remove
 
@@ -214,9 +214,36 @@ def test_serial_resources_says_what_a_reopened_pull_request_does_to_the_order():
     assert "Require branches to be up to date" in text  # what still keeps the two from merging unchecked
 
 
-def test_autopilot_reruns_the_later_check_when_it_finds_a_reopened_earlier_pr():
+def test_autopilot_merges_the_earlier_pr_first_when_it_was_reopened():
     text = flat("skills/autopilot/tick.md")
-    assert "reopened" in text
+    assert "reopened" in text and "Don't merge the later one first" in text
+
+
+def test_nobody_is_told_to_rerun_a_check_with_a_token_that_cannot():
+    """Found by the audit: the machine account's token has no Actions permission, and the tick was told to re-run."""
+    assert "no Workflows" in flat("docs/guardrails/machine-account.md") and "Actions" in flat("docs/guardrails/machine-account.md")
+    tick = flat("skills/autopilot/tick.md")
+    assert "no Actions permission" in tick and "the Owner has to re-run it" in tick
+    assert "Actions access" in section("docs/guardrails/serial-resources.md", "## Cost and false positives")
+
+
+@pytest.mark.parametrize("skill", ["build", "verify", "plan", "design", "report"])
+def test_every_skill_a_session_can_start_unattended_asks_for_the_account(skill):
+    """Found by the audit: plan, design and verify said what an unattended session does, with no account check."""
+    text = flat(f"skills/{skill}/SKILL.md")
+    assert re.search(r"[Uu]nattended \(nobody in the conversation\)", text), skill
+    assert "machine account" in text and "autonomy.md" in text, skill
+
+
+def test_no_skill_glosses_unattended_as_autopilot_only():
+    hits = [p.relative_to(PLUGIN).as_posix() for p in PAGES
+            if re.search(r"\(one `/autopilot` started|\(`/autopilot` started this session\)", p.read_text())]
+    assert hits == []
+
+
+def test_the_glossary_has_the_word():
+    glossary = (REPO_ROOT / "docs" / "agents" / "glossary.md").read_text()
+    assert "| unattended |" in glossary
 
 
 # --- the record ------------------------------------------------------------------
