@@ -2,7 +2,7 @@
 
 Small, composable skills for developing with coding agents under human review: plan a roadmap of milestones and cut each into tickets, build red-then-green, verify cold in a fresh session, and report. Protection grows by **level** instead of a gate: `/setup` installs a cheap Level 1 default (an AGENTS.md map, permissions, four hooks and a tests workflow), and higher levels come from guardrail recipes when a project needs them. The levels form a spectrum, from close control like Matt Pocock's skills (Level 0) to the most agent authority like pstack (Level 4).
 
-> **Status: 0.1.3.** Fourteen skills and seventeen guardrail recipes ([`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md)). Progress: [design, section 13](docs/design.md#13-implementation-plan). Everything each level includes: [`plugin/docs/levels.md`](plugin/docs/levels.md); what each part achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
+> **Status: 0.1.4.** Fourteen skills and seventeen guardrail recipes ([`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md)). Progress: [design, section 13](docs/design.md#13-implementation-plan). Everything each level includes: [`plugin/docs/levels.md`](plugin/docs/levels.md); what each part achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
 
 ## Install
 

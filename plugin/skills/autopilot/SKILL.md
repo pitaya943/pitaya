@@ -21,7 +21,7 @@ You coordinate; you don't build, verify or plan. Each piece of work goes to a fr
 
 Rebuild the state, then act in this order. [tick.md](tick.md) has the details and the exact comments to post.
 
-1. **Read:** `git fetch`; each ticket's `Status:` line on `milestone/M<n>`; open PRs on `ticket/*` branches with their CI, head commit and the latest verdict on that head; the milestone PR and plan PRs waiting for the Owner; the tracking issue for a "stop". Merge `main` into `milestone/M<n>` if it moved.
+1. **Read:** `git fetch`; each ticket's `Status:` line on `milestone/M<n>`; open PRs on `ticket/*` branches with their CI, head commit and the latest verdict on that head; the milestone PR and plan PRs waiting for the Owner; the tracking issue for a "stop". If `main` moved, open a sync PR into `milestone/M<n>` (the plan skill's `milestones.md`).
 2. **Finish what's open.** For each open ticket PR:
    - CI red, or a FAIL verdict: start a fresh session with `/pitaya:build <ticket>` as a fix round, giving it the verdict. Past the harness's fix rounds, use `ask-owner` and mark the ticket blocked.
    - CI green and no verdict on the current head: start a fresh verifier with `/pitaya:verify <PR>`.

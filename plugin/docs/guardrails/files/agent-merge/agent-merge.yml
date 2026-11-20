@@ -1,4 +1,4 @@
-# pitaya template 0.1.3 · docs/guardrails/files/agent-merge/agent-merge.yml
+# pitaya template 0.1.4 · docs/guardrails/files/agent-merge/agent-merge.yml
 # Sets a "verdict" commit status on the pull request's head: success only when a
 # verifier gave PASS for that exact commit and none gave FAIL.
 # Copy to .github/workflows/agent-merge.yml, and check_verdict.py to .github/guardrails/check_verdict.py.
@@ -33,21 +33,28 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}
+          fetch-depth: 0
       - name: Check the verdict and set the status on the head commit
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number || github.event.issue.number }}
           VERIFIERS: ${{ vars.VERIFIER_ACCOUNTS || vars.MACHINE_ACCOUNT }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -uo pipefail
           pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR")
           head=$(printf '%s' "$pr" | jq -r .head.sha)
           branch=$(printf '%s' "$pr" | jq -r .head.ref)
+          base=$(printf '%s' "$pr" | jq -r .base.ref)
+          # Fetch the PR's commits as data only (nothing from the PR is checked out or run), so the
+          # check can prove a head is a PASS head plus only a merge of the base, or a pure sync PR.
+          git fetch -q origin "+refs/pull/$PR/head:refs/remotes/pr/head" "+refs/heads/$base:refs/remotes/origin/$base"
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/comments.json"
           gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/reviews" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/reviews.json"
           if python3 .github/guardrails/check_verdict.py --comments "$RUNNER_TEMP/comments.json" \
-              --reviews "$RUNNER_TEMP/reviews.json" --head "$head" --verifiers "$VERIFIERS" --branch "$branch"; then
-            state=success; text="a verifier passed this commit"
+              --reviews "$RUNNER_TEMP/reviews.json" --head "$head" --verifiers "$VERIFIERS" --branch "$branch" \
+              --git-dir . --base "origin/$base" --default "origin/$DEFAULT_BRANCH"; then
+            state=success; text="a verifier passed this commit, its base merge, or a sync"
           else
             state=failure; text="no PASS verdict for this commit"
           fi

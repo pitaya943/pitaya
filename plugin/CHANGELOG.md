@@ -2,6 +2,19 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.4 (2026-11-20)
+
+The two W8 part 2 fixes that change the merge gate (D58).
+
+### Recipes
+
+- `agent-merge`: a PASS carries over GitHub's "Update branch" and nothing else. The check fetches the PR's commits as data and passes a head only if its tree equals the current base merged into the PASS head; a change folded into that merge, or any later commit, needs a new verdict. A FAIL on the PASS head stops the carry. Sync PRs need no verdict when they only merge the default branch into a milestone.
+- The shared "Find the ticket" step recognises sync PRs (`sync/<slug>` into `milestone/<id>`): it passes one only when its tree is exactly the milestone merged with the newest default-branch commit it contains, and fails any other change or a conflict.
+
+### Skills
+
+- `plan/milestones.md`: bring `main` into a milestone through a sync PR, never by pushing to the milestone branch or with "Update branch" on a PR from `main`. `autopilot` opens a sync PR when `main` moved.
+
 ## 0.1.3 (2026-11-20)
 
 Fixes for the problems the W8 trial found at Level 2 (D57). The two that change the merge gate (P14, P20) follow in 0.1.4.

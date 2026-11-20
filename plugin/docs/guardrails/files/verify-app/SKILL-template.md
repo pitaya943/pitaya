@@ -1,5 +1,5 @@
 ---
-# pitaya template 0.1.3 · docs/guardrails/files/verify-app/SKILL-template.md
+# pitaya template 0.1.4 · docs/guardrails/files/verify-app/SKILL-template.md
 name: verify-<app>
 description: Drive <app> the way a user would and capture evidence that a feature works. Used by /verify and /report when a change touches a user-facing feature. Covers <surface: the web UI, the CLI, the HTTP API>.
 ---

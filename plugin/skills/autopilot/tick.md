@@ -13,6 +13,7 @@ Everything comes from places anyone can open, so a fresh session can take over a
 | CI and the verdict | the PR's check runs, and the verifier's reviews on the PR's current head commit (with agent-merge), or the latest verdict comment that names it |
 | Fix rounds used | the verdict comments on the PR: one round per FAIL |
 | Owner instructions | the tracking issue `Autopilot: M<n>`, and answers on `needs-owner` issues |
+| Whether `main` moved | `git merge-base --is-ancestor origin/main origin/milestone/M<n>` fails: open a sync PR `sync/M<n>-<short sha>` (the plan skill's `milestones.md`); ticket PRs behind the milestone use "Update branch", which keeps their PASS |
 
 `gh pr list --search "head:ticket/"`, `gh pr checks <n>` and `gh pr view <n> --json headRefOid,comments` cover most of it; where `gh` can't reach GitHub, as in cloud sessions, use the GitHub tool's list, read and check-run calls instead.
 
