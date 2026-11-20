@@ -32,7 +32,7 @@ stateDiagram-v2
   done --> [*]
 ```
 
-Below Level 3 there is no milestone branch: tickets merge into `main`, and the milestone is done when its plan PR sets `Status: done`. At Level 4 the Chief approves the cut inside the milestone branch, and the Owner reviews it at the sign-off.
+At every level, an active milestone has its branch `milestone/M<n>` (D44): tickets merge into it, and only the milestone PR merges into `main`. What changes with the level is who merges the tickets: the Owner below Level 3, agents from Level 3. At Level 4 the Chief approves the cut inside the milestone branch, and the Owner reviews it at the sign-off.
 
 ## PR verdict
 
@@ -63,13 +63,13 @@ stateDiagram-v2
 
 | State | Stored in | Changed by |
 | --- | --- | --- |
-| Ticket open or done | its `Status:` line, on `milestone/M<n>` from Level 3 and on `main` below; or whether its issue is closed | plan PR (open); the ticket's own PR (done) |
+| Ticket open or done | its `Status:` line on `milestone/M<n>` (on `main` for a ticket outside any milestone); or whether its issue is closed | plan PR (open); the ticket's own PR (done) |
 | Ticket claimed | a remote branch `ticket/<id>-<slug>`, or an open PR from one | builder or `/autopilot` |
 | In review, fixing | the PR's state, its CI and its head commit | builder (pushes), CI |
 | Verdict | a verdict comment or review on the PR, for one head commit | verifier |
 | Fix rounds used | the number of FAIL verdicts on the PR | verifier |
 | Escalated | an open `needs-owner` issue linked from the PR or ticket | any role (`ask-owner`); the Owner closes it |
-| Milestone phase | `Status:` in `docs/milestones/M<n>.md`, plus the `milestone/M<n>` branch and its PR | plan PR; the Owner's merge |
+| Milestone phase | `Status:` in `docs/milestones/M<n>.md`, plus the `milestone/M<n>` branch and its PR | plan PR; the first `/build` or `/autopilot` tick creates a missing branch; the Owner's merge closes it |
 | Autopilot progress, stop requests | the tracking issue `Autopilot: M<n>` | `/autopilot`; the Owner comments "stop" |
 | Decisions | `docs/decisions.md`, `docs/adr/` | Owner, Chief |
 | Handover of stopped work | `docs/handoff/<branch>.md` | `/handoff` |

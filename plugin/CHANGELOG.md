@@ -13,10 +13,12 @@ Fixes for the problems the W8 trial found at Level 1 (D55).
 - `plan`: every worked example in a condition is computed or run before it's written; the ticket template says so under "Done when".
 - `plan/milestones.md`: when the tools can't create GitHub milestones for the issue mirror, the plan PR says so and lists them for the Owner.
 - `build`: each fix round also updates the PR description's "How to verify" and "Scope".
+- Milestone branches at every level (D56): `build` creates a missing `milestone/M<n>` from `main` instead of falling back to `main`; `plan/milestones.md` says who creates it after the Owner's merge; `help` reports a missing branch or a milestone ticket PR aimed at `main`.
 - `verify`: the verdict's "Round" line links the Owner's authorisation for a round beyond "Fix rounds".
 
 ### Docs
 
+- `concepts/states.md` no longer says milestone branches start at Level 3; they exist at every level, as D44 decided.
 - `concepts/escalation.md`: the Owner may authorise an extra fix round; it runs in a fresh session, and its verdict links the authorisation.
 - README: cloud sessions start by allowing pitaya's branch names.
 

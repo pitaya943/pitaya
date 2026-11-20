@@ -68,3 +68,33 @@ def test_fix_rounds_refresh_the_pr_description():
 def test_autopilot_asks_for_the_branch_names_and_passes_the_permission_on():
     text = read("skills/autopilot/SKILL.md")
     assert "assigned branch" in text and "every session you start" in text
+
+
+# P7: every milestone has its branch at every level (D44), and nothing may silently fall back to main.
+
+def test_states_page_agrees_that_every_level_has_milestone_branches():
+    text = read("docs/concepts/states.md")
+    assert "no milestone branch" not in text
+    assert "every level" in text
+
+
+def test_build_creates_a_missing_milestone_branch_instead_of_using_main():
+    text = read("skills/build/SKILL.md")
+    assert "create it from `main`" in text and "never fall back to `main`" in text
+
+
+def test_milestones_say_who_creates_the_branch():
+    text = read("skills/plan/milestones.md").split("## The milestone branch", 1)[1].split("\n## ", 1)[0]
+    assert "every level" in text and "`/build`" in text
+
+
+def test_help_reports_a_missing_milestone_branch():
+    assert "missing" in read("skills/help/SKILL.md").split("**Milestone:**", 1)[1].split("\n", 1)[0]
+
+
+def test_no_concept_page_ties_milestone_branches_to_level_3():
+    for page in ("states.md", "layout.md"):
+        text = read(f"docs/concepts/{page}")
+        for line in text.splitlines():
+            if "milestone/M<n>" in line:
+                assert "Level 3 and up" not in line and "from Level 3 and on `main` below" not in line, (page, line)

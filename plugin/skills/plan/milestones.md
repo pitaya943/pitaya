@@ -19,7 +19,7 @@ From Level 2, the milestone is designed first: `docs/milestones/M<n>-design.md` 
 
 ## The milestone branch
 
-Once the Owner merges the plan PR that cuts M<n>, create `milestone/M<n>` from `main` and push it. Every ticket of the milestone branches from `milestone/M<n>` and its PR targets `milestone/M<n>`; the checks read the tickets from there. Agents merge ticket PRs into it when the harness's Autonomy allows (Level 3, [agent-merge](../../docs/guardrails/agent-merge.md)); otherwise the Owner does. Before each new ticket, merge `main` into the milestone branch so it doesn't drift.
+Every active milestone has this branch, at every level (D44). Once the Owner merges the plan PR that cuts M<n>, create `milestone/M<n>` from `main` and push it. That merge happens outside any session, so whichever comes first creates the branch if it's missing: this skill's next run, `/build` for the milestone's first ticket, or an `/autopilot` tick. Every ticket of the milestone branches from `milestone/M<n>` and its PR targets `milestone/M<n>`; the checks read the tickets from there. Agents merge ticket PRs into it when the harness's Autonomy allows (Level 3, [agent-merge](../../docs/guardrails/agent-merge.md)); otherwise the Owner does. Before each new ticket, merge `main` into the milestone branch so it doesn't drift.
 
 The milestone branch is the blast radius: whatever goes wrong inside it stays out of `main`, and the Owner can throw the whole branch away.
 
