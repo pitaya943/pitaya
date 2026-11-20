@@ -3,7 +3,8 @@
 ## Verification: PASS | FAIL
 
 - Model: <name and version from the session's configuration, or "unavailable: <reason>">
-- Round: <n> (for a round beyond the harness's "Fix rounds", link the Owner's authorisation)
+- Verify round: <n> of at most <the harness's "Fix rounds" + 1> (for a round beyond that, link the Owner's authorisation)
+- Next step: <for PASS, "the Owner merges" or "agents merge"; for FAIL, "fix round <n> in the builder's session" or "fix round <n> in a fresh session" or "escalate to the Owner">
 - Head commit: <sha>
 - Ticket: <link or path>
 

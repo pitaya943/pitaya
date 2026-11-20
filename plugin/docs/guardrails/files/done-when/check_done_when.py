@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.2 · docs/guardrails/files/done-when/check_done_when.py
+# pitaya template 0.1.3 · docs/guardrails/files/done-when/check_done_when.py
 """Guardrail "done-when": every test the ticket names exists in the PR's results and passes.
 
 Usage (in CI, after running the test command on the PR head)::
 
     python3 check_done_when.py --junit head-junit.xml --ticket ticket.md
 
-The ticket's "## Test IDs" section lists one "classname::name" per done-when
-condition. A listed test that's missing, failing or skipped means a condition
+The ticket's "## Test IDs" section lists one test ID per done-when condition,
+as JUnit reports it ("classname::name", for pytest "tests.test_cli::test_x") or
+as a pytest path ("tests/test_cli.py::test_x", "tests/test_x.py::TestC::test_y"),
+which is converted to the JUnit form. An ID without parameters also stands for
+every parametrized case of that test ("test_x[1]", "test_x[2]"): all of them
+must pass. A listed test that's missing, failing or skipped means a condition
 claimed done isn't shown to be done.
 
 When to remove: when the verifier's checklist reliably catches untested
@@ -58,6 +62,27 @@ def load_results(path: Path) -> dict[str, str]:
     return results
 
 
+def junit_id(test_id: str) -> str:
+    """"tests/test_x.py::TestC::test_y" -> "tests.test_x.TestC::test_y"; JUnit-form IDs are unchanged."""
+    parts = test_id.split("::")
+    if len(parts) >= 2 and parts[0].endswith(".py"):
+        module = parts[0][:-3].replace("/", ".")
+        return ".".join([module, *parts[1:-1]]) + "::" + parts[-1]
+    return test_id
+
+
+def outcome(test_id: str, results: dict[str, str]) -> list[str]:
+    """Problems for one listed ID: [] when it passes. An ID without "[" covers its parametrized cases."""
+    wanted = junit_id(test_id)
+    if wanted in results:
+        return [] if results[wanted] == "passed" else [f"{test_id}: {results[wanted]}"]
+    if "[" not in wanted:
+        cases = {k: v for k, v in results.items() if k.startswith(wanted + "[") and k.endswith("]")}
+        if cases:
+            return [f"{k}: {v}" for k, v in sorted(cases.items()) if v != "passed"]
+    return [f"{test_id}: missing"]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check that every done-when test passes.")
     parser.add_argument("--junit", required=True, type=Path)
@@ -76,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL done-when: {exc}")
         print("To fix: make the test command write JUnit XML to the path the workflow expects.")
         return 1
-    problems = [f"{t}: {results.get(t, 'missing')}" for t in wanted if results.get(t) != "passed"]
+    problems = [line for t in wanted for line in outcome(t, results)]
     if problems:
         print("FAIL done-when: these done-when tests don't pass:")
         for line in problems:

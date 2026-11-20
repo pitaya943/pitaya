@@ -48,7 +48,7 @@ If an answer contradicts something you found (an account that doesn't exist, a f
 
 The machine account can't change repo settings, so list these steps for the Owner, and check them afterwards where you can read them:
 
-- A ruleset on `main`: require a pull request with 1 approval (dismissed on new pushes), block force pushes and deletions, require the `tests` check, and let only the Owner bypass. The machine account can't approve its own PR, so only the Owner merges `main`. With milestones, a second ruleset on `milestone/*` (the plugin's `docs/guardrails/protect-main.md`).
+- A ruleset on `main`: require a pull request with 1 approval (dismissed on new pushes), block force pushes and deletions, require the `tests` check, and let only the Owner bypass. The machine account can't approve its own PR, so only the Owner merges `main`. With milestones, a second ruleset on `milestone/*`, with the same bypass (the plugin's `docs/guardrails/protect-main.md`).
 - If there's a machine account: it's a collaborator with Write, not Admin.
 
 Then name the next steps: `/plan --roadmap` to cut the project into milestones (or `/plan` for a single small piece of work), and the next level up from the plugin's `docs/suggestion.md`, usually nothing until a second agent works in the repo (Level 2).

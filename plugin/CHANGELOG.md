@@ -2,6 +2,34 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.3 (2026-11-20)
+
+Fixes for the problems the W8 trial found at Level 2 (D57). The two that change the merge gate (P14, P20) follow in 0.1.4.
+
+### Skills
+
+- `build` fetches its base before branching and checks the ticket file is on it (a cloud checkout's remote refs can be stale), and reads the learning proposals in the verdicts of PRs already merged into the milestone.
+- `verify`: checklist item 6 checks error messages by mutation (change one character; a substring or prefix match fails the item). Verdicts say "Verify round: n of at most m" and the exact next step, and fix rounds are named as such.
+- `report`: the closing plan PR adds `docs/reports/M<n>.md`, and the milestone PR lists `Closes #<n>` for every done ticket's issue mirror.
+- `plan`: the ticket template states the Test ID format.
+- `setup`: the hand-over gives the milestone ruleset the same bypass as `main`.
+
+### Templates
+
+- `AGENTS.md`: a "Branches" section grants pitaya's branch names once for every session, so cloud sessions don't need the permission pasted each time.
+- `tests.yml`: the setup comment names `actions/setup-python` v7 and `actions/setup-node` v5.
+
+### Recipes
+
+- `done-when` accepts pytest-path Test IDs (`tests/test_x.py::test_y`) and treats an ID without parameters as all of a parametrized test's cases.
+- Plan PRs may add `docs/reports/*.md`.
+- `protect-main`: the `protect-milestones` ruleset has a bypass list.
+- The setup comments in `no-weakened-tests` and `done-when` name `actions/setup-python` v7.
+
+### Docs
+
+- `concepts/escalation.md`: verify rounds and fix rounds alternate, verify 1, fix 1, verify 2, fix 2, verify 3, escalate.
+
 ## 0.1.2 (2026-11-20)
 
 Fixes for the problems the W8 trial found at Level 1 (D55).

@@ -28,3 +28,28 @@ def test_failing_or_skipped_test_fails(tmp_path):
 def test_ticket_without_test_ids_fails(tmp_path):
     proc = check(tmp_path, {"t::a": "pass"}, None)
     assert proc.returncode == 1 and "Test IDs" in proc.stdout
+
+
+# P10 (W8): IDs written as pytest paths, and parametrized tests, must match what JUnit reports.
+
+def test_pytest_path_ids_match_junit_classnames(tmp_path):
+    cases = {"tests.test_cli::test_a": "pass", "tests.sub.test_x.TestC::test_b": "pass"}
+    ids = ["tests/test_cli.py::test_a", "tests/sub/test_x.py::TestC::test_b"]
+    proc = check(tmp_path, cases, ids)
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_an_id_without_parameters_needs_every_case_to_pass(tmp_path):
+    passing = {"t::a[1]": "pass", "t::a[2-x]": "pass"}
+    assert check(tmp_path, passing, ["t::a"]).returncode == 0
+    proc = check(tmp_path, {"t::a[1]": "pass", "t::a[2]": "fail"}, ["t::a"])
+    assert proc.returncode == 1 and "t::a[2]: failed" in proc.stdout
+
+
+def test_a_parametrized_id_still_matches_one_case_exactly(tmp_path):
+    assert check(tmp_path, {"t::a[1]": "pass", "t::a[2]": "fail"}, ["t::a[1]"]).returncode == 0
+
+
+def test_a_name_prefix_is_not_a_parametrized_match(tmp_path):
+    proc = check(tmp_path, {"t::a_longer": "pass"}, ["t::a"])
+    assert proc.returncode == 1 and "t::a: missing" in proc.stdout

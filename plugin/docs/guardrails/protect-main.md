@@ -35,6 +35,7 @@ When work runs in milestones (`/plan --roadmap`), tickets merge into `milestone/
 | Field | Setting |
 | --- | --- |
 | Target branches | **Add target → Include by pattern**: `milestone/*` |
+| Bypass list | **Repository admin**, mode **For pull requests only**, as on `main`. Without it the Owner can't discard a milestone or force a merge in an emergency. Agent accounts never go here |
 | Restrict deletions, Block force pushes | On (the Owner deletes a discarded milestone through the bypass) |
 | Require a pull request before merging | On, with **Required approvals: 0**: the agents merge ticket PRs here |
 | Require status checks to pass | On: `tests`, plus the Level 2 checks you added, plus `verdict` with [agent-merge](agent-merge.md) |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.2 · docs/guardrails/files/append-only/check_append_only.py
+# pitaya template 0.1.3 · docs/guardrails/files/append-only/check_append_only.py
 """Guardrail "append-only": listed files only gain lines in a PR.
 
 Usage (from the repository root, in CI)::

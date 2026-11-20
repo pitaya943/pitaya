@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.2 · docs/guardrails/files/serial-resources/check_serial.py
+# pitaya template 0.1.3 · docs/guardrails/files/serial-resources/check_serial.py
 """Guardrail "serial-resources": only one open ticket at a time changes a shared resource.
 
 Usage (in CI)::

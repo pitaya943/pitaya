@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.2 · AGENTS.md -->
+<!-- pitaya template 0.1.3 · AGENTS.md -->
 # AGENTS.md
 
 A short map for coding agents. Details live in the files it points to; read them when you need them.
@@ -8,6 +8,13 @@ A short map for coding agents. Details live in the files it points to; read them
 - Read `docs/agents/harness.md` first: the level, who the Owner is, who may merge, where tickets live, how work is verified.
 - Before planning or building, read `docs/agents/learnings.md`, and the parts of `docs/agents/architecture.md` and `docs/agents/glossary.md` your work touches.
 - Work on a branch, never on `main`.
+
+## Branches
+
+The Owner grants this once for every session in this repository, including cloud sessions that were given an assigned branch: use the branch names the pitaya skills ask for, and create and push them without asking again.
+
+- `plan/<slug>` for plan PRs, `ticket/<id>-<slug>` for tickets, `milestone/M<n>` for an active milestone, `setup/<slug>` for harness setup.
+- Never push to `main` or force-push any branch. The rulesets on `main` and `milestone/*` still require a pull request.
 
 ## Commands
 

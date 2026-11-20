@@ -13,7 +13,7 @@ Verification is only worth something if it's independent. The verifier judges fr
 
 1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once, then continue with defaults: the document language is the conversation's, and there are no sensitive areas.
 2. Fetch the PR: its number, base branch, head commit and linked ticket. If there's no ticket, ask the user for the completion conditions. Don't infer them from the diff.
-3. Count earlier verdicts on the PR to get this round's number.
+3. Count earlier verdicts on the PR to get this verify round's number. A verify round checks; a fix round changes code. They alternate: verify 1, fix 1, verify 2, and so on.
 
 ## 2. Dispatch a fresh verifier
 
@@ -43,6 +43,7 @@ Tell it to:
 - PASS: whoever the harness file's "Autonomy" names merges. By default that's the Owner, so don't merge.
 - FAIL: the builder fixes it (`/build` explains the fix rounds). Each new round is verified by a new subagent.
 - FAIL in the last round the harness file's "Fix rounds" allows (default 2): recommend escalating to the Owner.
+- Either way, end your reply with the exact next step from the verdict's "Next step" line, so a reader can't mistake one failed verify round for two.
 
 ## Don't
 
