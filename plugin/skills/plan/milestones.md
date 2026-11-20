@@ -11,7 +11,7 @@ Planning has two levels. A **milestone** is a large outcome the Owner can see wo
    - says what it deliberately leaves out.
 3. Show the Owner the list and change it until they approve.
 4. Write `docs/milestones/M1.md`, `M2.md`, ... from [milestone-template.md](milestone-template.md). The first is `Status: active`, the rest `planned`. Leave "Tickets" empty except in M1, if you go straight on to cut it.
-5. Commit on a `plan/<slug>` branch and open one PR; if the session has an assigned branch (cloud sessions do), ask the user to allow `plan/<slug>` instead of using the assigned branch. The Owner's merge approves the roadmap. With an issue mirror, also create one GitHub milestone per file (title `M1: <title>`) and assign each mirror issue to its milestone. If your tools can't create GitHub milestones, say so in the plan PR and list them for the Owner to create; the files stay the source of truth.
+5. Commit on a `plan/<slug>` branch and open one PR; if the session has an assigned branch (cloud sessions do), the "Branches" section of `AGENTS.md` is the Owner's standing grant for `plan/<slug>`, so use it without asking; only when that section is missing, ask the user to allow it instead of using the assigned branch, and when nobody is there to ask, open a `needs-owner` issue and stop. The Owner's merge approves the roadmap. With an issue mirror, also create one GitHub milestone per file (title `M1: <title>`) and assign each mirror issue to its milestone. If your tools can't create GitHub milestones, say so in the plan PR and list them for the Owner to create; the files stay the source of truth.
 
 ## `/plan M<n>`
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.7 · docs/guardrails/files/evidence/check_evidence.py
+# pitaya template 0.1.8 · docs/guardrails/files/evidence/check_evidence.py
 """Guardrail "evidence": the PR description shows evidence, and screenshots when the ticket requires them.
 
 Usage (from the repository root, in CI)::

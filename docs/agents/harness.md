@@ -7,7 +7,7 @@ This repository develops pitaya with pitaya (decision D31).
 ## Level
 
 - Level: 1, plus the machine-account commit identity from Level 2. What each level includes: `plugin/docs/levels.md`; what each part achieves: `plugin/docs/suggestion.md`.
-- Templates: pitaya 0.1.7. The version `/setup` installed; re-run `/setup` to find stale copies.
+- Templates: pitaya 0.1.8. The version `/setup` installed; re-run `/setup` to find stale copies.
 
 ## People and accounts
 
@@ -26,7 +26,7 @@ This repository develops pitaya with pitaya (decision D31).
 ## Review
 
 - Verification: a fresh subagent, started by `/verify`.
-- Fix rounds: 2. Round 1 in the builder's session, the rest in fresh sessions; still failing after the last round means escalating to the Owner.
+- Fix rounds: 2. Under `/autopilot` every round is a fresh session; otherwise round 1 may stay in the builder's session. One more FAIL after the last round means escalating to the Owner.
 - Autopilot: off.
 - Learning: off.
 

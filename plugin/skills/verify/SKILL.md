@@ -31,7 +31,7 @@ Tell it to:
 
 - work in a clean checkout of the head commit (a new worktree or a fresh clone), never in this session's working tree;
 - follow the checklist, and return the filled-in verdict;
-- not modify product code or tests, and not push anything except its own screenshots under `docs/evidence/<ticket>/verify/`.
+- not modify product code or tests, and push nothing to the PR's branch: a push moves the head, and the verdict counts for one head only, so it would void itself. Its own screenshots go under `docs/evidence/<ticket>/verify/` on a branch of their own, `evidence/<PR>-<short sha>`, made from the head it judged and pushed with no pull request; the verdict links them there. In a session with an assigned branch, the "Branches" section of `AGENTS.md` grants that name; without the grant, leave the screenshots out and say so in the verdict.
 
 ## 3. Post the verdict
 
@@ -42,8 +42,8 @@ Tell it to:
 ## After the verdict
 
 - PASS: whoever the harness file's "Autonomy" names merges. By default that's the Owner, so don't merge.
-- FAIL: the builder fixes it (`/build` explains the fix rounds). Each new round is verified by a new subagent, or with agent-merge by a new session.
-- FAIL in the last round the harness file's "Fix rounds" allows (default 2): recommend escalating to the Owner.
+- FAIL: a builder fixes it, in the fix round with the FAIL's number. The plugin's `docs/concepts/states.md`, "Fix rounds", is the one definition: under `/autopilot` every fix round is a fresh session; otherwise round 1 may stay in the builder's session. Each new round is verified by a new subagent, or with agent-merge by a new session.
+- FAIL number `Fix rounds` + 1 (the harness file's field; by default the third FAIL): recommend escalating to the Owner. Every earlier FAIL gets its fix round.
 - Either way, end your reply with the exact next step from the verdict's "Next step" line, so a reader can't mistake one failed verify round for two.
 
 ## Don't
