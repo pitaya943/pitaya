@@ -24,7 +24,7 @@ Otherwise keep the default: only the Owner merges.
 3. In the `protect-milestones` ruleset, require the `verdict` status, with **GitHub Actions** as its source, alongside the other required checks.
 4. Change "Autonomy" in `docs/agents/harness.md` to "Agents merge ticket PRs into milestone branches; only the Owner merges main". The `ask_on_merge.py` hook reads that value and stops asking before merges; `main` stays protected by its required approval.
 
-The workflow runs when a PR changes and when a verdict comment or review is posted, edited or deleted. It runs in the base branch's context (`pull_request_target`, and the default branch's copy for comments and reviews) and checks out only the base, so nothing in the PR can change the check or the status. It sets a `verdict` status on the PR's **current head commit**: success only when the verifier gave PASS for that exact commit and no FAIL. A new push moves the head, so an earlier PASS no longer counts. Edited verdict comments don't count. Plan and milestone PRs never pass.
+The workflow runs when a PR changes and when a verdict comment or review is posted, edited or deleted. It runs in the base branch's context (`pull_request_target`, and the default branch's copy for comments and reviews) and checks out only the base, so nothing in the PR can change the check or the status. It sets a `verdict` status on the PR's **current head commit**: success only when the verifier gave PASS for that exact commit and no FAIL. A new push moves the head, so an earlier PASS no longer counts, with one exception: GitHub's "Update branch", a merge of the base and nothing else. The check proves it rather than trusting the commit message. It fetches the PR's commits as data, and passes the head only if its tree equals the tree git gets by merging the current base into the PASS head. A change folded into that merge, or any commit after it, gives another tree and needs a new verdict. Without this, every ticket merged into the milestone would send every other open ticket back to verification. A sync PR (`sync/<slug>` into `milestone/<id>`, the plan skill's `milestones.md`) passes without a verdict when its tree is exactly the milestone merged with the newest default-branch commit it contains, because all of that was merged into the default branch already. Edited verdict comments don't count. Plan and milestone PRs never pass.
 
 ## How to prove it works
 
@@ -39,7 +39,7 @@ Get a PASS verdict on a ticket PR into a milestone branch, then push one more co
 
 ```text
 FAIL agent-merge: no PASS verdict for head a1b2c3d.
-To fix: run /verify on the current head (a new push voids earlier verdicts) and fix what it reports.
+To fix: run /verify on the current head (a new push voids earlier verdicts, except a merge of the base alone) and fix what it reports.
 ```
 
 ## Afterwards

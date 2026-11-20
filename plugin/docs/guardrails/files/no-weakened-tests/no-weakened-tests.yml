@@ -1,4 +1,4 @@
-# pitaya template 0.1.3 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
+# pitaya template 0.1.4 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
 # Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
 # Copy to .github/workflows/no-weakened-tests.yml, and compare_junit.py to .github/guardrails/compare_junit.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
@@ -39,6 +39,7 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
           fail() { echo "FAIL: $1"; echo "To fix: $2"; exit 1; }
@@ -89,6 +90,20 @@ jobs:
             # A milestone PR (milestone/M<n> into main) gathers tickets that passed these checks
             # on their way into the milestone; the Owner reviews it as a whole.
             echo "This is a milestone PR: the Owner reviews and merges it; ticket checks don't apply."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ "${HEAD_REF#sync/}" != "$HEAD_REF" ] && [ "${BASE_REF#milestone/}" != "$BASE_REF" ]; then
+            # A sync PR (sync/<slug> into milestone/M<n>) brings in what the default branch gained,
+            # all of it already merged there. It passes only if its tree is exactly the base merged
+            # with the newest default-branch commit it contains: any other change gives another tree.
+            newest=$(git merge-base HEAD "origin/$DEFAULT_BRANCH") \
+              || fail "this sync PR contains nothing from $DEFAULT_BRANCH." "merge origin/$DEFAULT_BRANCH into the sync branch."
+            want=$(git merge-tree --write-tree "origin/$BASE_REF" "$newest" | head -n 1) \
+              || fail "merging $DEFAULT_BRANCH into $BASE_REF conflicts." \
+                 "the Owner resolves the conflict and merges with the bypass, or a ticket resolves it."
+            [ "$want" = "$(git rev-parse 'HEAD^{tree}')" ] \
+              || fail "this sync PR changes more than merging $DEFAULT_BRANCH into $BASE_REF." \
+                 "recreate it from $BASE_REF with only origin/$DEFAULT_BRANCH merged in; move other changes to a ticket."
+            echo "This is a sync PR: it only merges $DEFAULT_BRANCH ($(git rev-parse --short "$newest")) into $BASE_REF, so ticket checks don't apply."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif [ "${HEAD_REF#plan/}" != "$HEAD_REF" ]; then
             other=$(git diff --name-only "origin/$BASE_REF...HEAD" \

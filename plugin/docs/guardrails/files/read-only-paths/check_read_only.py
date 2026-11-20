@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.3 · docs/guardrails/files/read-only-paths/check_read_only.py
+# pitaya template 0.1.4 · docs/guardrails/files/read-only-paths/check_read_only.py
 """Guardrail "read-only-paths": a ticket PR can't change rules, specs or CI.
 
 Usage (from the repository root, in CI)::

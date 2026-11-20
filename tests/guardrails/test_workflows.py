@@ -303,3 +303,54 @@ def test_agent_merge_runs_in_the_base_context_on_reviews():
     assert "pull_request_target:" in text and "pull_request_review:" in text
     assert "\n  pull_request:" not in text  # never the PR's own copy of the workflow
     assert "ref: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}" in text
+
+
+# --- sync PRs: bring main into a milestone branch (P14, D58) ------------------------
+
+@pytest.fixture
+def milestone_repo(repo):
+    """main and milestone/M1 have each moved on since the milestone started."""
+    repo.write("docs/tickets/T-1.md", "## Scope\n\n- `src/**`\n")
+    repo.commit("start")
+    repo.git("checkout", "-q", "-b", "milestone/M1")
+    repo.write("src/ticket.py", "done = True\n")
+    repo.commit("a ticket merged into the milestone")
+    repo.git("checkout", "-q", "main")
+    repo.write("docs/tickets/T-2.md", "## Scope\n\n- `src/**`\n")
+    repo.commit("a plan PR merged into main")
+    repo.git("update-ref", "refs/remotes/origin/main", "main")
+    repo.git("update-ref", "refs/remotes/origin/milestone/M1", "milestone/M1")
+    repo.git("checkout", "-q", "-b", "sync/M1-main", "milestone/M1")
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "main")
+    return repo
+
+
+SYNC = dict(BASE_REF="milestone/M1", DEFAULT_BRANCH="main")
+
+
+def test_sync_pr_that_only_merges_main_is_skipped(milestone_repo, tmp_path):
+    proc, out = run_find(milestone_repo, tmp_path, "sync/M1-main", "example-bot", **SYNC)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skip=true" in out and "sync PR" in proc.stdout
+
+
+def test_sync_pr_that_adds_anything_else_fails(milestone_repo, tmp_path):
+    milestone_repo.write("src/ticket.py", "done = False  # slipped in with the sync\n")
+    milestone_repo.commit("an unreviewed change")
+    proc, out = run_find(milestone_repo, tmp_path, "sync/M1-main", "example-bot", **SYNC)
+    assert proc.returncode == 1 and "To fix:" in proc.stdout
+    assert "skip=true" not in out
+
+
+def test_sync_pr_with_a_change_hidden_in_the_merge_commit_fails(milestone_repo, tmp_path):
+    milestone_repo.write("src/ticket.py", "done = 'amended'\n")
+    milestone_repo.git("add", "-A")
+    milestone_repo.git("commit", "-q", "--amend", "--no-edit")
+    proc, out = run_find(milestone_repo, tmp_path, "sync/M1-main", "example-bot", **SYNC)
+    assert proc.returncode == 1 and "skip=true" not in out
+
+
+def test_sync_branch_into_main_is_not_a_sync_pr(milestone_repo, tmp_path):
+    proc, out = run_find(milestone_repo, tmp_path, "sync/M1-main", "example-bot",
+                         BASE_REF="main", DEFAULT_BRANCH="main")
+    assert proc.returncode == 1 and "skip=true" not in out

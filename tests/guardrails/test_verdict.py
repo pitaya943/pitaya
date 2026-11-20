@@ -82,3 +82,123 @@ def test_plan_and_milestone_prs_never_pass_on_a_verdict(tmp_path):
     for branch in ("plan/roadmap", "milestone/M2"):
         proc = check(tmp_path, [comment("PASS")], branch=branch)
         assert proc.returncode == 1 and "Owner" in proc.stdout, branch
+
+
+# --- a PASS survives only a merge of the base (P20), and sync PRs (P14); D58 ---------
+
+import pytest  # noqa: E402
+
+from helpers import Repo  # noqa: E402
+
+
+@pytest.fixture
+def branches(tmp_path):
+    """A ticket branch with a PASS head, then its milestone moves on and the base is merged in."""
+    (tmp_path / "repo").mkdir()
+    repo = Repo(tmp_path / "repo")
+    repo.write("app.py", "x = 1\n")
+    repo.commit("start")
+    repo.git("checkout", "-q", "-b", "milestone/M1")
+    repo.git("checkout", "-q", "-b", "ticket/T-1-a")
+    repo.write("a.py", "a = 1\n")
+    passed = repo.commit("ticket T-1")
+    repo.git("checkout", "-q", "milestone/M1")
+    repo.write("b.py", "b = 1\n")
+    repo.commit("ticket T-2 merged into the milestone")
+    repo.git("checkout", "-q", "ticket/T-1-a")
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")  # "Update branch"
+    head = repo.git("rev-parse", "HEAD")
+    return repo, passed, head
+
+
+def check_git(tmp_path, repo, comments, head, branch="ticket/T-1-a", base="milestone/M1", default="main"):
+    c = tmp_path / "comments.json"
+    c.write_text(json.dumps(list(comments)))
+    return run_check("agent-merge", "check_verdict.py", "--comments", str(c), "--head", head,
+                     "--verifiers", "example-bot", "--branch", branch,
+                     "--git-dir", str(repo.path), "--base", base, "--default", default)
+
+
+def test_a_pass_carries_over_a_merge_of_the_base(tmp_path, branches):
+    repo, passed, head = branches
+    proc = check_git(tmp_path, repo, [comment("PASS", sha=passed)], head)
+    assert proc.returncode == 0, proc.stdout
+    assert passed[:7] in proc.stdout and "base" in proc.stdout
+
+
+def test_a_pass_does_not_carry_over_any_other_change(tmp_path, branches):
+    repo, passed, _ = branches
+    repo.write("a.py", "a = 2  # not what was verified\n")
+    head = repo.commit("an unverified change after the merge")
+    assert check_git(tmp_path, repo, [comment("PASS", sha=passed)], head).returncode == 1
+
+
+def test_a_change_hidden_in_the_update_merge_does_not_carry(tmp_path, branches):
+    repo, passed, _ = branches
+    repo.write("a.py", "a = 'amended into the merge'\n")
+    repo.git("add", "-A")
+    repo.git("commit", "-q", "--amend", "--no-edit")
+    head = repo.git("rev-parse", "HEAD")
+    assert check_git(tmp_path, repo, [comment("PASS", sha=passed)], head).returncode == 1
+
+
+def test_a_fail_on_the_passed_head_stops_the_carry(tmp_path, branches):
+    repo, passed, head = branches
+    verdicts = [comment("PASS", sha=passed), comment("FAIL", sha=passed)]
+    assert check_git(tmp_path, repo, verdicts, head).returncode == 1
+
+
+def test_a_fail_on_the_current_head_is_still_final(tmp_path, branches):
+    repo, passed, head = branches
+    verdicts = [comment("PASS", sha=passed), comment("FAIL", sha=head)]
+    assert check_git(tmp_path, repo, verdicts, head).returncode == 1
+
+
+def test_a_pass_on_a_commit_outside_the_branch_does_not_carry(tmp_path, branches):
+    repo, _, head = branches
+    repo.git("checkout", "-q", "-b", "elsewhere", "main")
+    repo.write("a.py", "a = 1\n")
+    other = repo.commit("same file, another branch")
+    assert check_git(tmp_path, repo, [comment("PASS", sha=other)], head).returncode == 1
+
+
+def test_an_edited_or_foreign_pass_does_not_carry(tmp_path, branches):
+    repo, passed, head = branches
+    assert check_git(tmp_path, repo, [comment("PASS", sha=passed, edited=True)], head).returncode == 1
+    assert check_git(tmp_path, repo, [comment("PASS", sha=passed, login="someone-else")], head).returncode == 1
+
+
+@pytest.fixture
+def sync_branch(tmp_path):
+    """sync/M1-main: milestone/M1 with main merged in."""
+    (tmp_path / "repo").mkdir()
+    repo = Repo(tmp_path / "repo")
+    repo.write("app.py", "x = 1\n")
+    repo.commit("start")
+    repo.git("checkout", "-q", "-b", "milestone/M1")
+    repo.write("a.py", "a = 1\n")
+    repo.commit("a ticket")
+    repo.git("checkout", "-q", "main")
+    repo.write("docs.md", "plan\n")
+    repo.commit("a plan PR")
+    repo.git("checkout", "-q", "-b", "sync/M1-main", "milestone/M1")
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "main")
+    return repo
+
+
+def test_a_sync_pr_needs_no_verdict(tmp_path, sync_branch):
+    head = sync_branch.git("rev-parse", "HEAD")
+    proc = check_git(tmp_path, sync_branch, [], head, branch="sync/M1-main")
+    assert proc.returncode == 0, proc.stdout
+    assert "sync" in proc.stdout
+
+
+def test_a_sync_pr_with_its_own_change_needs_a_verdict(tmp_path, sync_branch):
+    sync_branch.write("a.py", "a = 'smuggled'\n")
+    head = sync_branch.commit("a change riding on the sync")
+    assert check_git(tmp_path, sync_branch, [], head, branch="sync/M1-main").returncode == 1
+
+
+def test_a_sync_branch_into_main_is_not_a_sync_pr(tmp_path, sync_branch):
+    head = sync_branch.git("rev-parse", "HEAD")
+    assert check_git(tmp_path, sync_branch, [], head, branch="sync/M1-main", base="main").returncode == 1

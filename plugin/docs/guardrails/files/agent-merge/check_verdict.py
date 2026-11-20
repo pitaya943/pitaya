@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.3 · docs/guardrails/files/agent-merge/check_verdict.py
+# pitaya template 0.1.4 · docs/guardrails/files/agent-merge/check_verdict.py
 """Guardrail "agent-merge": a PASS verdict exists for the pull request's current head commit.
 
 Usage (in CI)::
@@ -7,7 +7,8 @@ Usage (in CI)::
     gh api "repos/$REPO/issues/$PR/comments" --paginate > comments.json
     gh api "repos/$REPO/pulls/$PR/reviews" --paginate > reviews.json
     python3 check_verdict.py --comments comments.json --reviews reviews.json \
-        --head <head sha> --verifiers <logins> --branch <head branch>
+        --head <head sha> --verifiers <logins> --branch <head branch> \
+        [--git-dir . --base origin/<base branch> --default origin/<default branch>]
 
 A verdict comes from an allowed verifier account, for the current head commit:
 
@@ -18,7 +19,18 @@ A verdict comes from an allowed verifier account, for the current head commit:
 - a pull request review from a verifier account on that commit: "Approve" is
   PASS, "Request changes" is FAIL. Dismissed reviews don't count.
 
-Any new push voids earlier verdicts. A FAIL on this head is final until the
+Any new push voids earlier verdicts, with one exception that needs `--git-dir`:
+a PASS carries over to a head that adds only a merge of the base branch (GitHub's
+"Update branch"). The check proves it: the head's tree must equal the tree git
+gets by merging the current base into the PASS head. Anything else on top, even a
+change folded into that merge commit, gives a different tree and needs a new
+verdict. A FAIL on this head, or on the PASS head being carried, is final.
+
+A sync PR (`sync/<slug>` into `milestone/<id>`, with `--git-dir`) needs no
+verdict when its tree equals the base merged with the newest default-branch
+commit it contains: everything in it was already merged into the default branch.
+
+A FAIL on this head is final until the
 next push. Plan PRs (`plan/<slug>`) and milestone PRs (`milestone/<id>`) never
 pass on a verdict: the Owner merges those.
 
@@ -33,11 +45,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 RESULT_RE = re.compile(r"^##\s*Verification:\s*(PASS|FAIL)\b", re.M)
 HEAD_RE = re.compile(r"Head commit:\s*`?([0-9a-f]{7,40})", re.I)
+MILESTONE_RE = re.compile(r"(^|/)milestone/[^/]+$")
 
 
 def fail(message: str, fix: str) -> int:
@@ -50,6 +64,42 @@ def load(path: Path | None) -> list[dict]:
     return json.loads(path.read_text()) if path and path.exists() else []
 
 
+def git(repo: Path, *args: str) -> str | None:
+    """Run git in `repo`; None when it fails (an unknown commit, a conflict)."""
+    proc = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def merged_tree(repo: Path, base: str, other: str) -> str | None:
+    """The tree git gets by merging `other` into `base`; None on a conflict."""
+    out = git(repo, "merge-tree", "--write-tree", base, other)
+    return out.splitlines()[0] if out else None
+
+
+def only_merges(repo: Path, head: str, base: str, other: str) -> bool:
+    """True when `head` holds exactly `other` merged with the base, and nothing else."""
+    want = merged_tree(repo, base, other)
+    return want is not None and want == git(repo, "rev-parse", f"{head}^{{tree}}")
+
+
+def verdicts(comments: list[dict], reviews: list[dict], verifiers: set[str]) -> list[tuple[str, str]]:
+    """(named commit, PASS or FAIL) for each verdict that counts: an allowed author, not edited."""
+    out = []
+    for c in comments:
+        login = ((c.get("user") or {}).get("login") or "").lower()
+        body = c.get("body") or ""
+        result, named = RESULT_RE.search(body), HEAD_RE.search(body)
+        edited = c.get("updated_at") and c.get("updated_at") != c.get("created_at")
+        if login in verifiers and result and named and not edited:
+            out.append((named.group(1).lower(), result.group(1)))
+    for r in reviews:
+        login = ((r.get("user") or {}).get("login") or "").lower()
+        result = {"APPROVED": "PASS", "CHANGES_REQUESTED": "FAIL"}.get(r.get("state"), "")
+        if login in verifiers and result:
+            out.append(((r.get("commit_id") or "").lower(), result))
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check for a PASS verdict on the current head.")
     parser.add_argument("--comments", type=Path, help="JSON from the issue comments API")
@@ -57,6 +107,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--head", required=True, help="the pull request's head commit")
     parser.add_argument("--verifiers", required=True, help="logins allowed to give verdicts, comma separated")
     parser.add_argument("--branch", default="", help="the pull request's head branch")
+    parser.add_argument("--git-dir", type=Path, help="a clone with the head, base and default commits")
+    parser.add_argument("--base", default="", help="the base branch as a commit or ref, with --git-dir")
+    parser.add_argument("--default", default="", help="the default branch as a commit or ref, with --git-dir")
     args = parser.parse_args(argv)
 
     verifiers = {v.strip().lower() for v in args.verifiers.split(",") if v.strip()}
@@ -69,27 +122,49 @@ def main(argv: list[str] | None = None) -> int:
                     "ask the Owner to review and merge it.")
 
     head = args.head.lower()
-    results = []
-    for c in load(args.comments):
-        login = ((c.get("user") or {}).get("login") or "").lower()
-        body = c.get("body") or ""
-        result, named = RESULT_RE.search(body), HEAD_RE.search(body)
-        edited = c.get("updated_at") and c.get("updated_at") != c.get("created_at")
-        if login in verifiers and result and named and not edited and head.startswith(named.group(1).lower()):
-            results.append(result.group(1))
-    for r in load(args.reviews):
-        login = ((r.get("user") or {}).get("login") or "").lower()
-        if login in verifiers and (r.get("commit_id") or "").lower() == head:
-            results.append({"APPROVED": "PASS", "CHANGES_REQUESTED": "FAIL"}.get(r.get("state"), ""))
+    repo = args.git_dir
+    found = verdicts(load(args.comments), load(args.reviews), verifiers)
 
-    if "FAIL" in results:
+    def matches(named: str, commit: str) -> bool:
+        return bool(named) and commit.startswith(named)
+
+    on_head = [result for named, result in found if matches(named, head)]
+    if "FAIL" in on_head:
         return fail(f"a verifier reported FAIL on head {args.head[:7]}.",
                     "fix what the verdict reports and push; the new head needs a new /verify.")
-    if "PASS" not in results:
-        return fail(f"no PASS verdict for head {args.head[:7]}.",
-                    "run /verify on the current head (a new push voids earlier verdicts) and fix what it reports.")
-    print(f"PASS agent-merge: a verifier passed head {args.head[:7]}.")
-    return 0
+    if "PASS" in on_head:
+        print(f"PASS agent-merge: a verifier passed head {args.head[:7]}.")
+        return 0
+
+    if repo and args.base:
+        # A sync PR brings commits already merged into the default branch; it needs no verdict.
+        if args.branch.startswith("sync/") and MILESTONE_RE.search(args.base) and args.default:
+            newest = git(repo, "merge-base", head, args.default)
+            if newest and only_merges(repo, head, args.base, newest):
+                print(f"PASS agent-merge: sync PR; head {args.head[:7]} only merges {args.default} "
+                      f"({newest[:7]}) into {args.base}.")
+                return 0
+            return fail(f"sync PR head {args.head[:7]} has changes besides merging {args.default}.",
+                        "recreate the sync branch from the milestone branch and merge only the default "
+                        "branch into it, or move the other changes to a ticket.")
+        # A PASS carries over a merge of the base ("Update branch"), and nothing else.
+        for named, result in found:
+            if result != "PASS":
+                continue
+            passed = git(repo, "rev-parse", "--verify", "--quiet", f"{named}^{{commit}}")
+            if not passed or passed == head:
+                continue
+            if any(r == "FAIL" and matches(n, passed) for n, r in found):
+                continue
+            ancestor = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", passed, head])
+            if ancestor.returncode == 0 and only_merges(repo, head, args.base, passed):
+                print(f"PASS agent-merge: head {args.head[:7]} is the PASS head {passed[:7]} with only the "
+                      f"base merged in since.")
+                return 0
+
+    return fail(f"no PASS verdict for head {args.head[:7]}.",
+                "run /verify on the current head (a new push voids earlier verdicts, except a merge of "
+                "the base alone) and fix what it reports.")
 
 
 if __name__ == "__main__":

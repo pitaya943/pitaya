@@ -98,3 +98,16 @@ def test_plan_prs_may_add_reports():
 
 def test_report_closes_the_milestone_issue_mirrors():
     assert "Closes #<n>" in read("skills/report/SKILL.md")
+
+
+# P14 and P20 (0.1.4, D58): the merge gate.
+
+def test_milestones_explain_the_sync_pr():
+    section = read("skills/plan/milestones.md").split("## The milestone branch", 1)[1].split("\n## ", 1)[0]
+    assert "sync/M<n>-" in section and "Update branch" in section
+    assert "sync" in read("skills/autopilot/tick.md")
+
+
+def test_agent_merge_recipe_explains_what_carries_a_verdict():
+    text = read("docs/guardrails/agent-merge.md")
+    assert "Update branch" in text and "sync/" in text and "tree" in text
