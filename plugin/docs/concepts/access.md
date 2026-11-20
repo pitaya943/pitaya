@@ -39,7 +39,7 @@ A ticket PR changes only the data plane, and only inside its ticket's scope. The
 
 - **Writes are enforced.** CI fails a ticket PR that changes files outside its scope or a read-only path, and the hooks stop or ask before the usual dangerous commands. A write a check misses still has to get past the verifier and the merge gate.
 - **Reads are mostly prose.** Claude Code's permissions apply to a whole project, not to one role, so a check can't stop only the verifier from reading a file. Secrets are the exception: the Read tool is denied on them, though a shell command can still reach them, which is why credentials belong outside the repository.
-- **Isolation does the rest.** The verifier and the adversaries start fresh and work in their own checkout or worktree, so the Builder's conversation isn't there to read. Keep it that way: never paste a builder's transcript into a verifier's prompt.
+- **Isolation does the rest, mostly.** The verifier and the adversaries start fresh and work in their own checkout or worktree, so the Builder's conversation isn't there to read. Keep it that way: never paste a builder's transcript into a verifier's prompt. One gap: hand-off notes committed as `docs/handoff/<branch>.md` travel with the branch into the verifier's checkout. `/handoff` writes that file only as a last resort and removes it before review, and the verifier's checklist says not to open it, but that is prose, not a check.
 
 ## Crossing the line
 

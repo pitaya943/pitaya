@@ -20,7 +20,7 @@ SKILLS = PLUGIN / "skills"
 TEMPLATES = PLUGIN / "templates"
 
 # Paths in the skills that point at the plugin's own docs, not at the user's repository.
-PLUGIN_DOCS = ("docs/levels.md", "docs/suggestion.md", "docs/guardrails/")
+PLUGIN_DOCS = ("docs/levels.md", "docs/suggestion.md", "docs/guardrails/", "docs/concepts/")
 PROJECT_PATH = re.compile(r"`((?:docs|\.claude|\.github)/[^` ]*|AGENTS\.md|CLAUDE\.md)`")
 
 
@@ -149,3 +149,63 @@ def test_adrs_are_read_only_in_ticket_prs():
     script = PLUGIN / "docs" / "guardrails" / "files" / "read-only-paths" / "check_read_only.py"
     assert '"docs/adr/**"' in script.read_text()
     assert "docs/adr/**" in read(PLUGIN / "docs" / "guardrails" / "read-only-paths.md")
+
+
+# --- each role's skills stay inside its column (gaps found after D49) -------------------------
+
+ROLE_OF = {
+    "plan": "Chief", "design": "Chief", "report": "Chief", "retro": "Chief", "autopilot": "Chief",
+    "build": "Builder", "verify": "Verifier", "setup": "Owner",
+}
+NEGATION = re.compile(r"\b(never|don't|do not|must not|nor)\b", re.I)
+
+
+def matrix() -> dict[str, dict[str, str]]:
+    """Each path in the access matrix mapped to its cell per role."""
+    rows, header = {}, None
+    for line in read(CONCEPTS / "access.md").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if cells and cells[0] == "Path":
+            header = cells
+        elif header and line.startswith("| `"):
+            for area in re.findall(r"`([^`]+)`", cells[0]):
+                rows[area] = dict(zip(header, cells))
+    return rows
+
+
+def row_for(path: str, rows: dict) -> dict | None:
+    """The most specific matrix row that covers `path`."""
+    hits = [a for a in rows if path == a or (a.endswith("/") and path.startswith(a))]
+    return rows[max(hits, key=len)] if hits else None
+
+
+def role_paths():
+    for skill, role in ROLE_OF.items():
+        for md in (SKILLS / skill).rglob("*.md"):
+            text = read(md)
+            for match in PROJECT_PATH.finditer(text):
+                path = match.group(1)
+                before = text[max(0, match.start() - 60):match.start()].rsplit(".", 1)[-1]
+                if path.startswith(PLUGIN_DOCS) or NEGATION.search(before):
+                    continue  # plugin docs, or a path named only to forbid it ("never edit `x`")
+                yield pytest.param(role, path, id=f"{skill}:{path}")
+
+
+@pytest.mark.parametrize("role,path", sorted(set(role_paths()), key=lambda p: p.id))
+def test_a_role_only_uses_paths_its_column_allows(role, path):
+    row = row_for(path, matrix())
+    assert row is not None, path
+    assert row[role][:1] in ("R", "W"), f"{role} uses {path}, but access.md marks it {row[role]!r}"
+
+
+def test_verifier_skips_handoff_notes_even_when_they_are_on_the_branch():
+    checklist = read(SKILLS / "verify" / "checklist.md")
+    assert "docs/handoff/" in checklist
+    handoff = read(SKILLS / "handoff" / "SKILL.md")
+    assert "last resort" in handoff and "verifier" in handoff.lower()
+    access = read(CONCEPTS / "access.md")
+    assert "docs/handoff/" in access.split("## Crossing the line")[0].split("Isolation")[1]
+
+
+def test_autopilot_rebuilds_state_from_the_states_page():
+    assert "states.md" in read(SKILLS / "autopilot" / "tick.md")

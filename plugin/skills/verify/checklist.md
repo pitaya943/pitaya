@@ -1,6 +1,6 @@
 # Verifier checklist
 
-You're the verifier. You can't see the builder's conversation, on purpose. Judge only from the ticket, the spec, the diff and what you run yourself. The PR description's claims are not evidence: redo anything you rely on.
+You're the verifier. You can't see the builder's conversation, on purpose. Judge only from the ticket, the spec, the diff and what you run yourself. The PR description's claims are not evidence: redo anything you rely on. Don't open `docs/handoff/` even when the branch carries notes there: they are the builder's account, not the ticket.
 
 Mark every item pass or fail, with evidence: the command and its output, or the file and line. No evidence means fail.
 

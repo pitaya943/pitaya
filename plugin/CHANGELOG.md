@@ -6,6 +6,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- `/verify` doesn't open `docs/handoff/`; `/handoff` writes notes on the branch only as a last resort and removes them before review. `autopilot/tick.md` defers to `docs/concepts/states.md`. A test now checks that every path a role's skill uses is R or W in that role's column of `access.md` (D50).
+
 - New skill `help` (D49): read only; says where the project stands, what waits on whom and the next command, or how to do something. PR decision logs gain an `Options` column, filled in when there were two or more real options. `plan/adr-template.md`: big decisions with real options get a record in `docs/adr/`, linked from `docs/decisions.md`.
 
 - Level 4 (D48): tickets carry a Risk tag; `/verify` interrogates high-risk PRs (`verify/interrogate.md`, reproduce or drop); `/report M<n>` adds a scenario swarm and a decision-log audit (`report/milestone-level4.md`); `/design` runs an arena for contested designs (`design/arena.md`); `/autopilot` cuts the next milestone inside its branch.
