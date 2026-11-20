@@ -11,6 +11,16 @@
 /CLAUDE.md @example-owner
 /docs/agents/ @example-owner
 
+# Files a tool, git or a dev container loads or runs by itself
+/.mcp.json @example-owner
+.gitattributes @example-owner
+/.gitmodules @example-owner
+/.githooks/ @example-owner
+/.devcontainer/ @example-owner
+/.cursor/ @example-owner
+/.codex/ @example-owner
+GEMINI.md @example-owner
+
 # Plans and decisions
 /docs/tickets/ @example-owner
 /docs/milestones/ @example-owner

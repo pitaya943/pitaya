@@ -140,9 +140,12 @@ jobs:
             # or a ticket an open PR is building: its scope and conditions don't move under the builder.
             for f in $(git diff --name-only --no-renames --diff-filter=MD "origin/$BASE_REF...HEAD" -- docs/tickets/ | grep '\.md$' || true); do
               n=$(basename "$f" .md)
-              if git show "origin/$BASE_REF:$f" 2>/dev/null | grep -qiE '^Status:[[:space:]]*done'; then
-                fail "this plan PR changes ticket $n, which is done." "leave a finished ticket as the record it is; write a new ticket for what's missing."
-              fi
+              # A ticket is marked done on its milestone's branch first, so look there as well as on the base.
+              for ref in "origin/$BASE_REF" $(git for-each-ref --format='%(refname:short)' 'refs/remotes/origin/milestone/'); do
+                if git show "$ref:$f" 2>/dev/null | grep -qiE '^Status:[[:space:]]*done'; then
+                  fail "this plan PR changes ticket $n, which is done (on ${ref#origin/})." "leave a finished ticket as the record it is; write a new ticket for what's missing."
+                fi
+              done
               [ -n "${PR_NUMBER:-}" ] || continue
               others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,headRefName \
                 --jq ".[] | select(.number != $PR_NUMBER) | .headRefName" | grep -E "^ticket/$n(-|\$)" || true)

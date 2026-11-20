@@ -22,7 +22,8 @@ A verdict comes from an allowed verifier account, for the current head commit:
 - a pull request review from a verifier account on that commit: "Approve" is
   PASS, "Request changes" is FAIL. Dismissed reviews don't count.
 
-A PASS comment also needs a "Session:" line, and that session must not be one a
+A PASS comment also needs a "Session:" line with a real ID ("unavailable" or an
+unfilled placeholder doesn't count), and that session must not be one a
 "Builder session:" line on the pull request names (the builder's hand-off and
 fix-round comments carry it): the session that built the work, or a subagent of
 it, can't pass it. This catches an honest mistake. It doesn't stop a session
@@ -140,8 +141,10 @@ def real_session(value: str) -> bool:
 def builder_sessions(comments: list[dict], agents: set[str]) -> set[str]:
     """Session IDs the builders recorded on the pull request ("Builder session: <id>").
 
-    Only comments from the agents' own accounts count: text from anyone else is information,
-    so an outsider can't void a verdict by naming the verifier's session as a builder's.
+    Only comments from the verifier accounts count. With one machine account that is the
+    builders' account too; with a separate verifier account the guard isn't needed, because
+    a builder can't post as the verifier. Text from anyone else is information, so an
+    outsider can't void a verdict by naming the verifier's session as a builder's.
     """
     out = set()
     for c in comments:

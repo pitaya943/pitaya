@@ -50,4 +50,4 @@ Apply only accepted proposals, each through a normal pull request. Add accepted 
 ## Don't
 
 - Don't change skills, rules, hooks or CI without the Owner's acceptance.
-- Don't propose a rule for something that happened once, except the two Attention kinds in step 2.
+- Don't propose a rule for something that happened once, except the two Attention kinds in section 2.

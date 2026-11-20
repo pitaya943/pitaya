@@ -1,4 +1,4 @@
-"""The three Level 1 hooks (docs/design.md section 8, D6), driven the way Claude Code drives them.
+"""The four Level 1 hooks (docs/design.md section 8, D6), driven the way Claude Code drives them.
 
 Each hook reads the PreToolUse JSON on stdin. It prints a hookSpecificOutput
 decision ("deny" or "ask") to stdout, or prints nothing to let the call

@@ -23,8 +23,9 @@ on:
   issue_comment:
     types: [created, edited, deleted]
 
-# One run at a time per pull request, in order: each run reads the comments and then writes the
-# status, so two overlapping runs could let the older snapshot write last.
+# One run at a time per pull request: each run reads the comments and then writes the status,
+# so two overlapping runs could let the older snapshot write last. A run still waiting when a
+# newer one arrives is dropped, which is fine: every run reads everything again.
 concurrency:
   group: verdict-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: false

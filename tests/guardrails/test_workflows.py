@@ -703,3 +703,27 @@ def test_a_plan_pr_that_adds_tickets_is_not_stopped_by_other_open_prs(tickets_re
     path = stub_gh(tmp_path, pr_list="ticket/T-1-first")
     proc, out = run_find(tickets_repo, tmp_path, "plan/more", "example-bot", PATH=path, PR_NUMBER="9")
     assert proc.returncode == 0 and "skip=true" in out, proc.stdout + proc.stderr
+
+
+# --- found by the consistency audit before the 0.1.6 PR ----------------------------------
+
+def test_a_plan_pr_into_main_may_not_change_a_ticket_done_on_a_milestone_branch(milestone_repo, tmp_path):
+    """A ticket's PR marks it done on the milestone branch; main still says open until the sign-off."""
+    repo = milestone_repo
+    repo.git("checkout", "-q", "milestone/M1")
+    repo.write("docs/tickets/T-1.md", "Status: done\n\n## Scope\n\n- `src/**`\n")
+    repo.commit("T-1 merged into the milestone, marked done")
+    repo.git("update-ref", "refs/remotes/origin/milestone/M1", "milestone/M1")
+    repo.git("checkout", "-q", "-b", "plan/rewrite", "main")
+    repo.write("docs/tickets/T-1.md", "## Scope\n\n- `**`\n")
+    repo.commit("re-plan a ticket that is finished on its milestone")
+    proc, out = run_find(repo, tmp_path, "plan/rewrite", "example-bot")
+    assert proc.returncode == 1 and "T-1" in proc.stdout and "done" in proc.stdout, proc.stdout + proc.stderr
+    assert "skip=true" not in out
+
+
+def test_multi_account_codeowners_cover_the_files_tools_load_by_themselves():
+    text = (FILES / "multi-account" / "CODEOWNERS-agent-merge").read_text()
+    for pattern in ("/.mcp.json", ".gitattributes", "/.gitmodules", "/.githooks/", "/.devcontainer/",
+                    "/.cursor/", "/.codex/", "GEMINI.md"):
+        assert any(line.split()[0] == pattern for line in text.splitlines() if line and not line.startswith("#")), pattern

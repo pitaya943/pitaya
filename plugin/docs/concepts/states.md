@@ -45,7 +45,7 @@ stateDiagram-v2
   Fail --> Pending: new head
 ```
 
-A verdict is a comment that starts with the verdict heading and names the full head commit and the verifier's session, or a review from a separate verifier account. A FAIL is one-way: any FAIL on the head is final for that head, and it still counts when its comment is edited or deleted afterwards, because the `agent-merge` workflow records each FAIL it sees in a `verdict-fail` status on the commit. An edited PASS doesn't count, and neither does a PASS from a session the pull request names as a builder. At Level 3 a PASS carries over a merge of the base and nothing else, unless the ticket is `Risk: high`. Plan and milestone PRs never get a passing verdict: the Owner merges them.
+A verdict is a comment that starts with the verdict heading and names the full head commit (a PASS also names the verifier's session), or a review from a separate verifier account. A FAIL is one-way: any FAIL on the head is final for that head, and it still counts when its comment is edited or deleted afterwards, because the `agent-merge` workflow records each FAIL it sees in a `verdict-fail` status on the commit. An edited PASS doesn't count, and neither does a PASS from a session the pull request names as a builder. At Level 3 a PASS carries over a merge of the base and nothing else, unless the ticket is `Risk: high`. Plan and milestone PRs never get a passing verdict: the Owner merges them.
 
 ## Autopilot run
 

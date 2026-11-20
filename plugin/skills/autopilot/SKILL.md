@@ -24,8 +24,8 @@ Rebuild the state, then act in this order. [tick.md](tick.md) has the details an
 1. **Read:** `git fetch`; each ticket's `Status:` line on `milestone/M<n>`; open PRs on `ticket/*` branches with their CI, head commit and the latest verdict on that head; the milestone PR and plan PRs waiting for the Owner; the tracking issue for a "stop". If `main` moved, open a sync PR into `milestone/M<n>` (the plan skill's `milestones.md`).
 2. **Finish what's open.** For each open ticket PR:
    - CI red, or a FAIL verdict: start a fresh session with `/pitaya:build <ticket>` as a fix round, giving it the verdict. Past the harness's fix rounds, use `ask-owner` and mark the ticket blocked.
-   - CI green and no verdict on the current head: start a fresh verifier with `/pitaya:verify <PR>`.
-   - PASS on the current head and every required check green: merge it into `milestone/M<n>` if the Autonomy line lets agents merge. Otherwise comment that it's ready for the Owner, and move on.
+   - CI green and no verdict that counts for the current head: start a fresh verifier with `/pitaya:verify <PR>`. After "Update branch" an earlier PASS still counts, unless the ticket is `Risk: high` ([tick.md](tick.md)).
+   - A PASS that counts for the current head, no FAIL on it, and every required check green: merge it into `milestone/M<n>` if the Autonomy line lets agents merge. Otherwise comment that it's ready for the Owner, and move on.
 3. **Start new work.** Pick tickets that are open, unblocked (every "Blocked by" is done), unclaimed (no `ticket/<id>-*` branch or PR yet) and whose scope doesn't overlap a ticket in progress. Claim each by pushing its branch, then start it in a fresh session with `/pitaya:build <ticket>`, up to the parallel-builder limit.
 4. **Record** one line on the tracking issue: what merged, what started, what waits on whom.
 
@@ -50,4 +50,4 @@ At Level 4 the cut is yours too: create `milestone/M<n+1>` from `main`, aim that
 - Never merge into `main`: not a milestone PR, not a plan PR. Below Level 4, never merge a plan PR anywhere. Never change the roadmap or decide what an escalation asks: those, and sign-off, belong to the Owner.
 - Never merge a PR that has no PASS on its current head or isn't green on every required check, and never bypass or re-run a check to get it green. A ticket that touches a sensitive area without a covering test is escalated, not built.
 - Never build, verify or fix code in your own context; never let a builder verify its own work.
-- Never edit rule files (`AGENTS.md`, `docs/agents/`, `.claude/`, `.github/`), push to `main` or force-push a milestone branch.
+- Never edit rule files (`AGENTS.md`, `docs/agents/`, `.claude/`, `.github/`, or a file tools load by themselves such as `.mcp.json`), push to `main` or force-push a milestone branch.

@@ -13,12 +13,12 @@ Verification is only worth something if it's independent. The verifier judges fr
 
 1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once, then continue with defaults: the document language is the conversation's, and there are no sensitive areas.
 2. Fetch the PR: its number, base branch, head commit and linked ticket. If there's no ticket, ask the user for the completion conditions. Don't infer them from the diff.
-3. Count earlier verdicts on the PR to get this verify round's number. A verify round checks; a fix round changes code. They alternate: verify 1, fix 1, verify 2, and so on.
-4. Note this session's ID for the verdict: `${CLAUDE_SESSION_ID}`. If that shows a placeholder instead of an ID, use the ID your tool gives the session (a cloud session's ID is in its link); if there is none, the verdict says `unavailable: <reason>`. Compare it with the `Builder session:` lines on the PR: with the agent-merge guardrail, a PASS from a builder's session, or from its subagent, doesn't count, so hand the PR to a separate session instead.
+3. Count earlier verdicts on the PR (with agent-merge, also a commit's `verdict-fail` status whose comment is gone) to get this verify round's number. A verify round checks; a fix round changes code. They alternate: verify 1, fix 1, verify 2, and so on.
+4. Note this session's ID for the verdict: `${CLAUDE_SESSION_ID}`. If that shows a placeholder instead of an ID, use the ID your tool gives the session (a cloud session's ID is in its link); if there is none, the verdict says `unavailable: <reason>`. With the agent-merge guardrail (Level 3) the verdict is posted from a session that built none of the PR: a PASS doesn't count when its session is one a `Builder session:` line on the PR names, or when its session is `unavailable`. So if this session built it, a subagent isn't enough there: stop and hand the PR to a separate session.
 
 ## 2. Dispatch a fresh verifier
 
-Start **one new subagent** with a fresh context. If this session wrote the code, this step isn't optional: you can't verify your own work. If the harness file's "Verification" asks for a separate session, give the user the pointers below as a prompt for that session instead.
+Start **one new subagent** with a fresh context. If this session wrote the code, this step isn't optional: you can't verify your own work (and with agent-merge, step 1.4 already sent you to a separate session). If the harness file's "Verification" asks for a separate session, give the user the pointers below as a prompt for that session instead.
 
 Give it only pointers, not your opinions:
 

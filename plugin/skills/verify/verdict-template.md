@@ -6,7 +6,7 @@
 - Verify round: <n> of at most <the harness's "Fix rounds" + 1> (for a round beyond that, link the Owner's authorisation)
 - Next step: <for PASS, "the Owner merges" or "agents merge"; for FAIL, "fix round <n> in the builder's session" or "fix round <n> in a fresh session" or "escalate to the Owner">
 - Head commit: <the full 40-character sha>
-- Session: <this session's ID, or "unavailable: <reason>">
+- Session: <this session's ID, or "unavailable: <reason>" (with agent-merge, a PASS without a real ID doesn't count)>
 - Ticket: <link or path>
 
 | # | Check | Result | Evidence |

@@ -23,7 +23,7 @@
 
 | Kind | PR | Where | Disclosed | Evidence |
 | --- | --- | --- | --- | --- |
-| <kind> | <PR link> | <file:line, commit or comment> | yes / no | <verdict comment link> |
+| <kind> | <PR link> | <file:line, commit or comment> | yes / no | <verdict comment link; for a row the Level 4 audit adds, the decision-log row or diff line> |
 
 ## Decisions the agents made
 

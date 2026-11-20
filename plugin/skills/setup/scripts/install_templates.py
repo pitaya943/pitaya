@@ -22,7 +22,8 @@ Rules, so a re-run is always safe:
 * `README.md` files document the templates for whoever browses them and are
   never copied.
 
-Output: one line per file, `<status> <path>`. Exit 0 on success, 2 on bad
+Output: one line per file, `<status> <path>`, and a `withdrawn` line for each allow rule in the
+project's settings that pitaya installed once and no longer does. Exit 0 on success, 2 on bad
 arguments. Standard library only.
 """
 

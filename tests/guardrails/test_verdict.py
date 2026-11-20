@@ -2,7 +2,7 @@
 
 With one machine account (D44) the verifier posts as that account, so the verdict
 is a comment (an author can't approve its own PR). A review from a verifier
-account counts too. Edited comments don't count, any FAIL on the head is final,
+account counts too. An edited PASS doesn't count, any FAIL on the head is final (edited or not),
 and plan PRs never pass on a verdict.
 """
 
