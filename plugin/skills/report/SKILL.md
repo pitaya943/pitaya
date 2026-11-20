@@ -11,7 +11,7 @@ argument-hint: "<what to cover: a milestone, a list of PRs or tickets, or a date
 
 1. Read `docs/agents/harness.md` for the document language and whether "Learning" is on. If it's missing, suggest `/setup` once and write in the language of the conversation.
 2. Settle the range with the user if the argument doesn't make it exact: which PRs or tickets, from when to when.
-3. For a milestone (`/report M<n>`), the range is the tickets listed in `docs/milestones/M<n>.md`. Check each exit criterion with evidence, and say which ones aren't met. If all are met, propose the plan PR that sets the milestone to `Status: done`; the Owner's merge is the sign-off.
+3. For a milestone (`/report M<n>`), the range is the tickets listed in `docs/milestones/M<n>.md`. Check each exit criterion with evidence, and say which ones aren't met. When `docs/milestones/M<n>-design.md` exists, also check every scenario: the test it names passes, or it's listed as not met. If all are met, propose the plan PR that sets the milestone to `Status: done`; the Owner's merge is the sign-off.
 
 ## Gather, don't remember
 

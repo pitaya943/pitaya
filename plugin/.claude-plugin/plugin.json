@@ -17,6 +17,7 @@
   "skills": [
     "./skills/setup",
     "./skills/plan",
+    "./skills/design",
     "./skills/build",
     "./skills/verify",
     "./skills/report",

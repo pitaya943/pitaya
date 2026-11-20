@@ -16,6 +16,10 @@ Issue: #<n>
 1. <condition>, checked by `<test ID or command>`
 2. <condition>, checked by `<test ID or command>`
 
+## Scenarios
+
+<From Level 2: the design's scenarios this ticket makes true, such as "Scenarios: S-<n>, S-<m>"; each is also a done-when condition. Delete below Level 2.>
+
 ## Depends on
 
 <"None", or one "Blocked by <ticket>" line per ticket: "Blocked by T-002" for file tickets, "Blocked by #<n>" for issue-only tickets>

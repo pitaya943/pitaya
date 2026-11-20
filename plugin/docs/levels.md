@@ -56,6 +56,7 @@ Includes everything in Level 1. Add the recipes one at a time; each is a copyabl
 
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
+| Skill | [`skill:design`](../skills/design/SKILL.md) | `skill:plan` | - | Scenarios first, then interfaces, data flow, notifications and state owners; tickets come from the scenarios |
 | Recipe | [`machine-account`](guardrails/machine-account.md) | `protect-main` | - | One GitHub account per agent role, with Write access only |
 | Recipe | [`commit-author`](guardrails/commit-author.md) | `protect-main`, `machine-account` | - | Every commit in a PR is authored by the expected machine account |
 | Recipe | [`scope`](guardrails/scope.md) | `protect-main`, `machine-account` | `read-only-paths`, `skill:plan`, `skill:build` | A PR changes only the paths its ticket lists |
@@ -64,6 +65,7 @@ Includes everything in Level 1. Add the recipes one at a time; each is a copyabl
 | Recipe | [`done-when`](guardrails/done-when.md) | `protect-main`, `machine-account` | `no-weakened-tests`, `skill:plan`, `skill:verify` | Every completion condition has a test that exists and passes |
 | Recipe | [`append-only`](guardrails/append-only.md) | `protect-main`, `machine-account` | `decisions` | Listed files only gain lines |
 | Recipe | [`serial-resources`](guardrails/serial-resources.md) | `protect-main`, `machine-account` | `skill:plan` | Only one ticket at a time changes a migration, lockfile or other shared resource |
+| Recipe | [`verify-app`](guardrails/verify-app.md) | - | `skill:verify` | A project skill that drives the real app as a user would, with evidence |
 | Recipe | [`multi-account`](guardrails/multi-account.md) | `protect-main`, `machine-account` | - | Only with several agent accounts: CODEOWNERS, so only the Owner's approval counts |
 | Recipe | [`evidence`](guardrails/evidence.md) | `protect-main`, `machine-account` | `skill:build`, `skill:evidence` | A PR without an evidence section, or a UI change without screenshots, can't merge |
 

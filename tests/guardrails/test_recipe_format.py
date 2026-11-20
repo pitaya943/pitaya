@@ -40,6 +40,7 @@ RECIPES = {
     "second-model-review": 4,
     "project-evals": 4,
     "multi-account": 2,
+    "verify-app": 2,
 }
 
 
