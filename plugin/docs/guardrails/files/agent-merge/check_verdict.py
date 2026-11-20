@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.1 · docs/guardrails/files/agent-merge/check_verdict.py
+# pitaya template 0.1.2 · docs/guardrails/files/agent-merge/check_verdict.py
 """Guardrail "agent-merge": a PASS verdict exists for the pull request's current head commit.
 
 Usage (in CI)::

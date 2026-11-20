@@ -2,6 +2,24 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.2 (2026-11-20)
+
+Fixes for the problems the W8 trial found at Level 1 (D55).
+
+### Skills
+
+- `build`, `plan` and `autopilot` insist on pitaya's branch names (`ticket/<id>-<slug>`, `plan/<slug>`, `milestone/M<n>`). In a session with an assigned branch, as cloud sessions have, they ask the user to allow those names instead of using the assigned branch; `autopilot` passes the permission to the sessions it starts.
+- `evidence`: when the environment forbids model identifiers in repository text, the model line says "withheld" with the reason, and the Owner gets the model in the session.
+- `plan`: every worked example in a condition is computed or run before it's written; the ticket template says so under "Done when".
+- `plan/milestones.md`: when the tools can't create GitHub milestones for the issue mirror, the plan PR says so and lists them for the Owner.
+- `build`: each fix round also updates the PR description's "How to verify" and "Scope".
+- `verify`: the verdict's "Round" line links the Owner's authorisation for a round beyond "Fix rounds".
+
+### Docs
+
+- `concepts/escalation.md`: the Owner may authorise an extra fix round; it runs in a fresh session, and its verdict links the authorisation.
+- README: cloud sessions start by allowing pitaya's branch names.
+
 ## 0.1.1 (2026-11-20)
 
 ### Skills

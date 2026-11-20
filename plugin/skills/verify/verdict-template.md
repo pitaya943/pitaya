@@ -3,7 +3,7 @@
 ## Verification: PASS | FAIL
 
 - Model: <name and version from the session's configuration, or "unavailable: <reason>">
-- Round: <n>
+- Round: <n> (for a round beyond the harness's "Fix rounds", link the Owner's authorisation)
 - Head commit: <sha>
 - Ticket: <link or path>
 

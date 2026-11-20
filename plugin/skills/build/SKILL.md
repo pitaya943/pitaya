@@ -14,7 +14,7 @@ argument-hint: "<ticket: issue number, URL or path>"
 3. Fetch the ticket and state its title. If the reference is ambiguous, ask. List its completion conditions back to the user as a numbered list.
 4. If any condition is unclear, two conditions contradict each other, or the work needs a change the ticket doesn't authorize (a data model, a public interface, a sensitive area from the harness file with no covering test): stop. Ask the Owner with the `ask-owner` skill when installed, otherwise in the conversation. Don't guess.
 5. **Identity.** If the harness file names a machine account, confirm the GitHub login you act as is that account. If it isn't, stop and tell the user. Set the commit author to that account and its GitHub noreply email: `<id>+<login>` at the domain `users.noreply.github.com`. `<id>` is the numeric account id, from `gh api users/<login> --jq .id` or the `id` in the GitHub tool's get-me result (in a cloud session, use the GitHub tool).
-6. Branch `ticket/<id>-<short-slug>` from the ticket's base branch: its milestone's branch `milestone/M<n>` when the ticket names a milestone and that branch exists, `main` otherwise. `<id>` is the file ticket's id (`T-001`) or the issue number. The PR targets the same base.
+6. Branch `ticket/<id>-<short-slug>` from the ticket's base branch: its milestone's branch `milestone/M<n>` when the ticket names a milestone and that branch exists, `main` otherwise. `<id>` is the file ticket's id (`T-001`) or the issue number. The PR targets the same base. Use exactly this name: the guardrail checks and `/autopilot` find the ticket from it. If the session was told to work on another branch (cloud sessions get an assigned branch), don't use the assigned branch: ask the user to allow this name, and stop until they do.
 
 ## Build
 
@@ -34,7 +34,7 @@ argument-hint: "<ticket: issue number, URL or path>"
 
 ## Fix rounds
 
-- Verifier says FAIL, round 1: fix each listed problem in this same session, push, wait for green CI, and comment on what changed and where.
+- Verifier says FAIL, round 1: fix each listed problem in this same session, push, wait for green CI, and comment on what changed and where. Every round also updates the PR description's "How to verify" (the current test count) and "Scope" (the current diff stat), so they match the head.
 - Round 2 goes to a fresh session, which reads only the ticket, the diff and the verdicts.
 - The harness file's "Fix rounds" sets how many rounds there are (default 2). Still FAIL after the last one: stop and escalate to the Owner with the open problems and two or three options.
 

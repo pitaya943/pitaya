@@ -14,6 +14,8 @@ Issue: #<n>
 
 ## Done when
 
+<!-- Check every worked example (an input and its expected result) by computing or running it before writing it here. -->
+
 1. <condition>, checked by `<test ID or command>`
 2. <condition>, checked by `<test ID or command>`
 
