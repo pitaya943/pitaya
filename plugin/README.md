@@ -6,8 +6,8 @@ This folder is what the `pitaya` plugin installs. Once installed, the skills app
 
 ## Start
 
-1. In your project, run `/pitaya:setup`. It asks a few questions and installs the Level 1 defaults without overwriting anything: an `AGENTS.md` map, the harness config, the memory files, permissions, three hooks and a tests workflow.
-2. Plan work with `/pitaya:plan`, build a ticket with `/pitaya:build`, and have it checked with `/pitaya:verify`.
+1. In your project, run `/pitaya:setup`. It asks a few questions and installs the Level 1 defaults without overwriting anything: an `AGENTS.md` map, the harness config, the memory files, permissions, four hooks and a tests workflow.
+2. Cut the project into milestones with `/pitaya:plan --roadmap`, and the active milestone into tickets with `/pitaya:plan M1`. Build a ticket with `/pitaya:build` and have it checked with `/pitaya:verify`. At Level 3, `/pitaya:autopilot` runs a whole milestone.
 
 ## Read next
 

@@ -11,11 +11,12 @@ The `Autonomy` field in `docs/agents/harness.md` says who may merge into `main`.
 
 Agents merging their own work is safe only when the checks a person would make are mechanical:
 
-1. Level 1 is fully in place: the `ci` check is required on `main`, and the hooks are installed.
+1. Level 1 is fully in place: the tests check is required on `main`, and the hooks are installed. The required approval drops to 0 only together with requiring the `verdict` status (D37).
 2. Level 2's merge checks are on, at least scope, read-only paths, no weakened tests and done-when, so an agent can't widen its task or remove the tests that judge it.
 3. The verifier is a separate session or a different model, not a subagent of the builder.
 4. Sensitive areas still go to the Owner: a PR that touches one needs a person's merge.
 5. Someone reviews merged work afterwards, for example through `/report` and `/retro` on a fixed schedule.
+6. Agents merge only through `/autopilot` or a builder that follows its merge rules: re-read the head commit, require PASS on it, and leave plan PRs and sensitive areas to the Owner.
 
 If any of these stops holding, go back to the default.
 

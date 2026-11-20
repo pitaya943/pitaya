@@ -4,8 +4,8 @@ pitaya describes the work with four roles. They're concepts, not accounts or pro
 
 | Role | Who | Does | Doesn't | Skills |
 | --- | --- | --- | --- | --- |
-| **Owner** | A person | Approves plans, answers escalations, merges `main` (unless the autonomy setting says otherwise), sets the level | — | `/setup`, `learning` |
-| **Chief** | An agent session | Splits work into tickets, orders them, reports results, runs retros | Write product code, merge `main` | `/plan`, `/report`, `/retro` |
+| **Owner** | A person | Approves the roadmap and each milestone's tickets by merging plan PRs, answers escalations, signs off milestones, merges `main` (unless the autonomy setting says otherwise), sets the level | — | `/setup`, `learning` |
+| **Chief** | An agent session | Cuts the roadmap into milestones and milestones into tickets, orders them, reports results, runs retros; at Level 3 runs a milestone with `/autopilot` | Write product code, merge a plan PR, sign off a milestone | `/plan`, `/report`, `/retro`, `/autopilot` |
 | **Builder** | A fresh session per ticket | Builds one ticket red-then-green and opens a PR with evidence | Change the spec, change files outside the ticket's scope, merge | `/build`, `tdd`, `evidence` |
 | **Verifier** | A fresh subagent or session per PR and round | Re-runs everything from a clean checkout and judges PASS or FAIL | Fix the code, see the Builder's conversation, merge | `/verify`, `evidence` |
 
@@ -18,4 +18,5 @@ An agent that grades its own work overrates it; every source this project draws 
 ## Solo and parallel
 
 - **Solo (Level 1):** one session plans, then builds a ticket; `/verify` dispatches a fresh subagent; the Owner merges.
-- **Parallel (Level 2):** one Chief session plans and tracks; each ticket gets a fresh Builder session, ideally acting as a machine account so its work is traceable; each PR gets a fresh Verifier. Tickets run in parallel only when they don't depend on each other and their scopes don't overlap.
+- **Parallel (Level 2):** one Chief session plans and tracks; each ticket gets a fresh Builder session, ideally acting as a machine account so its work is traceable; each PR gets a fresh Verifier. Tickets run in parallel only when they don't depend on each other and their scopes don't overlap. The Owner still merges.
+- **Autopilot (Level 3):** the Chief runs `/autopilot` on the active milestone. Each time it wakes it starts fresh Builder and Verifier sessions, merges when the autonomy setting allows, and stops at the Owner's gates: plan PRs, sensitive areas, fix rounds, the milestone's sign-off and its budget.

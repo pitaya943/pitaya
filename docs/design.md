@@ -1,7 +1,7 @@
 # pitaya design
 
-- Status: draft 0.2, under Owner review. Steps W0–W6 are done; W7, the release, is next (section 13).
-- What users read instead: [`suggestion.md`](../plugin/docs/suggestion.md) explains which components each level should have and what each one achieves.
+- Status: draft 0.3. Steps W0–W6 are done, plus the additions decided after W6 (D33–D39 in [`decisions.md`](decisions.md)); W7, the release, is next (section 13).
+- What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
 
@@ -40,7 +40,7 @@ pitaya therefore uses **levels**: a cheap, universally endorsed Level 1 installe
 | --- | --- | --- |
 | R1 | Process in skills, guarantees in mechanisms | Skills teach agents how to work; rules with no exceptions are enforced by hooks, permissions or CI |
 | R2 | Every skill stands alone | Using only `/verify` or only `tdd` works |
-| R3 | Two kinds of skill | User-invoked skills orchestrate (`disable-model-invocation: true`); model-invoked skills hold reusable discipline. Orchestrators may call disciplines, never each other |
+| R3 | Two kinds of skill | User-invoked skills orchestrate (`disable-model-invocation: true`); model-invoked skills hold reusable discipline. Orchestrators may call disciplines, never each other in one context; `/autopilot` may start one in a fresh session (D39) |
 | R4 | No gate, but defaults | Nothing blocks the repo; `/setup` installs Level 1 by default and higher levels come from recipes |
 | R5 | Cheapest enforcement that suffices | Prose (agent discipline) → session mechanisms (hooks, permissions) → merge mechanisms (CI, branch protection) |
 | R6 | Every component says how to retire it | Each one assumes the model can't do something; when models improve, there must be evidence to remove it |
@@ -50,14 +50,14 @@ pitaya therefore uses **levels**: a cheap, universally endorsed Level 1 installe
 
 ## 3. Levels
 
-One harness, four levels (D1). Each level includes the one before. [`suggestion.md`](../plugin/docs/suggestion.md) explains each component and what it achieves.
+One harness, four levels (D1). Each level includes the one before. Every part is a **component** in [`components.json`](../plugin/docs/components.json), with its level, what it requires first and what it works better with; [`levels.md`](../plugin/docs/levels.md) is generated from it, and tests derive each recipe's dependencies from its own files (D33). Levels are presets: a project may add or remove single components, and `setup/scripts/select_components.py` adds what's required, refuses to drop what's still required, and prints the plan.
 
 | Level | For | Components | How to get it |
 | --- | --- | --- | --- |
-| 0 | Trying it out | Skills only | Install the plugin |
-| 1 (default) | One person with one or a few agents | AGENTS.md map, harness config, one test command, CI as a required check, `main` protection, permissions, three hooks, a fresh verifier, a decision log | `/setup` copies `templates/` |
+| 0 | Trying it out | Skills: `tdd`, `evidence`, `plan`, `build`, `verify`, `report`, `ask-owner` | Install the plugin |
+| 1 (default) | One person with one or a few agents | AGENTS.md map, harness config, memory files, decision log, one test command, CI as a required check, `main` protection with one required approval, permissions, four hooks, a fresh verifier; skills `setup`, `handoff`, `retro`, `learning` (D34, D37) | `/setup` copies `templates/` |
 | 2 | Agents working in parallel | Machine accounts and author checks, scope, read-only paths, no weakened tests (JUnit comparison), done-when, append-only files, serial resources, evidence checks | Recipes |
-| 3 | Long-running autonomy | Progress file and start-up routine, second-model review, an agent-merge policy, project evals | Recipes |
+| 3 | Long-running autonomy | `/autopilot`, progress file and start-up routine, second-model review, an agent-merge policy, project evals (D39) | Recipes and the `autopilot` skill |
 
 ## 4. Repo layout
 
@@ -67,13 +67,16 @@ plugin/                           what users install, and nothing else (D32)
   .claude-plugin/plugin.json      plugin "pitaya"
   skills/<name>/                  SKILL.md plus sibling reference files and scripts
   templates/                      Level 1 files that /setup copies into a project
-  docs/suggestion.md              what each level should have, and what each part achieves
+  docs/components.json            every component: level, requires, recommends, needs (D33)
+  docs/levels.md                  generated from components.json: what each level includes
+  docs/suggestion.md              what each part achieves and what it can't do
   docs/guardrails/                Level 2-3 recipes, with copyable files under files/<id>/
   docs/concepts/                  roles, autonomy, evidence, escalation
   README.md, CHANGELOG.md, LICENSE
 docs/design.md                    this document
 evals/                            tasks for testing the harness itself (run by hand)
 scripts/check_skills.py           manifest and SKILL.md checker
+scripts/render_levels.py          renders plugin/docs/levels.md from the manifest
 tests/                            checker, hooks, install script, recipes, docs, layout, English, personal data
 AGENTS.md, CLAUDE.md              rules for developing this repository
 ```
@@ -86,13 +89,14 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 
 | Skill | What it does | Role (D21) | Status |
 | --- | --- | --- | --- |
-| `/setup` | Explore the repo, ask a few questions, choose a level, install the Level 1 files without overwriting anything, write the harness config; re-runs report stale copies | Owner | Done |
-| `/plan` | Split work into verifiable vertical-slice tickets with dependencies; write them where the config says once the Owner agrees | Chief | Done |
+| `/setup` | Explore the repo, ask a few questions, choose a level or a custom selection, install the Level 1 files without overwriting anything, write the harness config; re-runs report stale copies | Owner | Done |
+| `/plan` | `--roadmap`: cut the project into milestones. `M<n>`: cut the active milestone into vertical-slice tickets with dependencies and scope. Written through a plan PR once the Owner agrees (D35, D36, D38) | Chief | Done |
 | `/build <ticket>` | Build one ticket red-then-green and open a PR with evidence | Builder | Done |
 | `/verify <PR>` | Dispatch a fresh subagent that re-runs everything cold and judges PASS or FAIL against a checklist | Verifier | Done |
-| `/report` | Summarize merged work for the Owner | Chief | Done |
+| `/report` | Summarize merged work for the Owner; `M<n>` checks a milestone's exit criteria for the Owner's sign-off | Chief | Done |
 | `/handoff` | Write hand-off notes when work stops: goal, done, in progress, next step, where the evidence is (D11) | Any | Done |
 | `/retro` | Turn repeated mistakes into rule-to-enforcer proposals and review what can be retired; the Owner approves (D18, D19) | Chief | Done |
+| `/autopilot` | Level 3: run the active milestone in stateless ticks, handing builds and verifications to fresh sessions, merging when Autonomy allows, stopping at Owner gates and a budget (D39) | Chief | Done |
 
 **Model-invoked (disciplines)**
 
@@ -111,25 +115,26 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 
 | Field | Default | Decision |
 | --- | --- | --- |
-| Level | 1 | D1 |
+| Level | 1, or a custom selection's label such as "Level 1 + scope, machine-account" | D1, D33 |
 | Templates | the version `/setup` installed | D20 |
 | Owner, machine account | asked by `/setup`; the machine account may be "none" | — |
 | Autonomy | only the Owner merges `main`; may become "agents merge after CI is green and the verdict is PASS" at Level 3 | D3 |
-| Tickets | GitHub Issues labelled `ticket` with a GitHub remote, else `docs/tickets/<id>.md` | D9 |
+| Tickets | `docs/tickets/T-<nnn>.md` files mirrored by issues labelled `ticket`; or files only; or issues only | D9, D35 |
+| Milestones | `docs/milestones/M<n>.md`, one active at a time | D38 |
 | Test command | one command that really runs, recorded as typed; JUnit XML from Level 2 | D5 |
 | Document language | asked by `/setup` | — |
 | Verification | a fresh subagent; may become a separate session with a named model | D13 |
 | Fix rounds | 2 | D16 |
 | Decisions | `docs/decisions.md` on | D12 |
-| Glossary, learnings, architecture | `docs/agents/glossary.md`, `learnings.md` (append only), `architecture.md` | D32 | What ships lives in `plugin/`; the marketplace installs that folder alone, so development files never reach users |
-| D30 |
+| Glossary, learnings, architecture | `docs/agents/glossary.md`, `learnings.md` (append only), `architecture.md` | D30 |
 | Sensitive areas | asked by `/setup` | — |
 | Guardrails | the Level 1 parts, plus any recipe added later | — |
+| Autopilot | off; when on: budget per run, parallel builders, how it wakes | D39 |
 | Learning | off | D22 |
 
 ## 7. Ticket format
 
-Fields grow with the level (D10); a field is needed only once its guardrail is adopted.
+Fields grow with the level (D10); a field is needed only once its guardrail is adopted. File tickets (`docs/tickets/T-<nnn>.md`) start with a title, `Status: open`, `Milestone: M<n>` and, with an issue mirror, `Issue: #<n>`. The ticket's own PR sets `Status: done`; the scope and read-only checks allow exactly that line (D35). Dependencies read `Blocked by T-002`.
 
 | Field | Level | Used by |
 | --- | --- | --- |
@@ -138,6 +143,8 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | Serial resources | 2 | the serial-resource recipe |
 | Append-only files | 2 | the append-only recipe |
 | Screenshots required | 2 | the evidence recipe |
+
+A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files reach `main` only through plan PRs on `plan/<slug>` branches, which may change nothing else and which only the Owner merges (D36, D38).
 
 ## 8. Level 1 defaults
 
@@ -151,6 +158,7 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | `.claude/hooks/no_push_main.py` | Deny pushes to the default branch (read from `origin/HEAD` too), force pushes, remote deletes, `--all` and `--mirror` | D6 |
 | `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x` | D6 |
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
+| `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge | D37 |
 | `.github/workflows/tests.yml` | One job running the test command; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
 | `docs/decisions.md` | Append-only decision log | D12 |
 | `docs/agents/glossary.md`, `learnings.md`, `architecture.md` | The project's words, what earlier work learned, and the module map; AGENTS.md points to them | D30 |
@@ -184,11 +192,11 @@ Each recipe in `plugin/docs/guardrails/<id>.md` has eight sections:
 
 | Level | Recipe | Origin |
 | --- | --- | --- |
-| 1 | Protect `main`: ruleset, Owner-only merges, required checks (the steps `/setup` hands over) | earlier template's setup guide |
+| 1 | Protect `main`: ruleset, one required approval dismissed on new pushes, required checks (the steps `/setup` hands over; D37) | earlier template's setup guide |
 | 2 | Machine account: creation, Write access, token, commit author | earlier identity checks |
 | 2 | Commit-author check | earlier `commit-author` check |
 | 2 | Scope: a PR changes only the ticket's paths | earlier `path-scope` check |
-| 2 | Read-only paths: rules, specs and CI can't change in a ticket PR | earlier `readonly-paths` check |
+| 2 | Read-only paths: rules, specs, CI, tickets and milestones can't change in a ticket PR, except the PR's own ticket `Status:` line | earlier `readonly-paths` check |
 | 2 | No weakened tests: every test passing on the base exists and passes on the PR | earlier `no-weakened-tests` check |
 | 2 | Done-when: every completion condition's test exists and passes | earlier `done-when` check |
 | 2 | Append-only files | earlier `append-only` check |
@@ -196,11 +204,11 @@ Each recipe in `plugin/docs/guardrails/<id>.md` has eight sections:
 | 2 | Evidence: the PR has an evidence section; screenshots when there's a UI | earlier `evidence` check |
 | 3 | Second-model review (D14) | earlier optional review module |
 | 3 | Progress file, start-up routine and a feature list where agents may only flip "passes" (D11) | Anthropic's long-running harness |
-| 3 | Agent merging, gated by a `verdict` status that only a PASS for the current head commit turns green (D3) | new |
+| 3 | Agent merging, gated by a `verdict` status that only a PASS for the current head commit turns green; required approvals drop to 0 (D3, D37) | new |
 | 3 | Project evals | Anthropic's guidance on agent evals |
 | — | Docs lint (links, structure) | earlier docs-lint module |
 
-The earlier bootstrap gate and branch-to-ticket gate are not carried over (D26).
+The earlier bootstrap gate and branch-to-ticket gate are not carried over (D26). All ticket-based checks share one "Find the ticket" step: it reads `docs/tickets/<id>.md` from the base branch (or the issue in the branch name), skips the Owner's non-ticket PRs, fails machine-account PRs that aren't on a ticket branch, and treats `plan/<slug>` branches as plan PRs (D36).
 
 ### 9.3 Copyable files
 
@@ -251,6 +259,9 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | D30 | Level 1 ships three memory files under `docs/agents/`: a glossary, append-only learnings and an architecture map. `/plan` keeps the glossary and map current, `/retro` adds accepted learnings, and ticket PRs only propose changes. They replace the optional pitfalls file |
 | D31 | During W6, the pitaya repository adopts pitaya itself: `/setup` on this repository, with its development memory moved into the same structure |
 | D29 | Agents commit to this repository as the machine account, with its GitHub noreply identity (display name equal to the login); the personal-data scan accepts that form and nothing else personal |
+| D32 | What ships lives in `plugin/`; the marketplace installs that folder alone, so development files never reach users |
+
+Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manifest and custom selections, D34 `retro` and `handoff` at Level 1, D35 ticket modes and the Status line, D36 plan PRs, D37 enforced Owner-only merges, D38 milestones, D39 `/autopilot`.
 
 ## 12. Failure modes
 
@@ -263,6 +274,9 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | Copied files go stale | Fixed bugs stay in the project | Version headers; re-running `/setup` lists stale copies |
 | A plugin update changes skill behaviour | Work in progress changes | Semver; breaking changes only in major versions, in the changelog |
 | Autonomy set to agent merging | Unreviewed code reaches `main` | The recipe lists prerequisites; never the default |
+| An agent merges its own PR at Levels 1–2 | Unreviewed code reaches `main` | One required approval the agent can't give itself, and the `ask_on_merge.py` hook (D37) |
+| A plan PR carries code | Code reaches `main` without ticket checks | Plan PRs may change only ticket, milestone and planning files; only the Owner merges them (D36) |
+| `/autopilot` runs unattended | It keeps merging past what the Owner would accept | Stops at plan approval, sensitive areas, fix rounds, milestone sign-off, a budget and an Owner "stop"; one tracking-issue line per tick (D39) |
 | The personal-data exception is read broadly | Other personal data creeps in | The scan still runs; the exception covers only the plugin name |
 
 ## 13. Implementation plan
@@ -275,7 +289,9 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 | W4 | Level 2 recipes and copyable files, ported from the earlier checks; the "protect `main`" recipe | Every copyable file has a failing-case test; tests check that error messages give a fix |
 | W5 | Level 3 recipes; `evals/` with the first task; `CHANGELOG.md` | CI green |
 | W6 | Trial: move the trial repository to Level 1 with `/setup`, add one Level 2 recipe and prove it blocks; run the hooks in a real Claude Code session; try `/plan` and `/handoff`; run `/setup` on this repository itself (D31) | A trial record with evidence |
+| W6+ | After the trial: per-level inventory and component manifest (D33), `retro`/`handoff` at Level 1 (D34), file tickets with an issue mirror (D35), plan PRs (D36), enforced Owner-only merges (D37), milestones (D38), `/autopilot` (D39) | Merged, CI green |
 | W7 | Release `v0.1.0` | The Owner creates the release |
+| W8 | Trial `/plan --roadmap`, `/plan M1` and `/autopilot` on the trial repository | A trial record with evidence |
 
 ## 14. Open questions
 
