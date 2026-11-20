@@ -27,7 +27,7 @@ Fill in [handoff-template.md](handoff-template.md) in the document language. Wri
 - **Open questions:** anything waiting on the Owner, with the issue link.
 - **Gotchas:** what cost time and would cost the next session time too. If it's worth keeping beyond this work, also propose it as a learning for `/retro`.
 
-Post the notes as a comment on the ticket. Without a tracker, put them in the PR description, or in `docs/handoff/<branch>.md` on the branch itself.
+Post the notes as a comment on the ticket. Without a tracker, put them in the PR description. Only as a last resort, write `docs/handoff/<branch>.md` on the branch itself: the verifier's checkout then contains it, and the verifier has to skip it, so remove the file before the PR asks for review.
 
 ## 3. Starting from someone's notes
 

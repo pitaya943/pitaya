@@ -2,7 +2,7 @@
 
 ## Reading the state
 
-Everything comes from places anyone can open, so a fresh session can take over at any tick:
+Everything comes from places anyone can open, so a fresh session can take over at any tick. The plugin's `docs/concepts/states.md` draws the state machines and lists where each state lives; the table below is the part a tick needs, and when the two disagree, `states.md` wins and this table gets fixed:
 
 | What | Where |
 | --- | --- |
