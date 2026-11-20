@@ -92,6 +92,11 @@
      "needs": ["tickets"],
      "summary": "A PR without an evidence section, or a UI change without screenshots, can't merge"},
 
+    {"id": "skill:autopilot", "kind": "skill", "level": 3, "doc": "skills/autopilot/SKILL.md",
+     "requires": ["skill:build", "skill:verify", "skill:report", "protect-main", "machine-account", "scope"],
+     "recommends": ["agent-merge", "read-only-paths", "no-weakened-tests", "done-when"],
+     "needs": ["tickets"],
+     "summary": "Runs the active milestone: hands tickets to fresh builders and verifiers, merges when allowed, stops at Owner gates"},
     {"id": "progress-file", "kind": "recipe", "level": 3, "doc": "docs/guardrails/progress-file.md",
      "requires": ["protect-main", "machine-account"], "recommends": ["skill:handoff"],
      "summary": "A start-up routine and a feature list where agents may only mark items as passing"},

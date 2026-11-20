@@ -22,6 +22,7 @@
     "./skills/report",
     "./skills/handoff",
     "./skills/retro",
+    "./skills/autopilot",
     "./skills/tdd",
     "./skills/evidence",
     "./skills/ask-owner",
