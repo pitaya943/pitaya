@@ -249,3 +249,8 @@ def test_skip_rejects_an_unknown_path(tmp_path):
     assert proc.returncode == 2
     assert "nope.txt" in proc.stderr
     assert list(tmp_path.iterdir()) == []
+
+
+def test_settings_deny_nested_env_files():
+    deny = json.loads((TEMPLATES / ".claude/settings.json").read_text())["permissions"]["deny"]
+    assert "Read(./**/.env)" in deny and "Read(./**/.env.*)" in deny

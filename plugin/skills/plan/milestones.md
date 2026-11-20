@@ -15,14 +15,19 @@ Planning has two levels. A **milestone** is a large outcome the Owner can see wo
 
 ## `/plan M<n>`
 
-Cut the active milestone into tickets as described in `SKILL.md` and [tickets.md](tickets.md). Every ticket gets `Milestone: M<n>`, and the milestone's "Tickets" section lists them. Tickets stay inside the milestone's goal and outside its "Not in this milestone" list; a needed change outside them is a question for the Owner, not a new ticket.
+Cut the active milestone into tickets as described in `SKILL.md` and [tickets.md](tickets.md). Every ticket gets `Milestone: M<n>`, and the milestone's "Tickets" section lists them. Tickets stay inside the milestone's goal and outside its "Not in this milestone" list; a needed change outside them is a question for the Owner, not a new ticket. The same plan PR sets the previous milestone to `Status: done` (once it's merged) and this one to `Status: active`.
+
+## The milestone branch
+
+Once the Owner merges the plan PR that cuts M<n>, create `milestone/M<n>` from `main` and push it. Every ticket of the milestone branches from `milestone/M<n>` and its PR targets `milestone/M<n>`; the checks read the tickets from there. Agents merge ticket PRs into it when the harness's Autonomy allows (Level 3, [agent-merge](../../docs/guardrails/agent-merge.md)); otherwise the Owner does. Before each new ticket, merge `main` into the milestone branch so it doesn't drift.
+
+The milestone branch is the blast radius: whatever goes wrong inside it stays out of `main`, and the Owner can throw the whole branch away.
 
 ## Closing a milestone
 
-When every ticket of the active milestone has `Status: done`:
+When every ticket of the active milestone has `Status: done` on `milestone/M<n>`:
 
 1. `/report M<n>` checks the exit criteria one by one, with evidence, and writes the report.
-2. In a plan PR, set the milestone to `Status: done` and the next one to `Status: active`. Revise later milestones if the report changed the picture.
-3. The Owner's merge of that PR is the sign-off. Run `/retro` before cutting the next milestone.
-
-Tickets merge into `main` as they pass; there are no milestone branches. A milestone groups tickets and ends with a sign-off.
+2. Open the milestone PR, `milestone/M<n>` into `main`, with the report as its description.
+3. The Owner reviews the milestone as a whole and merges it: that merge is the sign-off. Or the Owner sends it back with what to fix, or throws the branch away.
+4. Run `/retro`, then `/plan M<n+1>`: its plan PR sets M<n> to `Status: done` and cuts the next milestone, and the Owner approves the cut by merging it.

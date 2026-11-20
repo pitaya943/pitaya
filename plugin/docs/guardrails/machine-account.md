@@ -14,7 +14,7 @@ When a second agent works in the repository, or when agents act without a person
 
 1. Create a GitHub account for the agents (one per role or team of agents, if you want them told apart).
 2. Invite it as a collaborator with **Write**. Never Admin, and never on the ruleset's bypass list.
-3. Give the agent environment a token for that account: a fine-grained token limited to this repository, with Contents, Pull requests and Issues set to read and write.
+3. Give the agent environment a token for that account: a fine-grained token limited to this repository, with Contents, Pull requests and Issues set to read and write, and nothing else. In particular no Workflows (it could change CI), Commit statuses (it could forge a required status), Actions or Administration permission. In the ruleset, pick **GitHub Actions** as the source of each required check, so only statuses that CI sets count.
 4. Set the commit author in the agent's checkout: the account's login as the name, and its GitHub noreply address as the email (`<numeric id>+<login>` at `users.noreply.github.com`). `/build` does this when the harness file names a machine account.
 5. Put the login under "Machine account" in `docs/agents/harness.md`.
 
@@ -34,7 +34,7 @@ When the agent finds it's signed in as someone else, `/build` stops and says so:
 
 ## Afterwards
 
-Record the login under "Machine account" in the harness file. Add the [commit-author](commit-author.md) check to enforce the identity at merge time, and set the repository variable `MACHINE_ACCOUNT` to the login: the ticket-based checks use it too.
+Record the login under "Machine account" in the harness file. Add the [commit-author](commit-author.md) check to enforce the identity at merge time, and set the repository variable `MACHINE_ACCOUNT` to the login: the ticket-based checks require its PRs to name an open ticket, and fail closed when the variable is empty. Keep to one machine account for every agent role: then GitHub's rule that an author can't approve its own PR keeps the Owner's approval on `main`. More accounts need [multi-account](multi-account.md).
 
 ## When to remove it
 

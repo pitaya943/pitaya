@@ -144,7 +144,7 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | Append-only files | 2 | the append-only recipe |
 | Screenshots required | 2 | the evidence recipe |
 
-A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files reach `main` only through plan PRs on `plan/<slug>` branches, which may change nothing else and which only the Owner merges (D36, D38).
+A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files reach `main` only through plan PRs on `plan/<slug>` branches, which may change nothing else and which only the Owner merges (D36, D38). Each active milestone has a branch, `milestone/M<n>`: its tickets branch from it and merge into it, by agents at Level 3, and the Owner merges the milestone into `main` as its sign-off (D44). With one machine account, GitHub's rule that an author can't approve its own pull request keeps `main` with the Owner; more agent accounts need the multi-account recipe.
 
 ## 8. Level 1 defaults
 
@@ -261,7 +261,7 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | D29 | Agents commit to this repository as the machine account, with its GitHub noreply identity (display name equal to the login); the personal-data scan accepts that form and nothing else personal |
 | D32 | What ships lives in `plugin/`; the marketplace installs that folder alone, so development files never reach users |
 
-Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manifest and custom selections, D34 `retro` and `handoff` at Level 1, D35 ticket modes and the Status line, D36 plan PRs, D37 enforced Owner-only merges, D38 milestones, D39 `/autopilot`.
+Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manifest and custom selections, D34 `retro` and `handoff` at Level 1, D35 ticket modes and the Status line, D36 plan PRs, D37 enforced Owner-only merges, D38 milestones, D39 `/autopilot`, D40–D43 the audit fixes, D44 milestone branches with one machine account.
 
 ## 12. Failure modes
 
@@ -276,7 +276,7 @@ Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manife
 | Autonomy set to agent merging | Unreviewed code reaches `main` | The recipe lists prerequisites; never the default |
 | An agent merges its own PR at Levels 1–2 | Unreviewed code reaches `main` | One required approval the agent can't give itself, and the `ask_on_merge.py` hook (D37) |
 | A plan PR carries code | Code reaches `main` without ticket checks | Plan PRs may change only ticket, milestone and planning files; only the Owner merges them (D36) |
-| `/autopilot` runs unattended | It keeps merging past what the Owner would accept | Stops at plan approval, sensitive areas, fix rounds, milestone sign-off, a budget and an Owner "stop"; one tracking-issue line per tick (D39) |
+| `/autopilot` runs unattended | It keeps merging past what the Owner would accept | It merges only into the milestone branch, never `main`; stops at plan approval, fix rounds, milestone sign-off, a budget and an Owner "stop"; one tracking-issue line per tick (D39, D44) |
 | The personal-data exception is read broadly | Other personal data creeps in | The scan still runs; the exception covers only the plugin name |
 
 ## 13. Implementation plan

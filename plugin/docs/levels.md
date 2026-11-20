@@ -31,7 +31,7 @@ Includes everything in Level 0. Run `/setup`; it copies the files and fills in t
 | Files | [`agents-map`](../templates/AGENTS.md): [`AGENTS.md`](../templates/AGENTS.md), [`CLAUDE.md`](../templates/CLAUDE.md) | - | - | The map every agent tool starts from; CLAUDE.md makes Claude Code read it |
 | Files | [`memory-files`](../templates/docs/agents/README.md): [`docs/agents/glossary.md`](../templates/docs/agents/glossary.md), [`docs/agents/architecture.md`](../templates/docs/agents/architecture.md), [`docs/agents/learnings.md`](../templates/docs/agents/learnings.md) | - | - | The project's words, its module map, and what earlier work learned the hard way |
 | Files | [`decisions`](../templates/docs/decisions.md): [`docs/decisions.md`](../templates/docs/decisions.md) | - | - | The Owner's decisions in one place, append only |
-| Files | [`session-guards`](../templates/.claude/settings.json): [`.claude/settings.json`](../templates/.claude/settings.json), [`.claude/hooks/no_push_main.py`](../templates/.claude/hooks/no_push_main.py), [`.claude/hooks/no_destructive.py`](../templates/.claude/hooks/no_destructive.py), [`.claude/hooks/ask_on_rule_files.py`](../templates/.claude/hooks/ask_on_rule_files.py), [`.claude/hooks/ask_on_merge.py`](../templates/.claude/hooks/ask_on_merge.py) | - | - | Denies reading secrets; hooks block pushes to main and wiping commands, and ask before rule edits and merges |
+| Files | [`session-guards`](../templates/.claude/settings.json): [`.claude/settings.json`](../templates/.claude/settings.json), [`.claude/hooks/no_push_main.py`](../templates/.claude/hooks/no_push_main.py), [`.claude/hooks/no_destructive.py`](../templates/.claude/hooks/no_destructive.py), [`.claude/hooks/ask_on_rule_files.py`](../templates/.claude/hooks/ask_on_rule_files.py), [`.claude/hooks/ask_on_merge.py`](../templates/.claude/hooks/ask_on_merge.py) | - | - | Read tool denied on secrets; hooks block pushes to main and wiping commands, ask before rule edits and merges |
 | Files | [`tests-workflow`](../templates/.github/workflows/tests.yml): [`.github/workflows/tests.yml`](../templates/.github/workflows/tests.yml) | - | - | Runs the test command on every PR |
 | Recipe | [`protect-main`](guardrails/protect-main.md) | - | `tests-workflow` | A ruleset: changes reach main only through PRs, tests must pass, only the Owner merges |
 | Skill | [`skill:handoff`](../skills/handoff/SKILL.md) | - | - | Notes that let another session take over stopped work |
@@ -52,6 +52,7 @@ Includes everything in Level 1. Add the recipes you need, one at a time; each is
 | Recipe | [`done-when`](guardrails/done-when.md) | `protect-main`, `machine-account` | `no-weakened-tests`, `skill:plan`, `skill:verify` | Every completion condition has a test that exists and passes |
 | Recipe | [`append-only`](guardrails/append-only.md) | `protect-main`, `machine-account` | `decisions` | Listed files only gain lines |
 | Recipe | [`serial-resources`](guardrails/serial-resources.md) | `protect-main`, `machine-account` | `skill:plan` | Only one ticket at a time changes a migration, lockfile or other shared resource |
+| Recipe | [`multi-account`](guardrails/multi-account.md) | `protect-main`, `machine-account` | - | Only with several agent accounts: CODEOWNERS, so only the Owner's approval counts |
 | Recipe | [`evidence`](guardrails/evidence.md) | `protect-main`, `machine-account` | `skill:build`, `skill:evidence` | A PR without an evidence section, or a UI change without screenshots, can't merge |
 
 ## Level 3: long-running autonomy
@@ -63,7 +64,7 @@ Includes everything in Level 2. `agent-merge` comes last: it requires the main L
 | Skill | [`skill:autopilot`](../skills/autopilot/SKILL.md) | `skill:build`, `skill:verify`, `skill:report`, `protect-main`, `machine-account`, `scope` | `agent-merge`, `read-only-paths`, `no-weakened-tests`, `done-when` | Runs the active milestone: hands tickets to fresh builders and verifiers, merges when allowed, stops at Owner gates |
 | Recipe | [`progress-file`](guardrails/progress-file.md) | `protect-main`, `machine-account` | `skill:handoff` | A start-up routine and a feature list where agents may only mark items as passing |
 | Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | - | Another model reviews sensitive or risky PRs |
-| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge after CI is green and the latest verdict on the current commit is PASS |
+| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge ticket PRs into milestone branches on a PASS for the current commit; the Owner merges main |
 | Recipe | [`project-evals`](guardrails/project-evals.md) | - | - | A task set drawn from real failures, run before and after a harness change |
 
 ## What the project needs

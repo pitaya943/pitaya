@@ -83,7 +83,7 @@ def test_removing_something_still_required_is_refused():
 def test_removing_it_together_with_its_dependents_works():
     keep = ["--remove", "machine-account"] + [
         a for d in ("commit-author", "scope", "read-only-paths", "no-weakened-tests", "done-when",
-                    "append-only", "serial-resources", "evidence") for a in ("--remove", d)]
+                    "append-only", "serial-resources", "evidence", "multi-account") for a in ("--remove", d)]
     got = plan("--level", "2", *keep)
     assert "machine-account" not in got["selected"]
 

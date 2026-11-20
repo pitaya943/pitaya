@@ -17,7 +17,9 @@
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.config/gcloud/**)",
-      "Read(~/.azure/**)"
+      "Read(~/.azure/**)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)"
     ]
   },
   "hooks": {
@@ -53,7 +55,7 @@
         ]
       },
       {
-        "matcher": "mcp__.*merge_pull_request",
+        "matcher": "mcp__.*(merge_pull_request|auto_merge)",
         "hooks": [
           {
             "type": "command",

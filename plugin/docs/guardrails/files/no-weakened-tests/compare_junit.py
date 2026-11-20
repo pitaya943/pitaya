@@ -78,6 +78,11 @@ def main(argv: list[str] | None = None) -> int:
         print("To fix: make the test command write JUnit XML to the path the workflow expects, "
               "and make sure it runs on both the base and the head.")
         return 1
+    if not base:
+        print("FAIL no-weakened-tests: the base run reported no tests, so there is nothing to compare against.")
+        print("To fix: check that the base job's test command writes JUnit XML with its test cases; "
+              "an empty base report would let any test disappear.")
+        return 1
     renames = {}
     if args.ticket:
         for item in ticket_section(args.ticket.read_text(), "Test renames") or []:

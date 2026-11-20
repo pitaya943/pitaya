@@ -64,3 +64,12 @@ def test_missing_head_report_fails(tmp_path):
     base = junit(tmp_path / "base.xml", {"t::a": "pass"})
     proc = run_check("no-weakened-tests", "compare_junit.py", "--base", base, "--head", str(tmp_path / "nope.xml"))
     assert proc.returncode == 1
+
+
+def test_a_base_report_with_no_tests_fails(tmp_path):
+    base = tmp_path / "base.xml"
+    base.write_text("<testsuite/>")
+    head = tmp_path / "head.xml"
+    head.write_text('<testsuite><testcase classname="t" name="a"/></testsuite>')
+    proc = run_check("no-weakened-tests", "compare_junit.py", "--base", str(base), "--head", str(head))
+    assert proc.returncode == 1 and "no tests" in proc.stdout and "To fix:" in proc.stdout

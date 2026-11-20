@@ -6,6 +6,12 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- Milestone branches (D44): `/plan` creates `milestone/M<n>` once a cut is approved; `/build` branches from it and targets it; `/autopilot` merges ticket PRs only into it, opens the milestone PR into `main` and stops for the Owner's sign-off, then starts the next cut. `/verify` posts the verdict as a comment from the machine account.
+
+- `/autopilot` claims a ticket by pushing its branch before starting a builder.
+
+- `/verify` posts the verdict as a review from the verifier account when agent-merge is on.
+
 - New Level 3 skill `autopilot`: runs the active milestone in stateless ticks, dispatching fresh builder and verifier sessions, merging when the harness allows, stopping at Owner gates and a budget. `wake.md` lists how to wake it (PR events, `/loop`, a schedule, a GitHub Action).
 
 - Milestones (`plan/milestones.md`, `milestone-template.md`): `/plan --roadmap` writes `docs/milestones/M<n>.md`; `/plan M<n>` cuts the active one into tickets; `/report M<n>` checks its exit criteria for the Owner's sign-off. Tickets carry `Milestone: M<n>`.
@@ -15,6 +21,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `setup`, `plan`, `build`, `verify`, `report`, `handoff`, `retro`, `autopilot`, `tdd`, `evidence`, `ask-owner` and `learning`.
 
 ### Templates
+
+- Hooks look inside `sh -c` and `eval`; `ask_on_merge.py` reads only the Autonomy value and also catches `gh -R ... pr merge`, GraphQL merge and auto-merge mutations and auto-merge tools; `no_push_main.py` handles `--repo`; `ask_on_rule_files.py` covers all of `.github/` and inline scripts that name a rule file. `settings.json` also denies nested `.env` files.
 
 - New hook `ask_on_merge.py` asks before an agent merges a PR unless the harness file lets agents merge. `AGENTS.md` says so under "Never".
 
@@ -34,6 +42,16 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes
+
+- `protect-main` adds a `protect-milestones` ruleset for `milestone/*`. `agent-merge` gates merges into milestone branches; it reads verdict comments from the machine account (edited ones don't count, any FAIL on the head is final) and refuses plan and milestone PRs. New `multi-account` recipe holds CODEOWNERS for repositories with several agent accounts.
+
+- `append-only` accepts lines only after the last existing one. `serial-resources` maps resources to paths and fails undeclared changes. `protect-main` requires up-to-date branches (or a merge queue) from Level 2. `progress-file` runs on every PR, keeps its files in `docs/progress/`, and lets Owner accounts change requirements.
+
+- Every workflow runs the base branch's copy of its check. `no-weakened-tests` and `done-when` run the PR's tests in a separate job; an empty base report fails. `agent-merge` reads the verdict from the verifier account's pull request review on the current head, runs with `pull_request_target`, and refuses plan PRs and a verifier equal to `MACHINE_ACCOUNT`. Token permissions and the required-check source are spelled out.
+
+- The shared "Find the ticket" step: every account in `MACHINE_ACCOUNT` (comma separated, any case) must use an open ticket, and it fails closed when the variable is unset; milestone PRs (`milestone/*`) are left to the Owner; file tickets never fall back to issues; done tickets, closed issues and tickets another open PR works on can't be claimed. New `multi-account` recipe: CODEOWNERS and code-owner review, only for repositories with more than one agent account.
+
+- Workflows pass step outputs to scripts through `env:`, never inline, so a branch or file name can't inject shell code.
 
 - `docs/milestones/**` is read-only for ticket PRs; plan PRs may change `docs/milestones/*.md`.
 
