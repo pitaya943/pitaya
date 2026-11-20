@@ -41,6 +41,7 @@ RECIPES = {
     "project-evals": 4,
     "multi-account": 2,
     "verify-app": 2,
+    "deep-verification": 4,
 }
 
 

@@ -42,9 +42,11 @@ Stop, post why on the tracking issue, and cancel your wake-up when any of these 
 
 When you wake to find the Owner merged the milestone PR, start a fresh session with `/pitaya:design M<n+1>` and then `/pitaya:plan M<n+1>`: one plan PR carries the design, sets M<n> done and cuts the next milestone. Stop until the Owner merges it, then carry on with the new milestone. The two Owner gates between milestones are the sign-off and the next cut; everything inside a milestone runs on its own.
 
+At Level 4 the cut is yours too: create `milestone/M<n+1>` from `main`, aim that plan PR at it instead of `main`, and merge it once its checks pass; the Owner reviews the design and tickets with the rest of the milestone at its sign-off. The roadmap itself still changes only through the Owner.
+
 ## Never
 
-- Never merge into `main`: not a milestone PR, not a plan PR. Never change a ticket or milestone file, or decide what an escalation asks. Plans, scope and sign-off belong to the Owner.
+- Never merge into `main`: not a milestone PR, not a plan PR. Below Level 4, never merge a plan PR anywhere. Never change the roadmap or decide what an escalation asks: those, and sign-off, belong to the Owner.
 - Never merge a PR that has no PASS on its current head or isn't green on every required check, and never bypass or re-run a check to get it green. A ticket that touches a sensitive area without a covering test is escalated, not built.
 - Never build, verify or fix code in your own context; never let a builder verify its own work.
 - Never edit rule files (`AGENTS.md`, `docs/agents/`, `.claude/`, `.github/`), push to `main` or force-push a milestone branch.

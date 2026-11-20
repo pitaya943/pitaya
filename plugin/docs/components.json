@@ -117,6 +117,10 @@
                   "skill:verify"],
      "needs": ["verifier-account"],
      "summary": "Agents merge ticket PRs into milestone branches on a PASS for the current commit; the Owner merges main"},
+    {"id": "deep-verification", "kind": "recipe", "level": 4, "doc": "docs/guardrails/deep-verification.md",
+     "requires": ["second-model-review", "skill:design", "skill:verify", "skill:report"],
+     "recommends": ["verify-app", "project-evals", "skill:autopilot"],
+     "summary": "Risk tags, interrogation of high-risk PRs, a swarm and a log audit per milestone, an arena for contested designs"},
     {"id": "project-evals", "kind": "recipe", "level": 4, "doc": "docs/guardrails/project-evals.md",
      "summary": "A task set drawn from real failures, run before and after a harness change"}
   ]

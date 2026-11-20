@@ -42,8 +42,8 @@ AUTHORITY = [
     ("2", "A Chief dispatches parallel builders", "Approves plans, merges every PR", "Ticket checks: scope, tests, evidence"),
     ("3", "Merges tickets into the milestone branch", "Signs off each milestone, approves each cut",
      "Verdict on the head, milestone branch as blast radius"),
-    ("4", "Most autonomy: cross-model review, measured by evals", "Signs off each milestone",
-     "Second-model review, project evals"),
+    ("4", "Also cuts the next milestone inside its branch", "Signs off each milestone, owns the roadmap",
+     "Interrogation of high-risk PRs, a swarm and log audit per milestone, evals"),
 ]
 
 

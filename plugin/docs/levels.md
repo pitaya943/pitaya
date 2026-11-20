@@ -16,7 +16,7 @@ Each level up gives agents more authority and adds the safeguards that authority
 | 1 | Opens PRs, runs a fresh verifier | Approves plans, merges every PR | Hooks, CI, protected main |
 | 2 | A Chief dispatches parallel builders | Approves plans, merges every PR | Ticket checks: scope, tests, evidence |
 | 3 | Merges tickets into the milestone branch | Signs off each milestone, approves each cut | Verdict on the head, milestone branch as blast radius |
-| 4 | Most autonomy: cross-model review, measured by evals | Signs off each milestone | Second-model review, project evals |
+| 4 | Also cuts the next milestone inside its branch | Signs off each milestone, owns the roadmap | Interrogation of high-risk PRs, a swarm and log audit per milestone, evals |
 
 ## Level 0: skills only
 
@@ -86,6 +86,7 @@ Includes everything in Level 3. Closest to pstack: the most agent authority, wit
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
 | Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | `agent-merge` | Another model reviews sensitive or risky PRs |
+| Recipe | [`deep-verification`](guardrails/deep-verification.md) | `second-model-review`, `skill:design`, `skill:verify`, `skill:report` | `verify-app`, `project-evals`, `skill:autopilot` | Risk tags, interrogation of high-risk PRs, a swarm and a log audit per milestone, an arena for contested designs |
 | Recipe | [`project-evals`](guardrails/project-evals.md) | - | - | A task set drawn from real failures, run before and after a harness change |
 
 ## What the project needs

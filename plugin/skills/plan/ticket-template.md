@@ -5,6 +5,7 @@ File tickets (docs/tickets/T-<nnn>.md) start with the title and the Status line;
 
 Status: open
 Milestone: M<n>
+Risk: low
 Issue: #<n>
 
 ## Goal
