@@ -1,4 +1,4 @@
-# pitaya template 0.1.6 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
+# pitaya template 0.1.7 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
 # Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
 # Copy to .github/workflows/no-weakened-tests.yml, and compare_junit.py to .github/guardrails/compare_junit.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
@@ -122,7 +122,7 @@ jobs:
             # ticket and planning files, and the ticket checks don't apply to it.
             case "$BASE_REF" in
               "$DEFAULT_BRANCH"|milestone/*) ;;
-              *) fail "a plan PR targets $DEFAULT_BRANCH (or a milestone branch, for a cut made inside it), not $BASE_REF." \
+              *) fail "a plan PR targets $DEFAULT_BRANCH (or a milestone branch, for its report or a cut made inside it), not $BASE_REF." \
                    "open the plan PR into $DEFAULT_BRANCH; changes for a ticket go on its ticket/<id>-<slug> branch.";;
             esac
             other=$(git diff --name-only "origin/$BASE_REF...HEAD" \

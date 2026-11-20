@@ -27,7 +27,7 @@ Use [design-template.md](design-template.md); save it as `docs/milestones/M<n>-d
 
 ## Hand over
 
-Show the Owner the scenarios and the chosen shape, and change them until the Owner agrees. Then commit the design on a `plan/<slug>` branch with the milestone's ticket cut (the `plan` skill, `milestones.md`), so one plan PR carries both. The Owner's merge approves the design and the cut together.
+Show the Owner the scenarios and the chosen shape, and change them until the Owner agrees. Then commit the design on a `plan/<slug>` branch with the milestone's ticket cut (the `plan` skill, `milestones.md`), so one plan PR carries both. The Owner's merge approves the design and the cut together. In an unattended session (one `/autopilot` started) there is nobody to show: write each open question and the answer you assumed into the design, and go on to the cut. The Owner then judges the design in the plan PR, or at Level 4 at the milestone's sign-off.
 
 ## Don't
 

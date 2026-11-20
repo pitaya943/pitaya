@@ -440,3 +440,282 @@ def test_another_tickets_risk_does_not_matter(tmp_path, branches):
     repo.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")
     head = repo.git("rev-parse", "HEAD")
     assert check_git(tmp_path, repo, [comment("PASS", sha=passed)], head).returncode == 0
+
+
+# --- plan PRs into a milestone branch: the Level 4 cut (F04) and the report PR (F18); D67 ---
+
+LEVEL_3 = "Agents merge ticket PRs into milestone branches; only the Owner merges main"
+LEVEL_4 = "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main"
+MILESTONE = "# M{n}: a milestone\n\nStatus: {status}\n\n## Goal\n\nSomething works.\n\n## Exit criteria\n\n1. It runs.\n\n## Tickets\n\n{tickets}\n"
+TICKET = "# {id}\n\nStatus: {status}\nMilestone: {milestone}\nRisk: low\n\n## Done when\n\n1. It works.\n"
+
+
+def harness(autonomy):
+    return f"# Harness\n\n## People and accounts\n\n- Owner: example-owner.\n- Autonomy: {autonomy}.\n  The alternatives: at Level 4, \"{LEVEL_4}\".\n"
+
+
+@pytest.fixture
+def planned(tmp_path):
+    """main with M1 active (T-1 done on its branch) and M2 planned; milestone/M1 and milestone/M2 exist."""
+    (tmp_path / "repo").mkdir()
+    repo = Repo(tmp_path / "repo")
+    repo.write("app.py", "x = 1\n")
+    repo.write("docs/agents/harness.md", harness(LEVEL_3))
+    repo.write("docs/milestones/M1.md", MILESTONE.format(n=1, status="active", tickets="T-1: first"))
+    repo.write("docs/milestones/M2.md", MILESTONE.format(n=2, status="planned", tickets=""))
+    repo.write("docs/tickets/T-1.md", TICKET.format(id="T-1", status="open", milestone="M1"))
+    repo.commit("the roadmap and M1's cut")
+    repo.git("checkout", "-q", "-b", "milestone/M1")
+    repo.write("docs/tickets/T-1.md", TICKET.format(id="T-1", status="done", milestone="M1"))
+    repo.commit("T-1 merged")
+    repo.git("branch", "milestone/M2", "main")
+    return repo
+
+
+def level_4(repo):
+    """The Owner sets the Level 4 autonomy on main; milestone/M2 is cut from it afterwards."""
+    repo.git("checkout", "-q", "main")
+    repo.write("docs/agents/harness.md", harness(LEVEL_4))
+    repo.commit("the Owner moves to Level 4")
+    repo.git("branch", "-f", "milestone/M2", "main")
+
+
+def cut(repo, base="milestone/M2", branch="plan/M2"):
+    """A plan PR that cuts M2 inside its branch: the design, two tickets, Status: active."""
+    repo.git("checkout", "-q", "-b", branch, base)
+    repo.write("docs/milestones/M2.md", MILESTONE.format(n=2, status="active", tickets="T-2: second\nT-3: third"))
+    repo.write("docs/milestones/M2-design.md", "# M2 design\n\n## Scenarios\n\nS-1: it works.\n")
+    repo.write("docs/tickets/T-2.md", TICKET.format(id="T-2", status="open", milestone="M2"))
+    repo.write("docs/tickets/T-3.md", TICKET.format(id="T-3", status="open", milestone="M2"))
+    return repo.commit("cut M2")
+
+
+def report_pr(repo, status="done", report=True, milestone="M1", base="milestone/M1"):
+    """The report PR: Status: done and docs/reports/M1.md, into the milestone's own branch."""
+    repo.git("checkout", "-q", "-b", "plan/M1-report", base)
+    if status:
+        path = f"docs/milestones/{milestone}.md"
+        text = (repo.path / path).read_text()
+        repo.write(path, re.sub(r"^Status: \w+$", f"Status: {status}", text, flags=re.M))
+    if report:
+        repo.write("docs/reports/M1.md", "# Report: M1\n\n## Conclusion\n\nReady.\n")
+    return repo.commit("the report for M1")
+
+
+import re  # noqa: E402
+
+
+def test_a_level_4_cut_into_its_milestone_branch_needs_no_verdict(tmp_path, planned):
+    """F04: the `verdict` status is required on milestone/*, and no verifier judges a plan PR."""
+    level_4(planned)
+    head = cut(planned)
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 0, proc.stdout
+    assert "cut" in proc.stdout
+
+
+def test_a_cut_needs_the_level_4_autonomy_setting(tmp_path, planned):
+    """At Level 3 the Owner approves each cut, on main: a plan PR into a milestone branch waits for the Owner."""
+    head = cut(planned)
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "Owner" in proc.stdout, proc.stdout
+
+
+def test_the_autonomy_setting_is_read_from_the_default_branch(tmp_path, planned):
+    """The milestone branch is where agents merge; only the Owner's main says what they may merge."""
+    planned.git("checkout", "-q", "milestone/M2")
+    planned.write("docs/agents/harness.md", harness(LEVEL_4))
+    planned.commit("Level 4, but only on the milestone branch")
+    head = cut(planned)
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2").returncode == 1
+
+
+def test_the_alternatives_note_under_the_autonomy_line_does_not_count(tmp_path, planned):
+    """The template's note quotes the Level 4 value under a Level 3 setting; only the field's own value counts."""
+    assert LEVEL_4 in (planned.path / "docs/agents/harness.md").read_text()
+    head = cut(planned)
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2").returncode == 1
+
+
+def test_a_cut_that_changes_code_waits_for_the_owner(tmp_path, planned):
+    level_4(planned)
+    cut(planned)
+    planned.write("app.py", "x = 2\n")
+    head = planned.commit("code riding on the cut")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "app.py" in proc.stdout, proc.stdout
+
+
+def test_a_cut_may_not_change_a_ticket_that_exists(tmp_path, planned):
+    """A cut adds tickets. Re-planning one that exists, such as loosening its conditions, is the Owner's."""
+    level_4(planned)
+    planned.git("checkout", "-q", "-b", "plan/replan", "milestone/M1")
+    planned.git("merge", "-q", "--no-edit", "main")
+    planned.git("branch", "-f", "milestone/M1", "HEAD")
+    planned.write("docs/tickets/T-1.md", TICKET.format(id="T-1", status="open", milestone="M1").replace("It works", "It compiles"))
+    head = planned.commit("loosen T-1")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/replan", base="milestone/M1")
+    assert proc.returncode == 1 and "T-1" in proc.stdout, proc.stdout
+
+
+def test_a_cut_may_not_delete_a_ticket(tmp_path, planned):
+    level_4(planned)
+    planned.git("checkout", "-q", "-b", "plan/drop", "milestone/M2")
+    planned.remove("docs/tickets/T-1.md")
+    head = planned.commit("drop T-1")
+    assert check_git(tmp_path, planned, [], head, branch="plan/drop", base="milestone/M2").returncode == 1
+
+
+def test_a_plan_pr_into_the_default_branch_never_passes(tmp_path, planned):
+    """Whatever the level, only the Owner merges main: a cut aimed there gets no status."""
+    level_4(planned)
+    head = cut(planned, base="main")
+    proc = check_git(tmp_path, planned, [comment("PASS", sha=head)], head, branch="plan/M2", base="main")
+    assert proc.returncode == 1 and "Owner" in proc.stdout, proc.stdout
+
+
+def test_a_fail_on_a_cuts_head_still_blocks_it(tmp_path, planned):
+    level_4(planned)
+    head = cut(planned)
+    proc = check_git(tmp_path, planned, [comment("FAIL", sha=head)], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1, proc.stdout
+
+
+def test_a_cut_updated_with_its_base_still_needs_no_verdict(tmp_path, planned):
+    """"Require branches to be up to date": a sync merged meanwhile, and the cut pressed "Update branch"."""
+    level_4(planned)
+    cut(planned)
+    planned.git("checkout", "-q", "milestone/M2")
+    planned.write("other.md", "merged meanwhile\n")
+    planned.commit("something else merged into the milestone")
+    planned.git("checkout", "-q", "plan/M2")
+    planned.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M2")
+    head = planned.git("rev-parse", "HEAD")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2").returncode == 0
+
+
+def test_a_milestone_pr_never_passes_even_at_level_4(tmp_path, planned):
+    level_4(planned)
+    head = planned.git("rev-parse", "milestone/M1")
+    proc = check_git(tmp_path, planned, [comment("PASS", sha=head)], head, branch="milestone/M1", base="main")
+    assert proc.returncode == 1 and "Owner" in proc.stdout
+
+
+def test_a_report_pr_needs_no_verdict(tmp_path, planned):
+    """F18: the milestone PR itself carries Status: done, so some PR into the milestone branch must set it."""
+    head = report_pr(planned)
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 0, proc.stdout
+    assert "report" in proc.stdout
+
+
+def test_a_report_pr_may_update_the_report_alone(tmp_path, planned):
+    """After the Owner sends a milestone back, Status is done already; the new report is the only change."""
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/milestones/M1.md", MILESTONE.format(n=1, status="done", tickets="T-1: first"))
+    planned.commit("the first report PR merged")
+    head = report_pr(planned, status="")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 0
+
+
+def test_a_report_pr_may_not_change_anything_else_in_the_milestone_file(tmp_path, planned):
+    """The honest mistake: making the exit criteria fit what was built, in the PR nobody verifies."""
+    report_pr(planned)
+    text = (planned.path / "docs/milestones/M1.md").read_text()
+    planned.write("docs/milestones/M1.md", text.replace("1. It runs.", "1. It compiles."))
+    head = planned.commit("and an easier exit criterion")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 1 and "Status" in proc.stdout, proc.stdout
+
+
+def test_a_report_pr_sets_only_done(tmp_path, planned):
+    head = report_pr(planned, status="planned")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 1
+
+
+def test_a_report_pr_closes_only_its_own_milestone(tmp_path, planned):
+    head = report_pr(planned, milestone="M2")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 1
+
+
+def test_a_report_pr_with_any_other_file_waits_for_the_owner(tmp_path, planned):
+    report_pr(planned)
+    planned.write("docs/decisions.md", "| D1 | a decision |\n")
+    head = planned.commit("and a decision")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 1
+
+
+def test_a_milestone_with_an_open_ticket_is_not_done(tmp_path, planned):
+    """Status: done claims every ticket is done; the check reads the tickets instead of believing it."""
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/tickets/T-9.md", TICKET.format(id="T-9", status="open", milestone="M1"))
+    planned.commit("a ticket still open")
+    head = report_pr(planned)
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 1 and "T-9" in proc.stdout, proc.stdout
+
+
+def test_another_milestones_open_ticket_does_not_block_the_report(tmp_path, planned):
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/tickets/T-9.md", TICKET.format(id="T-9", status="open", milestone="M2"))
+    planned.commit("a ticket of the next milestone")
+    head = report_pr(planned)
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 0
+
+
+def test_a_fail_on_a_report_prs_head_still_blocks_it(tmp_path, planned):
+    head = report_pr(planned)
+    assert check_git(tmp_path, planned, [comment("FAIL", sha=head)], head, branch="plan/M1-report").returncode == 1
+
+
+def test_the_check_reads_the_autonomy_values_the_harness_template_offers():
+    """One source: the values `/setup` writes are the values the check understands."""
+    import importlib.util
+    import sys as _sys
+    from helpers import FILES, PLUGIN_ROOT
+    _sys.dont_write_bytecode = True
+    spec = importlib.util.spec_from_file_location("check_verdict", FILES / "agent-merge" / "check_verdict.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    template = (PLUGIN_ROOT / "skills" / "setup" / "harness-template.md").read_text()
+    assert LEVEL_3 in template and LEVEL_4 in template
+    assert module.agents_merge_plans(f"- Autonomy: {LEVEL_4}.\n")
+    assert not module.agents_merge_plans(f"- Autonomy: {LEVEL_3}.\n")
+    assert not module.agents_merge_plans("- Autonomy: Only the Owner merges `main`.\n")
+    default = re.search(r"^- Autonomy: .*(?:\n  .*)*", template, re.M).group(0)
+    assert not module.agents_merge_plans(default)
+
+
+def test_a_cut_may_not_change_another_milestones_file(tmp_path, planned):
+    """The roadmap changes only through the Owner: a cut fills in its own milestone, not its neighbours."""
+    level_4(planned)
+    cut(planned)
+    planned.write("docs/milestones/M1.md", MILESTONE.format(n=1, status="done", tickets="T-1: first"))
+    head = planned.commit("and M1 marked done from M2's cut")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "docs/milestones/M1.md" in proc.stdout, proc.stdout
+
+
+def test_a_cut_deletes_nothing(tmp_path, planned):
+    level_4(planned)
+    cut(planned)
+    planned.remove("docs/milestones/M1.md")
+    head = planned.commit("and a milestone dropped from the roadmap")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "delete" in proc.stdout, proc.stdout
+
+
+def test_a_report_pr_may_not_delete_the_report(tmp_path, planned):
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/reports/M1.md", "# Report: M1\n")
+    planned.commit("an earlier report")
+    planned.git("checkout", "-q", "-b", "plan/M1-report")
+    planned.remove("docs/reports/M1.md")
+    head = planned.commit("the report removed")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 1
+
+
+def test_a_plan_pr_that_changes_nothing_does_not_pass(tmp_path, planned):
+    planned.git("checkout", "-q", "-b", "plan/empty", "milestone/M1")
+    head = planned.commit("nothing")
+    assert check_git(tmp_path, planned, [], head, branch="plan/empty").returncode == 1

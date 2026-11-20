@@ -1,4 +1,4 @@
-<!-- A milestone written by /plan --roadmap, saved as docs/milestones/M<n>.md. Use the document language from docs/agents/harness.md. Status moves planned -> active -> done; only the Owner's merge of a plan PR changes it. -->
+<!-- A milestone written by /plan --roadmap, saved as docs/milestones/M<n>.md. Use the document language from docs/agents/harness.md. Status moves planned -> active -> done. The plan PR that cuts the milestone sets active; its report PR sets done on the milestone branch, and the Owner's merge of the milestone PR brings that to main. -->
 
 # M<n>: <title>
 

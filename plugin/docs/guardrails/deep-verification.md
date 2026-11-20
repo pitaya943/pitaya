@@ -19,11 +19,11 @@ When the project runs at Level 4. The extra agents are what Level 4's authority 
 3. `/verify` then interrogates each high-risk PR (`verify/interrogate.md`): adversaries in worktrees, and only findings a run reproduces survive.
 4. `/report M<n>` runs a swarm over the design's scenarios and a decision-log audit that adds its findings to the report's Attention table for the Owner (`report/milestone-level4.md`).
 5. `/design` runs an arena when two shapes come out close (`design/arena.md`).
-6. Set Autonomy to "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main", so `/autopilot` cuts the next milestone inside its branch.
+6. Set Autonomy to "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main", so `/autopilot` cuts the next milestone inside its branch. Make that change on the default branch: the `verdict` check ([agent-merge](agent-merge.md)) reads the line there, and passes a cut without a verifier only while it says so.
 
 ## How to prove it works
 
-Plant a bug in a high-risk ticket that the unit tests miss but a reordered call or an empty input exposes. The interrogation reproduces it and the verdict is FAIL. At a milestone, break one scenario after its ticket merged: the swarm's table shows it failing.
+Open a plan PR into a milestone branch that adds one ticket: its `verdict` status turns green with no verdict comment. Change an existing ticket in the same PR, and it turns red. Then plant a bug in a high-risk ticket that the unit tests miss but a reordered call or an empty input exposes. The interrogation reproduces it and the verdict is FAIL. At a milestone, break one scenario after its ticket merged: the swarm's table shows it failing.
 
 ## Cost and false positives
 

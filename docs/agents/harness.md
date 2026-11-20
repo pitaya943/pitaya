@@ -7,7 +7,7 @@ This repository develops pitaya with pitaya (decision D31).
 ## Level
 
 - Level: 1, plus the machine-account commit identity from Level 2. What each level includes: `plugin/docs/levels.md`; what each part achieves: `plugin/docs/suggestion.md`.
-- Templates: pitaya 0.1.6. The version `/setup` installed; re-run `/setup` to find stale copies.
+- Templates: pitaya 0.1.7. The version `/setup` installed; re-run `/setup` to find stale copies.
 
 ## People and accounts
 

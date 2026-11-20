@@ -80,7 +80,8 @@ def test_error_path_item_is_a_mutation():
     assert "change one character" in item and "substring" in item
 
 
-# P19: a report can be committed as a file in the closing plan PR.
+# P19: a report can be committed as a file through a plan PR. For a milestone that is the report PR
+# (0.1.7, D67: the "closing plan PR" into main is gone, so this no longer asks for those words).
 
 def test_plan_prs_may_add_reports():
     for wf in sorted(FILES.glob("*/*.yml")):
@@ -91,7 +92,8 @@ def test_plan_prs_may_add_reports():
         assert re.search(allow, "docs/reports/M2.md"), wf.name
         assert "docs/reports/*.md" in text, wf.name
     assert "docs/reports/" in read("skills/plan/tickets.md")
-    assert "closing plan PR" in read("skills/report/SKILL.md")
+    report = read("skills/report/SKILL.md")
+    assert "report PR" in report and "docs/reports/M<n>.md" in report
 
 
 # P21: the milestone PR closes the issue mirrors of its tickets.

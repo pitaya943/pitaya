@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: 0.1.5, ready to release (0.1.0 to 0.1.4 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D63 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
+- Status: 0.1.7, ready to release (0.1.0 to 0.1.6 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D67 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
@@ -150,7 +150,7 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | Scenarios (from the milestone design) | 2 | `/design`, `/report M<n>` |
 | Risk: low or high | 4 | deep verification |
 
-A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files reach `main` only through plan PRs on `plan/<slug>` branches, which may change nothing else and which only the Owner merges (D36, D38). Each active milestone has a branch, `milestone/M<n>`: its tickets branch from it and merge into it, by agents at Level 3, and the Owner merges the milestone into `main` as its sign-off (D44). With one machine account, GitHub's rule that an author can't approve its own pull request keeps `main` with the Owner; more agent accounts need the multi-account recipe.
+A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files change only through plan PRs on `plan/<slug>` branches, which may change nothing else. Only the Owner merges one into `main` (D36, D38); from 0.1.7 two kinds merge into a milestone branch and reach `main` with the milestone, at the sign-off: the report PR, and at Level 4 the cut (D67). Each active milestone has a branch, `milestone/M<n>`: its tickets branch from it and merge into it, by agents at Level 3, and the Owner merges the milestone into `main` as its sign-off (D44). With one machine account, GitHub's rule that an author can't approve its own pull request keeps `main` with the Owner; more agent accounts need the multi-account recipe.
 
 ## 8. Level 1 defaults
 
@@ -162,7 +162,7 @@ A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its 
 | `CLAUDE.md` | One line importing `AGENTS.md` | D2 |
 | `.claude/settings.json` | Deny reading `.env*`, key files and cloud credentials; allow the test command and read-only git; ask for everything else; no sandbox. Merged additively when the project already has one | D8 |
 | `.claude/hooks/no_push_main.py` | Deny pushes to the default branch (read from `origin/HEAD` too), force pushes, remote deletes, `--all` and `--mirror` | D6 |
-| `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x` | D6 |
+| `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x`; and from 0.1.6 the accidental wipes in D64 (f): `.git`, `*`, `./*`, `$PWD`, an unnarrowed `find . -delete`, `git checkout` and `git restore` of `.` | D6, D64 |
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
 | `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge | D37 |
 | `.github/workflows/tests.yml` | One job running the test command; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |

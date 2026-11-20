@@ -18,9 +18,9 @@ You answer two kinds of question: **where are we** (no argument, or "what's next
 
 Gather, with read-only commands (`git fetch`, `git branch -r`, `gh pr list`, `gh issue list`, or the GitHub tool's list and read calls where `gh` isn't available, as in cloud sessions):
 
-1. **Milestone:** the one with `Status: active` under `docs/milestones/`, and whether `milestone/M<n>` and its PR exist; report a missing branch, and any ticket PR of the milestone that targets `main` instead, as something to fix.
+1. **Milestone:** the active one, with each `docs/milestones/M<n>.md` read on `milestone/M<n>` when that branch exists and on `main` when it doesn't (the plugin's `docs/concepts/states.md`: `Status: done` on the branch alone means closing when every ticket is done, and sent back, so active, when one is open), and whether `milestone/M<n>` and its PR exist; report a missing branch, and any ticket PR of the milestone that targets `main` instead, as something to fix.
 2. **Tickets:** each ticket of that milestone with its state: open, blocked (a "Depends on" not done), claimed (a `ticket/<id>-*` branch), in review, fixing (FAIL on the head, and how many rounds), escalated (an open `needs-owner` issue), done.
-3. **Waiting on the Owner:** plan PRs (`plan/<slug>`), the milestone PR, `needs-owner` issues, and below Level 3 every green PR with a PASS, sync PRs included.
+3. **Waiting on the Owner:** plan PRs (`plan/<slug>`) into `main`, any plan PR into a milestone branch whose `verdict` is red, the milestone PR, `needs-owner` issues, and below Level 3 every green PR with a PASS, sync PRs and the milestone's report PR included. A closing milestone whose report PR is merged and whose milestone PR isn't open yet needs `/report M<n>` run once more: that opens it.
 4. **In sync:** whether `main` has commits `milestone/M<n>` lacks, and whether a sync PR (`sync/<slug>` into the milestone) is open for them.
 5. **Autopilot:** at Level 3 and up, the last line on the `Autopilot: M<n>` tracking issue and whether it said it stopped.
 

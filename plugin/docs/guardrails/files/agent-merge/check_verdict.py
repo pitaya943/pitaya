@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.6 · docs/guardrails/files/agent-merge/check_verdict.py
+# pitaya template 0.1.7 · docs/guardrails/files/agent-merge/check_verdict.py
 """Guardrail "agent-merge": a PASS verdict exists for the pull request's current head commit.
 
 Usage (in CI)::
@@ -53,13 +53,32 @@ verdict when its tree equals the base merged with the newest default-branch
 commit it contains, and every commit it adds is a true merge: everything in it
 was already merged into the default branch.
 
-Plan PRs (`plan/<slug>`) and milestone PRs (`milestone/<id>`) never pass on a
-verdict: the Owner merges those.
+Milestone PRs (`milestone/<id>`) never pass, and neither does a plan PR
+(`plan/<slug>`) into the default branch: the Owner merges those, and no verdict
+changes that. A plan PR into a milestone branch has no verifier to wait for, so
+it passes without a verdict in two cases, and only with `--git-dir`:
+
+- the report PR, which closes `milestone/<id>` from inside, from any `plan/` branch:
+  it changes nothing but `docs/reports/<id>.md` and the `Status:` line of
+  `docs/milestones/<id>.md`, which may only become `done`, and no ticket file
+  of that milestone is still open. The report alone is enough (a new report
+  after the Owner sent the milestone back). The Owner reads both in the
+  milestone PR, whose merge is the sign-off.
+- a cut, where the Owner lets agents merge it: the "Autonomy" line of
+  `docs/agents/harness.md` on the default branch starts with "Agents merge"
+  and names plan PRs (Level 4). It changes only plan files and deletes nothing,
+  it adds tickets without changing one that exists, and it changes no milestone
+  file but its own.
+
+Anything else in such a PR waits for the Owner. A FAIL on its head blocks it like
+any other.
 
 When to remove: when agents no longer merge on their own, and a person reads
 every verdict before merging.
 
-Exit 0 when this head has a PASS and no FAIL from a verifier, 1 otherwise. Standard library only.
+Exit 0 when this head has no FAIL and either a PASS from a verifier or one of the
+proofs above (a carried PASS, a sync PR, a report PR, a cut); 1 otherwise.
+Standard library only.
 """
 
 from __future__ import annotations
@@ -77,7 +96,14 @@ HEAD_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Head commit:[ \t]*`?([0-9a-f]{40})\b", 
 SESSION_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Session:[ \t]*`?([^\s`]*)", re.I | re.M)
 BUILDER_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Builder session:[ \t]*`?([^\s`]+)", re.I | re.M)
 RISK_HIGH_RE = re.compile(r"^Risk:[ \t]*high\b", re.I | re.M)
-MILESTONE_RE = re.compile(r"(^|/)milestone/[^/]+$")
+MILESTONE_RE = re.compile(r"(^|/)milestone/([^/]+)$")
+STATUS_RE = re.compile(r"^Status:[ \t]*(\S+)[ \t]*$", re.I)
+DONE_RE = re.compile(r"^Status:[ \t]*done\b", re.I | re.M)
+AUTONOMY_RE = re.compile(r"^[ \t]*-[ \t]*Autonomy:[ \t]*(.*)$", re.M)
+# The files a plan PR may change: the same list as the ticket checks' shared step.
+PLAN_FILES_RE = re.compile(r"^(docs/(tickets|milestones|adr|reports)/[^/]+\.md|docs/agents/(glossary|architecture)\.md"
+                           r"|docs/decisions\.md)$")
+HARNESS = "docs/agents/harness.md"
 
 
 def fail(message: str, fix: str) -> int:
@@ -207,6 +233,72 @@ def high_risk(repo: Path | None, base: str, branch: str, ticket: Path | None) ->
     return False
 
 
+def agents_merge_plans(harness: str) -> bool:
+    """True when the harness file's Autonomy value lets agents merge plan PRs (Level 4).
+
+    Only the field's own value counts, up to its first semicolon: the note under it quotes
+    the alternatives, and the part after the semicolon says who merges the default branch.
+    """
+    match = AUTONOMY_RE.search(harness)
+    value = match.group(1).split(";")[0].strip().lower() if match else ""
+    return value.startswith("agents merge") and bool(re.search(r"\bplan\b", value))
+
+
+def changed(repo: Path, base: str, head: str) -> list[tuple[str, str]] | None:
+    """(status letter, path) for each file the pull request changes, as GitHub shows it; None when git fails."""
+    out = git(repo, "diff", "--name-status", "--no-renames", f"{base}...{head}")
+    return None if out is None else [tuple(line.split("\t", 1)) for line in out.splitlines()]
+
+
+def plan_into_milestone(repo: Path, head: str, base: str, default: str) -> tuple[str, str]:
+    """(why a plan PR into a milestone branch needs no verdict, why it does); one of them is empty."""
+    milestone = MILESTONE_RE.search(base).group(2)
+    files = changed(repo, base, head)
+    start = git(repo, "merge-base", base, head)
+    if files is None or not start:
+        return "", "the check couldn't read what it changes"
+    if not files:
+        return "", "it changes nothing"
+    deleted = [path for status, path in files if status == "D"]
+    if deleted:
+        return "", "it deletes " + ", ".join(deleted) + ": plan files are records, and removing one is the Owner's"
+    paths = [path for _, path in files]
+    milestone_file, report = f"docs/milestones/{milestone}.md", f"docs/reports/{milestone}.md"
+
+    if set(paths) <= {milestone_file, report}:
+        # The report PR: Status: done and the report, for this branch's own milestone.
+        if milestone_file in paths:
+            before = (git(repo, "show", f"{start}:{milestone_file}") or "").splitlines()
+            after = (git(repo, "show", f"{head}:{milestone_file}") or "").splitlines()
+            differing = [(a, b) for a, b in zip(before, after) if a != b]
+            if len(before) != len(after) or not before or not all(
+                    STATUS_RE.match(a) and DONE_RE.match(b) for a, b in differing):
+                return "", (f"it changes more of {milestone_file} than its Status line to \"Status: done\": the goal, "
+                            "the exit criteria and the ticket list are the Owner's")
+        for path in (git(repo, "ls-tree", "--name-only", head, "docs/tickets/") or "").splitlines():
+            text = git(repo, "show", f"{head}:{path}") or ""
+            if path.endswith(".md") and re.search(rf"^Milestone:[ \t]*{re.escape(milestone)}[ \t]*$", text, re.I | re.M) \
+                    and not DONE_RE.search(text):
+                return "", f"ticket {Path(path).stem} of {milestone} isn't done, so the milestone isn't either"
+        return f"report PR; it only sets {milestone} to done and writes its report", ""
+
+    other = [path for path in paths if not PLAN_FILES_RE.match(path)]
+    if other:
+        return "", "it changes files that aren't plan files: " + ", ".join(other)
+    harness = (git(repo, "show", f"{default}:{HARNESS}") or "") if default else ""
+    if not agents_merge_plans(harness):
+        return "", (f"the Autonomy line in {HARNESS} on the default branch doesn't let agents merge plan PRs, "
+                    "and it isn't a report PR (only the milestone's Status line and its report)")
+    # A cut fills in its own milestone and adds tickets. A ticket that exists, and every other
+    # milestone's file, stay as the Owner approved them.
+    kept = [path for status, path in files if status != "A" and path != milestone_file
+            and path.startswith(("docs/tickets/", "docs/milestones/"))]
+    if kept:
+        return "", ("a cut adds tickets and fills in its own milestone; this changes tickets or milestones "
+                    "that exist: " + ", ".join(kept))
+    return "cut; it only adds plan files, and the Owner's Autonomy setting lets agents merge it", ""
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check for a PASS verdict on the current head.")
     parser.add_argument("--comments", type=Path, help="JSON from the issue comments API")
@@ -240,8 +332,8 @@ def main(argv: list[str] | None = None) -> int:
                       if c == head or (repo and git(repo, "rev-parse", "--verify", "--quiet", f"{c}^{{commit}}")))
         args.record.write_text("".join(f"{c}\n" for c in seen))
 
-    if args.branch.startswith(("plan/", "milestone/")):
-        return fail("this is a plan or milestone PR; it needs the Owner's review, not a verdict.",
+    if args.branch.startswith("milestone/"):
+        return fail("this is a milestone PR; it needs the Owner's review, not a verdict.",
                     "ask the Owner to review and merge it.")
 
     if head in failed:
@@ -249,6 +341,20 @@ def main(argv: list[str] | None = None) -> int:
             else "a FAIL was recorded (its comment was edited or deleted since)"
         return fail(f"{how} on head {args.head[:7]}.",
                     "fix what the verdict reports and push; the new head needs a new /verify.")
+
+    if args.branch.startswith("plan/"):
+        # No verifier judges a plan PR. Into a milestone branch it passes when it is the report PR
+        # or a cut the Owner lets agents merge; everything else, and every plan PR into the default
+        # branch, is the Owner's to merge.
+        why = "it targets a branch only the Owner merges"
+        if repo and MILESTONE_RE.search(args.base):
+            reason, why = plan_into_milestone(repo, head, args.base, args.default)
+            if reason:
+                print(f"PASS agent-merge: {reason} (head {args.head[:7]}).")
+                return 0
+        return fail(f"this plan PR needs the Owner's review, not a verdict: {why}.",
+                    "ask the Owner to review and merge it. A report PR changes only the milestone's Status line "
+                    "and docs/reports/<milestone>.md; a cut changes only plan files and adds tickets.")
     if any(named == head and result == "PASS" for named, result in found):
         print(f"PASS agent-merge: a verifier passed head {args.head[:7]}.")
         return 0

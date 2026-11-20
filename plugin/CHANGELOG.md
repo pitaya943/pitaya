@@ -2,6 +2,39 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.7 (2026-11-20)
+
+The third batch of fixes from the review of 0.1.4: the branch and merge model (D62's answers to Q4 and Q8, D67). Level 4 could not run as written, and a milestone had two definitions of done.
+
+**If you upgrade with a milestone in flight:** a milestone whose milestone PR was merged under 0.1.6 still says `Status: active` on `main`, because the plan PR that used to set it afterwards is gone. A plan PR into `main` sets it (`plan/milestones.md` allows this one repair; below Level 4 the next cut's plan PR can carry it), or change the line yourself.
+
+### Recipes
+
+- `agent-merge`, the verdict check. Copy `check_verdict.py` and `agent-merge.yml` again. A plan PR into a milestone branch used to stay red whatever happened, which blocked Level 4's cut behind a required status no verifier could ever turn green. It now passes without a verdict in two cases, each proved from the diff:
+  - the **report PR** (`plan/M<n>-report` into `milestone/M<n>`): only the `Status:` line of `docs/milestones/M<n>.md`, set to `done`, and `docs/reports/M<n>.md`, and no ticket file with `Milestone: M<n>` still open;
+  - a **cut** at Level 4: the Autonomy line of the harness file on the default branch lets agents merge plan PRs, and the PR changes only plan files, deletes nothing, adds tickets without changing one that exists, and changes no milestone file but its own.
+
+  Any other plan PR into a milestone branch, a plan PR into the default branch and every milestone PR stay red: the Owner merges those. A FAIL on the head still blocks. This loosens a check: the recipe's "What it trusts" says what nobody verifies before the sign-off.
+- The shared "Find the ticket" step, in all seven workflows: only the wording of one message changed (a plan PR into a milestone branch is for its report or a cut).
+- `deep-verification`: set the Level 4 Autonomy value on the default branch, where the verdict check reads it; "How to prove it works" starts with a cut.
+
+### Skills
+
+- `report`: closing a milestone is two PRs in a fixed order. `/report M<n>` opens the report PR, which sets `Status: done` and adds the report inside the milestone branch; once it is merged, the milestone PR is opened. The Owner's merge of the milestone PR is the sign-off and brings `Status: done` to `main` in the same event. The "closing plan PR" after the sign-off is gone. A milestone that falls short gets a `needs-owner` issue, not a report PR.
+- `plan`: `/plan M<n>` no longer sets the previous milestone to done, and cuts a milestone only once the one before it is done on `main`. "Closing a milestone" in `milestones.md` has the new steps.
+- `autopilot`:
+  - it reads a milestone's `Status:` and tickets on `milestone/M<n>` when that branch exists and on `main` only when it doesn't, so it finds a Level 4 cut, which exists only on the branch;
+  - a milestone that is closing (`Status: done` on its branch, not yet on `main`) is finished before anything else, and `tick.md` has a new section, "Closing the milestone", where each step first looks for what an earlier tick left, so two wake-ups don't write two reports or open two milestone PRs;
+  - with no active milestone the next cut comes first (`tick.md`, "The next cut"): below Level 4 a planning session opens the plan PR and the Owner merges it, at Level 4 autopilot merges it; a tick that ends waiting for the Owner's merge keeps a wake-up for it, where before every wake-up was cancelled once the tickets were done;
+  - it claims the report and the cut by pushing their branch before it starts the session, as it does for tickets;
+  - the only plan PRs it merges are the report PR and, at Level 4, the cut.
+- `help` reads the milestone's state by the same rule and lists the report PR among what waits for the Owner below Level 3.
+- `design`, `plan`: an unattended session, one `/autopilot` started, doesn't wait for an Owner who isn't in the conversation: it writes down what it would have asked and what it assumed, for the Owner to judge in the plan PR, or at Level 4 at the sign-off. New work for a Level 4 milestone goes in a plan PR into its branch.
+
+### Docs
+
+- `concepts/states.md` defines the four milestone phases by where `Status:` is read: planned, active, closing (done on the branch) and done (done on `main`). `concepts/autonomy.md` lists the Level 4 setting, which it had left out. `concepts/layout.md`, `access.md`, `roles.md` and the guardrails README say the same thing about who merges a plan PR.
+
 ## 0.1.6 (2026-11-20)
 
 The second batch of fixes from the review of 0.1.4: the threat model written down where it applies (D59), mistakes surfaced for the Owner (D60), and the cheap guards (D62 to D65). pitaya assumes cooperating agents: read "What the levels assume" in `docs/levels.md` before using Level 3 or 4.

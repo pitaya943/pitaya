@@ -727,3 +727,61 @@ def test_multi_account_codeowners_cover_the_files_tools_load_by_themselves():
     for pattern in ("/.mcp.json", ".gitattributes", "/.gitmodules", "/.githooks/", "/.devcontainer/",
                     "/.cursor/", "/.codex/", "GEMINI.md"):
         assert any(line.split()[0] == pattern for line in text.splitlines() if line and not line.startswith("#")), pattern
+
+
+# --- plan PRs into a milestone branch get their status from the workflow (F04, F18; D67) ------------
+
+L3 = "- Autonomy: Agents merge ticket PRs into milestone branches; only the Owner merges main.\n"
+L4 = "- Autonomy: Agents merge ticket and plan PRs into milestone branches; only the Owner merges main.\n"
+
+
+def plan_pr(run: VerdictRun, autonomy: str, branch: str, files: dict[str, str]) -> None:
+    """Put the harness file on main, then make pull request 7 a plan PR into milestone/M1 with `files`."""
+    origin = run.origin
+    origin.write("docs/agents/harness.md", autonomy)
+    origin.write("docs/milestones/M1.md", "# M1\n\nStatus: active\n\n## Tickets\n\nT-1: first\n")
+    origin.commit("the harness file and the milestone")
+    origin.git("branch", "-f", "milestone/M1", "main")
+    origin.git("checkout", "-q", "-b", branch, "milestone/M1")
+    for path, text in files.items():
+        origin.write(path, text)
+    run.head = origin.commit("the plan PR")
+    origin.git("update-ref", "refs/pull/7/head", run.head)
+    origin.git("checkout", "-q", "main")
+    subprocess.run(["git", "-C", str(run.work), "pull", "-q", "origin", "main"], check=True, capture_output=True)
+    run.put("pulls_7", {"head": {"sha": run.head, "ref": branch}, "base": {"ref": "milestone/M1"}})
+
+
+REPORT = {"docs/milestones/M1.md": "# M1\n\nStatus: done\n\n## Tickets\n\nT-1: first\n",
+          "docs/reports/M1.md": "# Report: M1\n"}
+CUT = {"docs/tickets/T-5.md": "# T-5\n\nStatus: open\nMilestone: M1\n"}
+
+
+def test_agent_merge_passes_a_report_pr_without_a_verdict(verdict_run):
+    """F18: at Level 3 `verdict` is required on milestone/*, and the report PR has no verifier."""
+    plan_pr(verdict_run, L3, "plan/M1-report", REPORT)
+    proc = verdict_run.run()
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert verdict_run.statuses() == ["success"], proc.stdout
+
+
+def test_agent_merge_passes_a_level_4_cut_without_a_verdict(verdict_run):
+    """F04: the workflow hands the check the default branch, where the Owner's Autonomy line is."""
+    plan_pr(verdict_run, L4, "plan/M1-more", CUT)
+    proc = verdict_run.run()
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert verdict_run.statuses() == ["success"], proc.stdout
+
+
+def test_agent_merge_leaves_a_cut_to_the_owner_below_level_4(verdict_run):
+    plan_pr(verdict_run, L3, "plan/M1-more", CUT)
+    verdict_run.run()
+    assert verdict_run.statuses() == ["failure"]
+
+
+def test_a_fail_verdict_on_a_report_pr_is_recorded_and_blocks_it(verdict_run):
+    plan_pr(verdict_run, L3, "plan/M1-report", REPORT)
+    verdict_run.comments(verdict_run.verdict("FAIL"))
+    verdict_run.run()
+    assert verdict_run.statuses() == ["failure"]
+    assert verdict_run.statuses(context="verdict-fail") == ["failure"]
