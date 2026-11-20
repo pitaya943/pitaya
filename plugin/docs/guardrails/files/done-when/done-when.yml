@@ -8,6 +8,8 @@ name: done-when
 on:
   pull_request:
 
+# The pull request's tests run in their own job, so its code can't touch the check;
+# the check runs the base branch's copy.
 permissions:
   contents: read
   issues: read
@@ -19,14 +21,15 @@ env:
   TEST_COMMAND: python -m pytest -q --junitxml="$JUNIT"
 
 jobs:
-  done-when:
-    name: done-when
+  ticket:
+    name: find the ticket
     runs-on: ubuntu-24.04
+    outputs:
+      skip: ${{ steps.ticket.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      # Add the setup steps the test command needs here (a runtime, dependencies).
       - name: Find the ticket
         id: ticket
         env:
@@ -105,12 +108,66 @@ jobs:
             fail "the branch $HEAD_REF names no open ticket, and $PR_AUTHOR isn't listed in OWNER_ACCOUNTS." \
               "name the branch ticket/<id>-<slug> after an open ticket: docs/tickets/<id>.md on $BASE_REF, or issue <id>."
           fi
-      - name: Run the tests on the PR
+      - name: Keep the ticket for the check
         if: steps.ticket.outputs.skip != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ticket
+          path: ${{ runner.temp }}/ticket.md
+  head-tests:
+    name: tests on the PR
+    needs: ticket
+    if: needs.ticket.outputs.skip != 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      # Add the setup steps the test command needs here (a runtime, dependencies).
+      - name: Run the tests
         run: JUNIT="$RUNNER_TEMP/head.xml" bash -c "$TEST_COMMAND" || true
-      - name: Check the done-when tests
-        if: steps.ticket.outputs.skip != 'true'
+      - name: Keep the results
+        uses: actions/upload-artifact@v7
+        with:
+          name: head-junit
+          path: ${{ runner.temp }}/head.xml
+          if-no-files-found: ignore
+  done-when:
+    name: done-when
+    needs: [ticket, head-tests]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require a ticket
+        env:
+          RESULT: ${{ needs.ticket.result }}
+          SKIP: ${{ needs.ticket.outputs.skip }}
+        run: |
+          if [ "$RESULT" != "success" ]; then echo "FAIL: the find-the-ticket job failed; its log says why."; exit 1; fi
+          if [ "$SKIP" = "true" ]; then echo "Nothing to check: see the find-the-ticket job."; fi
+      - uses: actions/checkout@v6
+        if: needs.ticket.outputs.skip != 'true'
+        with:
+          fetch-depth: 0
+      - name: Load the checks from the base branch
+        if: needs.ticket.outputs.skip != 'true'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # Run the base branch's copy of each check, so a pull request can't change the check
+          # that judges it. The PR's own copy is used only while the base has none yet: the PR
+          # that adds this guardrail.
+          mkdir -p "$RUNNER_TEMP/guardrails"
+          for f in check_done_when.py; do
+            git show "origin/$BASE_REF:.github/guardrails/$f" > "$RUNNER_TEMP/guardrails/$f" 2>/dev/null \
+              || cp ".github/guardrails/$f" "$RUNNER_TEMP/guardrails/$f"
+          done
+      - name: Collect the results
+        if: needs.ticket.outputs.skip != 'true'
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/results
+      - name: Check
+        if: needs.ticket.outputs.skip != 'true'
         run: >-
-          python3 .github/guardrails/check_done_when.py
-          --junit "$RUNNER_TEMP/head.xml"
-          --ticket "$RUNNER_TEMP/ticket.md"
+          python3 "$RUNNER_TEMP/guardrails/check_done_when.py"
+          --junit "$RUNNER_TEMP/results/head-junit/head.xml"
+          --ticket "$RUNNER_TEMP/results/ticket/ticket.md"

@@ -19,17 +19,17 @@ Otherwise keep the default: only the Owner merges.
 
 ## How to add it
 
-1. Give the verifier its own account, one the builder can't post as. Set the repository variable `VERIFIER_ACCOUNTS` to its login.
+1. Give the verifier its own account, one the builder can't act as: its token lives only where verifier sessions run, never in the builder's environment. Set the repository variable `VERIFIER_ACCOUNTS` to its login; it must differ from `MACHINE_ACCOUNT`, or the check refuses. With agent-merge on, `/verify` posts its verdict as a pull request review from that account: "Approve" for PASS, "Request changes" for FAIL. Other accounts can dismiss a review but can't change it, and each review records the commit it was given on.
 2. Copy `files/agent-merge/check_verdict.py` to `.github/guardrails/` and `files/agent-merge/agent-merge.yml` to `.github/workflows/`.
 3. Replace `.github/CODEOWNERS` with `files/agent-merge/CODEOWNERS` (the Owner's login in place of `@example-owner`), and add one line per sensitive area from the harness file. Keep **Require review from Code Owners** on: PRs that touch rules, CI, tickets, milestones, decisions or a sensitive area still need the Owner's approval, so a plan PR or a rule change can't merge on a verdict.
 4. In the ruleset on `main`, require the `verdict` status that the workflow sets, alongside the other required checks, and lower **Required approvals** from 1 to 0: for every other path, the verdict now does the approval's job.
 5. Change "Autonomy" in `docs/agents/harness.md` to "Agents merge after CI is green and the verdict is PASS". The `ask_on_merge.py` hook reads that line and stops asking before merges.
 
-The workflow runs when a PR changes and when a comment is posted. Each time, it sets a `verdict` status on the PR's **current head commit**: success only when the latest verdict comment for that exact commit is PASS. A new push moves the head, so an earlier PASS no longer counts.
+The workflow runs when a PR changes and when a review is submitted, edited or dismissed. It runs in the base branch's context (`pull_request_target`) and checks out only the base, so nothing in the PR can change the check or the status. It sets a `verdict` status on the PR's **current head commit**: success only when a verifier approved that exact commit and none requested changes on it. A new push moves the head, so an earlier PASS no longer counts. Plan PRs never pass. In the ruleset, pick **GitHub Actions** as the source of the required `verdict` and other checks, so a status posted by any other token doesn't count.
 
 ## How to prove it works
 
-Get a PASS verdict on a PR, then push one more commit. The `verdict` status turns red, and the merge button is blocked until `/verify` runs again on the new head. Posting a "## Verification: PASS" comment from the builder's account changes nothing.
+Get a PASS verdict on a PR, then push one more commit. The `verdict` status turns red, and the merge button is blocked until `/verify` runs again on the new head. An approving review from the builder's account, or a "## Verification: PASS" comment from anyone, changes nothing.
 
 ## Cost and false positives
 

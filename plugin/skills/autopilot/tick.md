@@ -10,7 +10,7 @@ Everything comes from places anyone can open, so a fresh session can take over a
 | Whether a ticket is done | its `Status:` line on `main` (file tickets) or whether its issue is closed (issue tickets) |
 | Dependencies | the ticket's "Depends on" lines |
 | Work in progress | open PRs whose branch is `ticket/<id>-<slug>` |
-| CI and the verdict | the PR's check runs, and the latest verdict comment that names the PR's current head commit |
+| CI and the verdict | the PR's check runs, and the verifier's reviews on the PR's current head commit (with agent-merge), or the latest verdict comment that names it |
 | Fix rounds used | the verdict comments on the PR: one round per FAIL |
 | Owner instructions | the tracking issue `Autopilot: M<n>`, and answers on `needs-owner` issues |
 

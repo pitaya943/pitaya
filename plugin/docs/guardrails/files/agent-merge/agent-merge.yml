@@ -1,40 +1,50 @@
 # pitaya template 0.1.0 · docs/guardrails/files/agent-merge/agent-merge.yml
-# Sets a "verdict" commit status on the pull request's head: success only when the
-# latest verdict comment for that exact commit is PASS, from a verifier account.
+# Sets a "verdict" commit status on the pull request's head: success only when a
+# verifier account approved that exact commit in a review and none requested changes.
 # Copy to .github/workflows/agent-merge.yml, and check_verdict.py to .github/guardrails/check_verdict.py.
-# Set the repository variable VERIFIER_ACCOUNTS, then make the "verdict" status required on main.
+# Set the repository variables VERIFIER_ACCOUNTS and MACHINE_ACCOUNT, then make the
+# "verdict" status required on main, with GitHub Actions as its source.
+#
+# It runs in the base branch's context (pull_request_target) and checks out only the
+# base, so nothing in the pull request can change the check or the status it sets.
 name: agent-merge
 
 on:
-  pull_request:
-  issue_comment:
-    types: [created, edited]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
 
 permissions:
   contents: read
   pull-requests: read
-  issues: read
   statuses: write
 
 jobs:
   agent-merge:
     name: agent-merge
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request' || github.event.issue.pull_request
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
       - name: Check the verdict and set the status on the head commit
         env:
           GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
           VERIFIERS: ${{ vars.VERIFIER_ACCOUNTS }}
+          MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
         run: |
           set -uo pipefail
-          head=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq .head.sha)
-          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/comments.json"
-          if python3 .github/guardrails/check_verdict.py --comments "$RUNNER_TEMP/comments.json" --head "$head" --verifiers "$VERIFIERS"; then
-            state=success; text="PASS for this commit"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/reviews" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/reviews.json"
+          if python3 .github/guardrails/check_verdict.py --reviews "$RUNNER_TEMP/reviews.json" \
+              --head "$HEAD_SHA" --verifiers "$VERIFIERS" --machine-account "$MACHINE_ACCOUNT" \
+              --author "$AUTHOR" --branch "$HEAD_REF"; then
+            state=success; text="a verifier approved this commit"
           else
-            state=failure; text="no PASS verdict for this commit"
+            state=failure; text="no approving verdict for this commit"
           fi
-          gh api "repos/$GITHUB_REPOSITORY/statuses/$head" -f state="$state" -f context=verdict -f description="$text"
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state="$state" -f context=verdict -f description="$text"

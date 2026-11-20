@@ -63,7 +63,7 @@ Includes everything in Level 2. `agent-merge` comes last: it requires the main L
 | Skill | [`skill:autopilot`](../skills/autopilot/SKILL.md) | `skill:build`, `skill:verify`, `skill:report`, `protect-main`, `machine-account`, `scope` | `agent-merge`, `read-only-paths`, `no-weakened-tests`, `done-when` | Runs the active milestone: hands tickets to fresh builders and verifiers, merges when allowed, stops at Owner gates |
 | Recipe | [`progress-file`](guardrails/progress-file.md) | `protect-main`, `machine-account` | `skill:handoff` | A start-up routine and a feature list where agents may only mark items as passing |
 | Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | - | Another model reviews sensitive or risky PRs |
-| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge after CI is green and the latest verdict on the current commit is PASS |
+| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge after CI is green and the latest verdict on the current commit is PASS |
 | Recipe | [`project-evals`](guardrails/project-evals.md) | - | - | A task set drawn from real failures, run before and after a harness change |
 
 ## What the project needs

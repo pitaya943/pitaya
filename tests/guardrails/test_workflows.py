@@ -136,12 +136,19 @@ def test_plan_branch_may_add_milestone_files(tickets_repo, tmp_path):
     assert "skip=true" in out
 
 
-def test_step_outputs_never_go_inline_into_run_scripts():
+RUN_BLOCK = re.compile(r"^(\s+)run: (?:\||>-)\n((?:\1  .*\n|\s*\n)*)", re.M)
+
+
+def test_step_and_job_outputs_never_go_inline_into_run_scripts():
     # A branch or file name can carry shell metacharacters; pass outputs through env (D40).
     for path in WORKFLOWS:
-        for line in path.read_text().splitlines():
-            if "${{ steps." in line:
-                assert re.match(r"\s+[A-Z_]+: \$\{\{ steps\.", line) or line.strip().startswith("if:"), f"{path.name}: {line.strip()}"
+        text = path.read_text()
+        for match in RUN_BLOCK.finditer(text):
+            for ref in ("${{ steps.", "${{ needs."):
+                assert ref not in match.group(2), f"{path.name}: {match.group(2).strip()[:80]}"
+        for line in text.splitlines():
+            if line.strip().startswith("run:") and ("${{ steps." in line or "${{ needs." in line):
+                raise AssertionError(f"{path.name}: {line.strip()}")
 
 
 # --- audit batch C (D41): who may skip, which ticket a PR may claim --------------
@@ -233,3 +240,53 @@ def test_open_issue_tickets_still_work(repo, tmp_path):
     proc, out = run_find(repo, tmp_path, "ticket/12-x", "example-bot", PATH=stub_gh(tmp_path))
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "skip=false" in out and "Scope" in (tmp_path / "ticket.md").read_text()
+
+
+# --- audit batch B (D42): the PR never runs or rewrites the checks that judge it --
+
+def jobs(path: Path) -> dict[str, str]:
+    text = path.read_text().split("\njobs:\n", 1)[1]
+    parts = re.split(r"^  ([\w-]+):\n", text, flags=re.M)
+    return dict(zip(parts[1::2], parts[2::2]))
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_checks_are_loaded_from_the_base_branch(path):
+    text = path.read_text()
+    if "guardrails/" not in text.split("\njobs:\n", 1)[1]:
+        return
+    for name, body in jobs(path).items():
+        if "python3 .github/guardrails/" in body:
+            # allowed only in a job that checks out nothing but the base commit
+            assert "ref: ${{ github.event.pull_request.base.sha }}" in body, f"{name}: run the base branch's copy of the check"
+    for name, body in jobs(path).items():
+        if '"$RUNNER_TEMP/guardrails/' in body:
+            assert "Load the checks from the base branch" in body, name
+
+
+def test_load_step_prefers_the_base_copy(tickets_repo, tmp_path):
+    tickets_repo.write(".github/guardrails/check_scope.py", "print('base')\n")
+    tickets_repo.commit("install the check")
+    tickets_repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    tickets_repo.write(".github/guardrails/check_scope.py", "print('rewritten by the PR')\n")
+    tickets_repo.commit("weaken the check")
+    script = next(s["run"] for s in steps(FILES / "scope" / "scope.yml") if s["name"] == "Load the checks from the base branch")
+    env = dict(os.environ, BASE_REF="main", RUNNER_TEMP=str(tmp_path))
+    proc = subprocess.run(["bash", "-c", script], cwd=tickets_repo.path, env=env, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "guardrails" / "check_scope.py").read_text() == "print('base')\n"
+
+
+@pytest.mark.parametrize("recipe", ["no-weakened-tests", "done-when"])
+def test_pr_tests_never_share_a_job_with_the_comparison(recipe):
+    for name, body in jobs(FILES / recipe / f"{recipe}.yml").items():
+        runs_pr_tests = '$TEST_COMMAND' in body and "base.sha" not in body.split("$TEST_COMMAND")[0][-400:]
+        if runs_pr_tests:
+            assert "guardrails/" not in body, f"job {name} runs the PR's tests and a check"
+
+
+def test_agent_merge_runs_in_the_base_context_on_reviews():
+    text = (FILES / "agent-merge" / "agent-merge.yml").read_text()
+    assert "pull_request_target:" in text and "pull_request_review:" in text
+    assert "issue_comment" not in text
+    assert "ref: ${{ github.event.pull_request.base.sha }}" in text

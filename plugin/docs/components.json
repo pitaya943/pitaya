@@ -104,7 +104,7 @@
      "requires": ["skill:verify"],
      "summary": "Another model reviews sensitive or risky PRs"},
     {"id": "agent-merge", "kind": "recipe", "level": 3, "doc": "docs/guardrails/agent-merge.md",
-     "requires": ["protect-main", "scope", "read-only-paths", "no-weakened-tests", "done-when",
+     "requires": ["protect-main", "machine-account", "scope", "read-only-paths", "no-weakened-tests", "done-when",
                   "second-model-review", "skill:verify"],
      "needs": ["verifier-account"],
      "summary": "Agents merge after CI is green and the latest verdict on the current commit is PASS"},

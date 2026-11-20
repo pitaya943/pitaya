@@ -21,6 +21,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - name: Load the checks from the base branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # Run the base branch's copy of each check, so a pull request can't change the check
+          # that judges it. The PR's own copy is used only while the base has none yet: the PR
+          # that adds this guardrail.
+          mkdir -p "$RUNNER_TEMP/guardrails"
+          for f in check_scope.py; do
+            git show "origin/$BASE_REF:.github/guardrails/$f" > "$RUNNER_TEMP/guardrails/$f" 2>/dev/null \
+              || cp ".github/guardrails/$f" "$RUNNER_TEMP/guardrails/$f"
+          done
       - name: Find the ticket
         id: ticket
         env:
@@ -104,7 +116,7 @@ jobs:
         env:
           TICKET_PATH: ${{ steps.ticket.outputs.ticket_path }}
         run: >-
-          python3 .github/guardrails/check_scope.py
+          python3 "$RUNNER_TEMP/guardrails/check_scope.py"
           --base "${{ github.event.pull_request.base.sha }}"
           --head "${{ github.event.pull_request.head.sha }}"
           --ticket "$RUNNER_TEMP/ticket.md"
