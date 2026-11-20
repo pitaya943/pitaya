@@ -28,7 +28,7 @@ def test_multi_account_recipe_ships_both_codeowners_files():
     assert owned(FILES / "multi-account" / "CODEOWNERS") == {"*": ["@example-owner"]}
     narrow = owned(FILES / "multi-account" / "CODEOWNERS-agent-merge")
     for pattern in ("/.github/", "/.claude/", "/AGENTS.md", "/CLAUDE.md", "/docs/agents/",
-                    "/docs/tickets/", "/docs/milestones/", "/docs/decisions.md"):
+                    "/docs/tickets/", "/docs/milestones/", "/docs/decisions.md", "/docs/adr/"):
         assert narrow.get(pattern) == ["@example-owner"], pattern
     text = (GUARDRAILS / "multi-account.md").read_text()
     assert "Require review from Code Owners" in text

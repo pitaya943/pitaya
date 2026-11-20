@@ -29,11 +29,11 @@ Red before green:
 
 ## Decision log
 
-<!-- Keep this as you work, newest last, so whoever merges sees why the code looks the way it does. Add rows; never edit or delete one: correct a row with a new row. Log choices between real alternatives, dead ends and failed attempts with what they showed. "Evidence" is a pointer (a commit, file:line, a command's output above), not prose. "Result" is a state: kept, reverted, failed, open. Skip the obvious. -->
+<!-- Keep this as you work, newest last, so whoever merges sees why the code looks the way it does. Add rows; never edit or delete one: correct a row with a new row. Log choices between real alternatives, dead ends and failed attempts with what they showed. "Evidence" is a pointer (a commit, file:line, a command's output above), not prose. "Result" is a state: kept, reverted, failed, open. Fill in "Options" only when there were two or more real ones, and name each, so /retro can later see what else was on the table; otherwise write "-". Skip the obvious. -->
 
-| When | Decision | Why | Evidence | Result |
-| --- | --- | --- | --- | --- |
-| <time> | <what you chose, or tried> | <the reason, and the alternative you didn't take> | <commit, file:line or output> | <kept, reverted, failed, open> |
+| When | Decision | Options | Why this one | Evidence | Result |
+| --- | --- | --- | --- | --- | --- |
+| <time> | <what you chose, or tried> | <the alternatives you weighed, or -> | <the reason it beat them> | <commit, file:line or output> | <kept, reverted, failed, open> |
 
 ## Assertions stricter than the spec
 

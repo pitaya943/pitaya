@@ -9,7 +9,7 @@ pitaya describes the work with four roles. They're concepts, not accounts or pro
 | **Builder** | A fresh session per ticket | Builds one ticket red-then-green and opens a PR with evidence | Change the spec, change files outside the ticket's scope, merge | `/build`, `tdd`, `evidence` |
 | **Verifier** | A fresh subagent or session per PR and round | Re-runs everything from a clean checkout and judges PASS or FAIL | Fix the code, see the Builder's conversation, merge | `/verify`, `evidence` |
 
-Any role can use `ask-owner` and `/handoff`.
+Any role can use `ask-owner` and `/handoff`, and anyone can ask `/help` where things stand. Which files each role reads and writes is in [Access](access.md).
 
 ## Why separate Builder and Verifier
 

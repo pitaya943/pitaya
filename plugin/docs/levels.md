@@ -31,6 +31,7 @@ Install the plugin. Nothing in the repository changes. Closest to Matt Pocock's 
 | Skill | [`skill:verify`](../skills/verify/SKILL.md) | - | `skill:evidence` | A fresh subagent re-runs the work and posts PASS or FAIL |
 | Skill | [`skill:report`](../skills/report/SKILL.md) | - | - | A summary of merged work for the Owner, every claim linked to evidence |
 | Skill | [`skill:ask-owner`](../skills/ask-owner/SKILL.md) | - | - | Unclear or risky decisions go to the Owner with options instead of a guess |
+| Skill | [`skill:help`](../skills/help/SKILL.md) | - | - | Where the project stands and the next command, or how to do something; read only |
 
 ## Level 1: the default
 

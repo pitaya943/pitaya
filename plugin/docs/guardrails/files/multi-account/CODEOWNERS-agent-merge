@@ -15,6 +15,7 @@
 /docs/tickets/ @example-owner
 /docs/milestones/ @example-owner
 /docs/decisions.md @example-owner
+/docs/adr/ @example-owner
 
 # Sensitive areas from docs/agents/harness.md, one line each, for example:
 # /src/payments/ @example-owner

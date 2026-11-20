@@ -31,7 +31,7 @@ def test_plan_sharpens_and_explores_first():
 def test_pr_template_has_an_append_only_decision_log():
     text = read("build/pr-template.md")
     assert "## Decision log" in text
-    assert "| When | Decision | Why | Evidence | Result |" in text
+    assert "| When | Decision | Options | Why this one | Evidence | Result |" in text
     assert "failed" in text.lower()
 
 

@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.4. Steps W0–W6 are done, plus the additions decided after W6 (D33–D48 in [`decisions.md`](decisions.md)); W7, the release, is next (section 13).
+- Status: draft 0.4. Steps W0–W6 are done, plus the additions decided after W6 (D33–D49 in [`decisions.md`](decisions.md)); W7, the release, is next (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
@@ -72,7 +72,7 @@ plugin/                           what users install, and nothing else (D32)
   docs/levels.md                  generated from components.json: what each level includes
   docs/suggestion.md              what each part achieves and what it can't do
   docs/guardrails/                Level 2-3 recipes, with copyable files under files/<id>/
-  docs/concepts/                  roles, autonomy, evidence, escalation
+  docs/concepts/                  roles, autonomy, escalation, access, states, layout
   README.md, CHANGELOG.md, LICENSE
 docs/design.md                    this document
 evals/                            tasks for testing the harness itself (run by hand)
@@ -99,6 +99,7 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 | `/design` | Level 2: a milestone's scenarios first, then interfaces, data flow, notifications and state owners, two shapes compared; tickets come from the scenarios; an arena for contested designs at Level 4 (D47, D48) | Chief | Done |
 | `/retro` | Turn repeated mistakes into rule-to-enforcer proposals along the correct ladder, keep lessons that hold, and review what can be retired; the Owner approves (D18, D19, D46) | Chief | Done |
 | `/autopilot` | Level 3: run the active milestone in stateless ticks, handing builds and verifications to fresh sessions, merging when Autonomy allows, stopping at Owner gates and a budget (D39) | Chief | Done |
+| `/help` | Read only: rebuild the state from the repository and GitHub and name the one next step, or answer how to do something by pointing at the right page (D49) | Any | Done |
 
 **Model-invoked (disciplines)**
 

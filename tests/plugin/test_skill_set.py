@@ -22,7 +22,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import check_skills  # noqa: E402
 
 # Grows step by step (docs/design.md, section 13).
-USER_INVOKED = {"setup", "plan", "build", "verify", "report", "handoff", "retro", "autopilot", "design"}
+USER_INVOKED = {"setup", "plan", "build", "verify", "report", "handoff", "retro", "autopilot", "design", "help"}
 MODEL_INVOKED = {"tdd", "evidence", "ask-owner", "learning"}
 EXPECTED = USER_INVOKED | MODEL_INVOKED
 CONFIG = "docs/agents/harness.md"

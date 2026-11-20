@@ -24,6 +24,7 @@
     "./skills/handoff",
     "./skills/retro",
     "./skills/autopilot",
+    "./skills/help",
     "./skills/tdd",
     "./skills/evidence",
     "./skills/ask-owner",

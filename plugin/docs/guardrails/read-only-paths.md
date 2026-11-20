@@ -18,7 +18,7 @@ Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it 
 2. Copy `files/read-only-paths/read-only-paths.yml` to `.github/workflows/read-only-paths.yml`, and add your spec paths to `--also` (for example `docs/spec/**`).
 3. After the first run, make `read-only-paths` a required check.
 
-Read-only by default: every `AGENTS.md` and `CLAUDE.md`, `docs/agents/**`, `.claude/**`, `.github/**`, `docs/decisions.md`, `docs/tickets/**` and `docs/milestones/**`. A ticket PR may change one line of its own ticket file, `Status:`, to mark it done; the workflow passes the ticket's path so the check knows which file that is.
+Read-only by default: every `AGENTS.md` and `CLAUDE.md`, `docs/agents/**`, `.claude/**`, `.github/**`, `docs/decisions.md`, `docs/adr/**`, `docs/tickets/**` and `docs/milestones/**`. A ticket PR may change one line of its own ticket file, `Status:`, to mark it done; the workflow passes the ticket's path so the check knows which file that is.
 
 The one exception: a ticket's "## Scope" lists the file **exactly**, with no wildcard, because the Owner approved that change. A glob such as `.github/**` in the scope never unlocks a read-only path.
 

@@ -7,7 +7,7 @@ Usage (from the repository root, in CI)::
     python3 check_read_only.py --base <base sha> --head <head sha> --ticket ticket.md [--ticket-path docs/tickets/<id>.md] [--also "docs/spec/**,..."]
 
 Read-only by default: every AGENTS.md and CLAUDE.md, docs/agents/**, .claude/**,
-.github/**, docs/decisions.md, docs/tickets/** and docs/milestones/**. Add the project's specs with --also (comma
+.github/**, docs/decisions.md, docs/adr/**, docs/tickets/** and docs/milestones/**. Add the project's specs with --also (comma
 separated globs) or the READ_ONLY_PATHS constant below.
 
 The one exception: a path the ticket's "## Scope" section lists **exactly**,
@@ -32,7 +32,7 @@ from pathlib import Path
 READ_ONLY_PATHS = [
     "AGENTS.md", "**/AGENTS.md", "CLAUDE.md", "**/CLAUDE.md",
     "docs/agents/**", ".claude/**", ".github/**", "docs/decisions.md", "docs/tickets/**",
-    "docs/milestones/**",
+    "docs/milestones/**", "docs/adr/**",
 ]
 
 

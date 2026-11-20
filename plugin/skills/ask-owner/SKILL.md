@@ -35,6 +35,6 @@ Don't use it for what you can settle by reading the spec, the code or the harnes
 
 ## After the answer
 
-1. Add the decision to `docs/decisions.md` when the project keeps one.
+1. Add the decision to `docs/decisions.md` when the project keeps one. If it chose between real options and changes the architecture, a public interface or the data model, also write `docs/adr/<nnnn>-<slug>.md` from the plan skill's `adr-template.md`, through a plan PR.
 2. Update the ticket's conditions if the answer changes them.
 3. Comment on the issue with where the decision was recorded, then close it.
