@@ -1,7 +1,7 @@
 # pitaya template 0.1.0 · docs/guardrails/files/serial-resources/serial-resources.yml
 # Fails a pull request whose ticket claims a serial resource another open pull request's ticket also claims.
 # Copy to .github/workflows/serial-resources.yml, and check_serial.py to .github/guardrails/check_serial.py.
-# Set the repository variable MACHINE_ACCOUNT to the agents' GitHub login, then
+# Set the repository variables MACHINE_ACCOUNT (the agents' login) and OWNER_ACCOUNTS (the Owner's), then
 # make the "serial-resources" check required on main in the ruleset.
 name: serial-resources
 
@@ -32,25 +32,51 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
           BASE_REF: ${{ github.base_ref }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OWNER_ACCOUNTS: ${{ vars.OWNER_ACCOUNTS }}
           MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
         run: |
           set -euo pipefail
-          # find_ticket <branch> <output file>: docs/tickets/<id>.md from the base branch,
-          # or the GitHub issue numbered in ticket/<number>-<slug>.
+          fail() { echo "FAIL: $1"; echo "To fix: $2"; exit 1; }
+          lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' '; }
+          # is_owner: the PR's author is listed in OWNER_ACCOUNTS (comma separated, any case).
+          is_owner() {
+            [ -n "${OWNER_ACCOUNTS:-}" ] || return 1
+            case ",$(lower "$OWNER_ACCOUNTS")," in *",$(lower "$PR_AUTHOR"),"*) return 0;; esac
+            return 1
+          }
+          # find_ticket <branch> <output file>. When docs/tickets/ exists on the base branch,
+          # tickets are files and only a file there counts; otherwise the open GitHub issue
+          # numbered in ticket/<number>-<slug>. A done or closed ticket can't be claimed.
           find_ticket() {
-            if [ -d docs/tickets ]; then
-              for f in docs/tickets/*.md; do
+            if git cat-file -e "origin/$BASE_REF:docs/tickets" 2>/dev/null; then
+              for f in $(git ls-tree --name-only "origin/$BASE_REF" docs/tickets/ | grep '\.md$'); do
                 n=$(basename "$f" .md)
                 case "$1" in "ticket/$n"|"ticket/$n-"*)
                   git show "origin/$BASE_REF:$f" > "$2"
+                  if grep -qiE '^Status:[[:space:]]*done' "$2"; then
+                    fail "ticket $n is already done." "work on an open ticket; if $n needs more, ask the Owner for a new ticket."
+                  fi
                   echo "ticket_path=$f" >> "$GITHUB_OUTPUT"
+                  claimed "$n"
                   return 0;;
                 esac
               done
+              return 1
             fi
             num=$(printf '%s' "$1" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
             [ -n "$num" ] || return 1
+            state=$(gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json state -q .state)
+            [ "$state" = "OPEN" ] || fail "issue #$num is $state." "work on an open ticket issue."
             gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$2"
+            claimed "$num"
+          }
+          # claimed <id>: fail when another open PR already works on the same ticket.
+          claimed() {
+            [ -n "${PR_NUMBER:-}" ] || return 0
+            others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,headRefName \
+              --jq ".[] | select(.number != $PR_NUMBER) | .headRefName" | grep -E "^ticket/$1(-|\$)" || true)
+            [ -z "$others" ] || fail "another open PR already works on ticket $1: $others." "one ticket, one PR: close one of them."
           }
           # A plan PR (plan/<slug>) adds ticket files for the Owner to merge; it may touch
           # only ticket and planning files, and the ticket checks don't apply to it.
@@ -67,13 +93,15 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif find_ticket "$HEAD_REF" "$RUNNER_TEMP/ticket.md"; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif [ "$PR_AUTHOR" != "$MACHINE_ACCOUNT" ]; then
-            echo "Not a ticket branch and not opened by the machine account: nothing to check."
+          elif is_owner; then
+            echo "Opened by an Owner account ($PR_AUTHOR) from a branch without a ticket: nothing to check."
             echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${OWNER_ACCOUNTS:-}" ]; then
+            fail "the repository variable OWNER_ACCOUNTS is not set, so an Owner's PR can't be told from an agent's." \
+              "set OWNER_ACCOUNTS (Settings, Secrets and variables, Actions, Variables) to the Owner's login."
           else
-            echo "FAIL: the branch $HEAD_REF doesn't name a ticket."
-            echo "To fix: name the branch ticket/<issue number>-<slug>, or ticket/<id>-<slug> for docs/tickets/<id>.md."
-            exit 1
+            fail "the branch $HEAD_REF names no open ticket, and $PR_AUTHOR isn't listed in OWNER_ACCOUNTS." \
+              "name the branch ticket/<id>-<slug> after an open ticket: docs/tickets/<id>.md on $BASE_REF, or issue <id>."
           fi
       - name: Collect the other open pull requests' tickets
         if: steps.ticket.outputs.skip != 'true'

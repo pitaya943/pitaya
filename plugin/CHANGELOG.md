@@ -37,6 +37,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Recipes
 
+- The shared "Find the ticket" step: only `OWNER_ACCOUNTS` may skip it (fail closed when unset); file tickets never fall back to issues; done tickets, closed issues and tickets another open PR works on can't be claimed. `commit-author` checks every non-Owner PR. `protect-main` and `agent-merge` ship `CODEOWNERS` files and require code-owner review.
+
 - Workflows pass step outputs to scripts through `env:`, never inline, so a branch or file name can't inject shell code.
 
 - `docs/milestones/**` is read-only for ticket PRs; plan PRs may change `docs/milestones/*.md`.

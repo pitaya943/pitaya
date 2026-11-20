@@ -1,6 +1,6 @@
 # Recipe: agent merge
 
-Level: 3. Files: [`check_verdict.py`](files/agent-merge/check_verdict.py), [`agent-merge.yml`](files/agent-merge/agent-merge.yml).
+Level: 3. Files: [`check_verdict.py`](files/agent-merge/check_verdict.py), [`agent-merge.yml`](files/agent-merge/agent-merge.yml), [`CODEOWNERS`](files/agent-merge/CODEOWNERS).
 
 ## What it guards against
 
@@ -21,8 +21,9 @@ Otherwise keep the default: only the Owner merges.
 
 1. Give the verifier its own account, one the builder can't post as. Set the repository variable `VERIFIER_ACCOUNTS` to its login.
 2. Copy `files/agent-merge/check_verdict.py` to `.github/guardrails/` and `files/agent-merge/agent-merge.yml` to `.github/workflows/`.
-3. In the ruleset on `main`, require the `verdict` status that the workflow sets, alongside the other required checks, and lower **Required approvals** from 1 to 0: the verdict now does the approval's job.
-4. Change "Autonomy" in `docs/agents/harness.md` to "Agents merge after CI is green and the verdict is PASS". The `ask_on_merge.py` hook reads that line and stops asking before merges.
+3. Replace `.github/CODEOWNERS` with `files/agent-merge/CODEOWNERS` (the Owner's login in place of `@example-owner`), and add one line per sensitive area from the harness file. Keep **Require review from Code Owners** on: PRs that touch rules, CI, tickets, milestones, decisions or a sensitive area still need the Owner's approval, so a plan PR or a rule change can't merge on a verdict.
+4. In the ruleset on `main`, require the `verdict` status that the workflow sets, alongside the other required checks, and lower **Required approvals** from 1 to 0: for every other path, the verdict now does the approval's job.
+5. Change "Autonomy" in `docs/agents/harness.md` to "Agents merge after CI is green and the verdict is PASS". The `ask_on_merge.py` hook reads that line and stops asking before merges.
 
 The workflow runs when a PR changes and when a comment is posted. Each time, it sets a `verdict` status on the PR's **current head commit**: success only when the latest verdict comment for that exact commit is PASS. A new push moves the head, so an earlier PASS no longer counts.
 

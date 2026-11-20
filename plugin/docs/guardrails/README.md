@@ -55,7 +55,9 @@ Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" ste
 - `docs/tickets/<id>.md` on the **base** branch, when the PR branch is named `ticket/<id>-<slug>`;
 - otherwise, the GitHub issue whose number is in the branch name, `ticket/<number>-<slug>`.
 
-Pull requests the Owner opens from a branch without a ticket are skipped, with a note. Pull requests opened by the machine account must use a ticket branch, or the check fails, so an agent can't avoid the checks by naming its branch differently. This needs the repository variable `MACHINE_ACCOUNT` set to the agents' login (Settings → Secrets and variables → Actions → Variables).
+Pull requests an Owner account opens from a branch without a ticket are skipped, with a note. Every other author, the machine account, a verifier account or anyone else, must use a ticket branch, or the check fails, so no agent account can avoid the checks by naming its branch differently. The Owner accounts come from the repository variable `OWNER_ACCOUNTS` (comma separated, any case; Settings → Secrets and variables → Actions → Variables); when it's empty, every non-ticket PR fails.
+
+When `docs/tickets/` exists on the base branch, tickets are files: a branch naming an issue number doesn't fall back to that issue, so an agent can't open its own issue and use it as a wider ticket. A ticket whose `Status:` is `done` (or a closed issue) can't be claimed, and neither can a ticket another open PR already works on.
 
 A branch named `plan/<slug>` is a plan PR: it adds ticket files for the Owner to merge. The step skips the ticket checks for it, but fails it if it changes anything besides `docs/tickets/*.md`, `docs/milestones/*.md`, `docs/agents/glossary.md`, `docs/agents/architecture.md` and `docs/decisions.md`.
 

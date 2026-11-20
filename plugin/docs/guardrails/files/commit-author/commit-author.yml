@@ -1,7 +1,7 @@
 # pitaya template 0.1.0 · docs/guardrails/files/commit-author/commit-author.yml
 # Fails a pull request with a commit not authored by the machine account (by GitHub login).
 # Copy to .github/workflows/commit-author.yml, and check_commit_author.py to .github/guardrails/check_commit_author.py.
-# Set the repository variable MACHINE_ACCOUNT to the agents' GitHub login, then
+# Set the repository variables MACHINE_ACCOUNT (the agents' login) and OWNER_ACCOUNTS (the Owner's), then
 # make the "commit-author" check required on main in the ruleset.
 name: commit-author
 
@@ -26,9 +26,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/commits" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/commits.json"
+      - name: Who opened it
+        id: who
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          OWNER_ACCOUNTS: ${{ vars.OWNER_ACCOUNTS }}
+        run: |
+          # Owner accounts (comma separated, any case) are skipped; every other author is checked.
+          lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' '; }
+          case ",$(lower "$OWNER_ACCOUNTS")," in
+            *",$(lower "$PR_AUTHOR"),"*) [ -n "$OWNER_ACCOUNTS" ] && echo "owner=true" >> "$GITHUB_OUTPUT" ;;
+          esac
       - name: Check the authors
-        # Skipped for pull requests opened by someone other than the machine account.
-        if: github.event.pull_request.user.login == vars.MACHINE_ACCOUNT
+        # Skipped only for pull requests an Owner account opened.
+        if: steps.who.outputs.owner != 'true'
         # --also-allow: logins allowed besides the machine account, such as the Owner's for "Update branch" merges.
         run: >-
           python3 .github/guardrails/check_commit_author.py
