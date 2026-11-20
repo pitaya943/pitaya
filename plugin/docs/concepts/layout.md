@@ -47,7 +47,7 @@ my-project/
 | `main` | Everything signed off | The Owner, always |
 | `milestone/M<n>` | The active milestone's merged tickets, at every level | The Owner merges it into `main`: the sign-off |
 | `ticket/<id>-<slug>` | One ticket's work | Into `milestone/M<n>`: the Owner below Level 3, the Chief from Level 3 |
-| `plan/<slug>` | A roadmap, a design, a cut or a milestone's report: plan files only | The Owner, into `main`. Into a milestone branch: the report PR (`plan/M<n>-report`) merges like a ticket PR, and at Level 4 the Chief merges a cut into the next milestone branch |
+| `plan/<slug>` | A roadmap, a design, a cut or a milestone's report: plan files only | The Owner, into `main`. Into a milestone branch: the report PR (`plan/M<n>-report`) merges like a sync PR, with no verifier, and at Level 4 the Chief merges a cut into the next milestone branch |
 | `sync/<slug>` | `milestone/M<n>` with `main` merged in, and nothing else: how a milestone gets what `main` gained | Into `milestone/M<n>`, like a ticket PR: the Owner below Level 3, the Chief from Level 3 |
 
 ## Where pitaya itself sits

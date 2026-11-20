@@ -4,7 +4,7 @@ pitaya describes the work with four roles. They're concepts, not accounts or pro
 
 | Role | Who | Does | Doesn't | Skills |
 | --- | --- | --- | --- | --- |
-| **Owner** | A person | Approves the roadmap and each milestone's tickets by merging plan PRs, answers escalations, signs off milestones, merges `main` (always, whatever the autonomy setting), sets the level | — | `/setup`, `learning` |
+| **Owner** | A person | Approves the roadmap, and below Level 4 each milestone's tickets, by merging plan PRs; at Level 4 reviews each cut at the milestone's sign-off; answers escalations, signs off milestones, merges `main` (always, whatever the autonomy setting), sets the level | — | `/setup`, `learning` |
 | **Chief** | An agent session | Cuts the roadmap into milestones and milestones into tickets, orders them, reports results, runs retros; from Level 2 designs each milestone; at Level 3 runs a milestone with `/autopilot`, and at Level 4 also cuts the next one | Write product code, merge into `main`, sign off a milestone | `/plan`, `/design`, `/report`, `/retro`, `/autopilot` |
 | **Builder** | A fresh session per ticket | Builds one ticket red-then-green and opens a PR with evidence | Change the spec, change files outside the ticket's scope, merge | `/build`, `tdd`, `evidence` |
 | **Verifier** | A fresh subagent or session per PR and round | Re-runs everything from a clean checkout and judges PASS or FAIL | Fix the code, see the Builder's conversation, merge | `/verify`, `evidence` |

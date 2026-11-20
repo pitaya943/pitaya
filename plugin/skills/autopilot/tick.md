@@ -41,19 +41,36 @@ On a PR that is ready but can't be merged by an agent:
 
 When stopping:
 
-> Stopped: <reason>. Open: <tickets and what each waits on>. Next: <the Owner's step, such as merging the milestone PR for M2>.
+> Stopped: <reason>. Open: <tickets and what each waits on>. Next: <the Owner's step, such as answering issue #44>.
+
+When a tick ends waiting for the Owner's merge:
+
+> Waiting: <the milestone PR for M2 | the plan PR that cuts M3> (#<n>). Autopilot wakes when it is merged.
 
 ## Closing the milestone
 
+This section applies only when every ticket of M<n> is done. A milestone whose branch says `Status: done` with a ticket still open was sent back by the Owner: it is active, so build its tickets as in any tick.
+
 Two wake-ups can both find every ticket done, and a fresh session can wake at any point of this, so each step first looks for what an earlier tick left. Take the first line that matches, and nothing after it:
 
-1. `main` says `Status: done` for M<n>, or its milestone PR is merged: it is closed. Go on to the next cut ("Between milestones"). A merged milestone PR with `main` still at `active` means the report PR was skipped: say so on the tracking issue, because only a plan PR the Owner merges into `main` can set the status now (the plan skill's `milestones.md`).
+1. `main` says `Status: done` for M<n>, or its milestone PR is merged: it is closed. Go on to [the next cut](#the-next-cut). A merged milestone PR with `main` still at `active` means the report PR was skipped: say so on the tracking issue, because only a plan PR into `main`, which the Owner merges, can set the status now (the plan skill's `milestones.md`).
 2. A report PR (`plan/M<n>-report` into `milestone/M<n>`) is open: merge it when its checks are green and the Autonomy line lets agents merge; otherwise comment that it waits for the Owner. It needs no verifier: the `verdict` check passes it because it changes only the milestone's `Status:` line and its report.
-3. The report is current: `milestone/M<n>` says `Status: done`, and nothing but sync PRs merged into it since the report PR. If the milestone PR (`milestone/M<n>` into `main`) is open, stop: the Owner's merge is the sign-off. If it isn't, open it with the report (`docs/reports/M<n>.md`) as its description, and stop.
-4. An open `needs-owner` issue says an exit criterion or a scenario of M<n> isn't met: stop. A report was written and found the milestone short; the Owner decides what to add.
-5. None of these: start a fresh session with `/pitaya:report M<n>`. It writes the report and opens the report PR, or raises that issue.
+3. The report is current: `milestone/M<n>` says `Status: done`, and nothing but sync PRs merged into it since the report PR. If the milestone PR (`milestone/M<n>` into `main`) isn't open, open it with the report (`docs/reports/M<n>.md`) as its description. If it is open, make its description the current report when it still shows an earlier one. Then end the tick: the Owner's merge is the sign-off, and you keep a wake-up for it.
+4. An open `needs-owner` issue says an exit criterion or a scenario of M<n> isn't met: end the tick. A report was written and found the milestone short; the Owner decides what happens.
+5. The branch `plan/M<n>-report` exists with no PR: a report session is at work. End the tick.
+6. None of these: claim the report by pushing `plan/M<n>-report` from `milestone/M<n>`, then start a fresh session with `/pitaya:report M<n>`, telling it to use that branch. It writes the report and opens the report PR, or raises that issue; you merge the report PR and open the milestone PR on later ticks, not the report session.
 
-If the Owner sends the milestone back, the new tickets arrive through a plan PR on `main` and a sync PR. The milestone is active again while any of them is open, even though its branch still says `Status: done`. Once they are done, tickets have merged since the report, so line 3 doesn't match and line 5 writes a new report; its report PR changes only the report file, and the new text replaces the description of the milestone PR that is still open.
+If the Owner sends the milestone back, the new work arrives as tickets. Below Level 4 they come through a plan PR on `main` and a sync PR. At Level 4 `main` holds only the roadmap's copy of the milestone file, so a plan PR on `main` would conflict in the sync: the new tickets go in a plan PR into `milestone/M<n>`, which adds them like a cut. Either way the milestone is active while any of them is open. Once they are done, ticket PRs have merged since the report, so line 3 doesn't match and line 6 writes a new report; its report PR changes only the report file, and line 3 then puts the new text in the milestone PR that is still open.
+
+## The next cut
+
+When no milestone is active or closing, the next `planned` milestone in the roadmap, M<n+1>, is cut. Look first, as above:
+
+1. A plan PR that cuts M<n+1> is open. Below Level 4 it targets `main`: end the tick, the Owner's merge approves the cut. At Level 4 it targets `milestone/M<n+1>`: merge it when every required check is green, `verdict` included; if `verdict` is red, say why on the tracking issue and leave it for the Owner.
+2. The branch `plan/M<n+1>-cut` exists with no PR: a planning session is at work. End the tick.
+3. None of these: at Level 4, create `milestone/M<n+1>` from `main` and push it if it's missing. Claim the cut by pushing `plan/M<n+1>-cut` from the branch the plan PR will target (`main`, or at Level 4 `milestone/M<n+1>`), then start a fresh session with `/pitaya:design M<n+1>` and then `/pitaya:plan M<n+1>`, telling it to use that branch and that it runs unattended.
+
+A milestone with no `planned` successor ends the run: say so on the tracking issue and cancel the wake-up.
 
 ## Merging
 

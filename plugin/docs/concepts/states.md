@@ -38,7 +38,7 @@ A milestone's phase is its `Status:` line in `docs/milestones/M<n>.md`, and wher
 
 - **planned**: `Status: planned`, and no branch yet.
 - **active**: `Status: active`. Below Level 4 the cut merged into `main` and the branch starts from there. At Level 4 the cut merged into the branch, so `main` still shows `planned`: a reader that looks only at `main` finds no active milestone and no tickets.
-- **closing**: `Status: done` on `milestone/M<n>` and not on `main`. The milestone's report PR (`plan/M<n>-report` into `milestone/M<n>`) set it, together with `docs/reports/M<n>.md`; the milestone PR is open or about to be. If the Owner sends it back, it is active again while any new ticket is open.
+- **closing**: `Status: done` on `milestone/M<n>` and not on `main`. The milestone's report PR (`plan/M<n>-report` into `milestone/M<n>`) set it, together with `docs/reports/M<n>.md`; the milestone PR is open or about to be. That holds while every ticket is done: if the Owner sends it back, it is active again while any new ticket is open, whatever the line says.
 - **done**: `Status: done` on `main`. Only the Owner's merge of the milestone PR puts it there, so the sign-off and the status change are one event, and no plan PR follows to complete it.
 
 ## PR verdict
@@ -60,9 +60,9 @@ A verdict is a comment that starts with the verdict heading and names the full h
 stateDiagram-v2
   [*] --> Tick: woken by a PR event, /loop, a schedule or an Action
   Tick --> Tick: rebuild the state, act, post one line
-  Tick --> Stopped: milestone done, budget spent, Owner said stop, nothing can move, or a repeated failure
-  Stopped --> Waiting: sign-off or next cut pending
+  Tick --> Waiting: the milestone PR, or below Level 4 the next cut's plan PR, waits for the Owner's merge (the wake-up stays)
   Waiting --> Tick: Owner merges
+  Tick --> Stopped: budget spent, Owner said stop, nothing can move, a repeated failure, or no milestone left (the wake-up is cancelled)
   Stopped --> [*]
 ```
 

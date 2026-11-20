@@ -150,7 +150,7 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | Scenarios (from the milestone design) | 2 | `/design`, `/report M<n>` |
 | Risk: low or high | 4 | deep verification |
 
-A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files reach `main` only through plan PRs on `plan/<slug>` branches, which may change nothing else and which only the Owner merges (D36, D38). Each active milestone has a branch, `milestone/M<n>`: its tickets branch from it and merge into it, by agents at Level 3, and the Owner merges the milestone into `main` as its sign-off (D44). With one machine account, GitHub's rule that an author can't approve its own pull request keeps `main` with the Owner; more agent accounts need the multi-account recipe.
+A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files change only through plan PRs on `plan/<slug>` branches, which may change nothing else. Only the Owner merges one into `main` (D36, D38); from 0.1.7 two kinds merge into a milestone branch and reach `main` with the milestone, at the sign-off: the report PR, and at Level 4 the cut (D67). Each active milestone has a branch, `milestone/M<n>`: its tickets branch from it and merge into it, by agents at Level 3, and the Owner merges the milestone into `main` as its sign-off (D44). With one machine account, GitHub's rule that an author can't approve its own pull request keeps `main` with the Owner; more agent accounts need the multi-account recipe.
 
 ## 8. Level 1 defaults
 

@@ -107,9 +107,8 @@ def test_the_milestone_template_says_who_changes_its_status():
 
 def test_autopilot_looks_before_it_closes_a_milestone():
     """F18: a stateless tick that finds every ticket done must not write the report and open the PR twice."""
-    stop = section(read("skills/autopilot/SKILL.md"), "## Stop")
-    bullet = next(line for line in stop.splitlines() if "every ticket" in line)
-    assert "tick.md" in bullet
+    summary = section(read("skills/autopilot/SKILL.md"), "## Closing")
+    assert "every ticket" in summary and "tick.md#closing-the-milestone" in summary
     closing = section(read("skills/autopilot/tick.md"), "## Closing the milestone")
     merged, report = closing.find("merged"), closing.find("/pitaya:report")
     assert 0 <= merged < report, "the check for a merged milestone PR must come before starting the report"
@@ -239,8 +238,8 @@ def test_a_milestone_sent_back_gets_a_new_report():
     """With the milestone PR still open, "PR open: stop" alone would leave the first report standing."""
     closing = section(read("skills/autopilot/tick.md"), "## Closing the milestone")
     assert "sends" in closing and "since the report" in closing
-    stop = next(line for line in closing.splitlines() if "milestone PR" in line and "stop" in line and "open" in line)
-    assert "current" in stop, stop
+    wait = next(line for line in closing.splitlines() if "milestone PR" in line and "isn't open" in line)
+    assert "current" in wait and "sync PRs" in wait, wait
     report = read("skills/report/SKILL.md")
     assert "already open" in report, "a second report replaces the open milestone PR's description"
 
@@ -268,3 +267,101 @@ def test_an_unmet_milestone_does_not_start_a_report_on_every_tick():
     closing = section(read("skills/autopilot/tick.md"), "## Closing the milestone")
     unmet = closing.find("needs-owner")
     assert 0 <= unmet < closing.find("/pitaya:report"), "look for the escalation before starting another report"
+
+
+# --- found by the consistency audit before the 0.1.7 PR ------------------------------------------
+
+def test_the_never_list_does_not_forbid_the_merges_the_skill_asks_for():
+    """A1: a sync PR, a report PR and a cut never have a PASS; "never merge without a PASS" forbade them."""
+    never = section(read("skills/autopilot/SKILL.md"), "## Never")
+    line = next(l for l in never.splitlines() if "no PASS" in l)
+    assert "ticket PR" in line and "green `verdict`" in line, line
+    point = next(l for l in read("docs/concepts/autonomy.md").splitlines() if l.startswith("7."))
+    assert "ticket PR" in point and "green `verdict`" in point, point
+
+
+def test_one_place_says_what_happens_with_no_milestone_to_run():
+    """A2, B4: step 2 said "stop" below Level 4 while "Between milestones" said to start the design."""
+    first = section(read("skills/autopilot/SKILL.md"), "## Before the first tick")
+    step = next(l for l in first.splitlines() if l.startswith("2."))
+    assert "below Level 4 stop" not in step
+    cut = section(read("skills/autopilot/tick.md"), "## The next cut")
+    assert cut.find("open") < cut.find("/pitaya:design"), "look for an open plan PR before starting another"
+    assert "Level 4" in cut and "claim" in cut.lower()
+
+
+def test_a_sent_back_milestone_is_built_not_closed():
+    """B1: the branch still says done; with a ticket open the tick must build, not sit in "closing"."""
+    first = section(read("skills/autopilot/SKILL.md"), "## Before the first tick")
+    step = next(l for l in first.splitlines() if l.startswith("2."))
+    assert re.search(r"closing[^.]*every ticket[^.]*done", step), step
+    closing = section(read("skills/autopilot/tick.md"), "## Closing the milestone")
+    assert re.search(r"only (when|while) every ticket", closing.split("1.")[0])
+    assert "sent back" in read("skills/help/SKILL.md")
+
+
+def test_autopilot_keeps_a_wake_up_while_it_waits_for_the_owner():
+    """B2: cancelling the wake-up when every ticket is done left closing, and the next cut, to nobody."""
+    stop = section(read("skills/autopilot/SKILL.md"), "## Stop")
+    assert "every ticket of the milestone is done" not in stop
+    assert re.search(r"keep[^.]*wake", stop), "the waits on the Owner's merge keep a wake-up"
+    wake = read("skills/autopilot/wake.md")
+    assert "report PR" in wake and "milestone PR" in wake
+
+
+def test_one_session_opens_the_milestone_pr():
+    """B3, B5: under autopilot the tick opens it; alone, `/report` does, and looks before it acts."""
+    deliver = section(read("skills/report/SKILL.md"), "## Deliver")
+    assert "/autopilot" in deliver and "look" in deliver.lower()
+    closing = section(read("skills/autopilot/tick.md"), "## Closing the milestone")
+    assert "description" in closing
+    assert "/report M<n>" in read("skills/help/SKILL.md")
+
+
+def test_new_work_for_a_level_4_milestone_goes_into_its_branch():
+    """B6: at Level 4 main holds the roadmap's copy of the milestone file, so a plan PR on main conflicts in the sync."""
+    for rel in ("skills/plan/milestones.md", "skills/autopilot/tick.md"):
+        text = read(rel)
+        assert re.search(r"At Level 4[^.]*plan PR into `milestone/M<n>`", text), rel
+
+
+def test_a_milestone_that_falls_short_has_a_way_out():
+    """B8: the Owner's answer on the issue is one of three things, and `/report` follows it."""
+    deliver = section(read("skills/report/SKILL.md"), "## Deliver")
+    for way in ("new tickets", "exit criteria", "as it is"):
+        assert way in deliver, way
+
+
+def test_unattended_design_and_plan_sessions_do_not_wait_for_the_owner():
+    """A3, B7: autopilot starts them with nobody in the conversation, at Level 3 too."""
+    for rel in ("skills/design/SKILL.md", "skills/plan/SKILL.md"):
+        text = read(rel)
+        assert "unattended" in text, rel
+        assert "/autopilot" in text, rel
+
+
+def test_the_repair_names_a_pr_that_can_carry_it():
+    """A4: at Level 4 the cut goes into a milestone branch, where it may not touch another milestone's file."""
+    text = section(read("skills/plan/milestones.md"), "## `/plan M<n>`")
+    assert re.search(r"plan PR into `main`", text) and "Level 4" in text
+
+
+def test_roles_and_the_recipes_agree_on_who_approves_a_cut():
+    owner = row(read("docs/concepts/roles.md"), "**Owner**")
+    assert "below Level 4" in owner
+    assert "report PR" in read("docs/guardrails/protect-main.md")
+    assert "like a sync PR" in row(read("docs/concepts/layout.md"), "`plan/<slug>`")
+
+
+def test_recipes_that_state_their_version_state_the_current_one():
+    import json
+    version = json.loads(read(".claude-plugin/plugin.json"))["version"]
+    stated = re.findall(r"this recipe is version (\d+\.\d+\.\d+)", read("docs/guardrails/progress-file.md"))
+    assert stated == [version]
+
+
+def test_the_checks_own_notes_list_every_rule_for_a_cut():
+    text = " ".join((FILES / "agent-merge" / "check_verdict.py").read_text().split('"""')[1].split())
+    for rule in ("deletes nothing", "no milestone file but its own", "any `plan/` branch"):
+        assert rule in text, rule
+    assert "Exit 0 when this head has a PASS and no FAIL" not in text

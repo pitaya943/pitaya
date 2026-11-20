@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Turn a request, spec or conversation into tickets an agent can build and verify on their own, each a thin vertical slice with completion conditions, dependencies and scope. The Owner approves the list before anything is written to the tracker.
+description: Turn a request, spec or conversation into tickets an agent can build and verify on their own, each a thin vertical slice with completion conditions, dependencies and scope. The Owner approves the list before anything is written to the tracker, or, in an unattended session, by merging the plan PR.
 disable-model-invocation: true
 argument-hint: "<what to build, or --roadmap for milestones, or M<n> to cut a milestone into tickets>"
 ---
@@ -41,7 +41,7 @@ A ticket that touches a sensitive area must have a done-when condition that cove
 ## Present, then write
 
 1. Show the Owner a numbered list: title, depends on, what it delivers, scope. Mark which tickets can run in parallel: no dependency between them and no overlapping scope.
-2. Ask whether the granularity, order and conditions are right. Change the plan until the Owner approves it.
+2. Ask whether the granularity, order and conditions are right. Change the plan until the Owner approves it. In an unattended session (one `/autopilot` started, with nobody in the conversation) there is nobody to ask: write what you would have asked, and the answer you assumed, into the plan PR's description. The Owner approves by merging that PR, or at Level 4 reads it at the milestone's sign-off.
 3. Only then write the tickets where the harness file says, in its document language. See [tickets.md](tickets.md) for each mode: files with an issue mirror (the default), files only, or issues only. File tickets reach `main` through one PR the Owner merges; that merge is the approval the checks rely on.
 4. If the Owner decided something along the way, add it to `docs/decisions.md` when the project keeps one. A decision between two or more real options that changes the architecture, a public interface or the data model also gets `docs/adr/<nnnn>-<slug>.md` from [adr-template.md](adr-template.md), in the same plan PR.
 5. If planning settled a new term or adds, removes or moves a module, update `docs/agents/glossary.md` or `docs/agents/architecture.md` in the same change.
@@ -50,4 +50,4 @@ A ticket that touches a sensitive area must have a done-when condition that cove
 
 - Don't write product code or tests while planning.
 - Don't decide a data-model or public-interface change the request didn't ask for: raise it with the `ask-owner` skill.
-- Don't write anything to the tracker before the Owner approves the list.
+- Don't write anything to the tracker before the Owner approves the list. Unattended, the plan PR is the proposal: open mirror issues only after it is merged.

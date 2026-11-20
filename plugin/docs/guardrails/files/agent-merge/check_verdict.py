@@ -58,14 +58,17 @@ Milestone PRs (`milestone/<id>`) never pass, and neither does a plan PR
 changes that. A plan PR into a milestone branch has no verifier to wait for, so
 it passes without a verdict in two cases, and only with `--git-dir`:
 
-- the report PR, which closes `milestone/<id>` from inside: it changes nothing
-  but the `Status:` line of `docs/milestones/<id>.md`, to `done`, and
-  `docs/reports/<id>.md`, and no ticket file of that milestone is still open.
-  The Owner reads both in the milestone PR, whose merge is the sign-off.
-- the cut of the next milestone, where the Owner lets agents merge it: the
-  "Autonomy" line of `docs/agents/harness.md` on the default branch starts with
-  "Agents merge" and names plan PRs (Level 4). It changes only plan files, and
-  it adds tickets without changing or deleting one that exists.
+- the report PR, which closes `milestone/<id>` from inside, from any `plan/` branch:
+  it changes nothing but `docs/reports/<id>.md` and the `Status:` line of
+  `docs/milestones/<id>.md`, which may only become `done`, and no ticket file
+  of that milestone is still open. The report alone is enough (a new report
+  after the Owner sent the milestone back). The Owner reads both in the
+  milestone PR, whose merge is the sign-off.
+- a cut, where the Owner lets agents merge it: the "Autonomy" line of
+  `docs/agents/harness.md` on the default branch starts with "Agents merge"
+  and names plan PRs (Level 4). It changes only plan files and deletes nothing,
+  it adds tickets without changing one that exists, and it changes no milestone
+  file but its own.
 
 Anything else in such a PR waits for the Owner. A FAIL on its head blocks it like
 any other.
@@ -73,7 +76,9 @@ any other.
 When to remove: when agents no longer merge on their own, and a person reads
 every verdict before merging.
 
-Exit 0 when this head has a PASS and no FAIL from a verifier, 1 otherwise. Standard library only.
+Exit 0 when this head has no FAIL and either a PASS from a verifier or one of the
+proofs above (a carried PASS, a sync PR, a report PR, a cut); 1 otherwise.
+Standard library only.
 """
 
 from __future__ import annotations
