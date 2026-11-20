@@ -92,6 +92,8 @@ Added from recipes in `docs/guardrails/`. These are the earlier template's CI ch
 | **Append-only files** (a changelog, the decision log) | Merge | Listed files only gain lines in a PR, so history can't be rewritten | It can't check that the new lines are right |
 | **Serial resources** (migrations, lockfiles) | Merge | Only one ticket at a time changes a given resource, avoiding two PRs that are each fine but conflict once merged | Someone has to keep the in-progress list (a board or issue labels) |
 | **Evidence check** | Merge | A PR without an evidence section, or a UI change without screenshots, can't merge, so the Owner always sees evidence | It checks that evidence exists, not that it's true |
+| **`design` skill** (scenarios first, then interfaces, data flow, notifications and state owners) | Prose | Parallel builders share one contract: every ticket comes from a Given/When/Then scenario with a named test, and `/report` checks each scenario at the end | It's only as good as the scenarios; a missed behaviour stays missed |
+| **Verify the real app** (a project skill that drives the UI, CLI or API) | Prose, checkable | Catches "every test passes, but the feature is broken": the verifier drives the feature as a user would and attaches evidence | It needs a runnable, isolated app and upkeep as features change |
 
 **Stopped at this level:** parallel agents overwriting each other, failing tests deleted to turn CI green, specs bent to fit the code, work nobody can attribute, two migrations colliding.
 

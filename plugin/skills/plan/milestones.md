@@ -15,7 +15,7 @@ Planning has two levels. A **milestone** is a large outcome the Owner can see wo
 
 ## `/plan M<n>`
 
-Cut the active milestone into tickets as described in `SKILL.md` and [tickets.md](tickets.md). Every ticket gets `Milestone: M<n>`, and the milestone's "Tickets" section lists them. Tickets stay inside the milestone's goal and outside its "Not in this milestone" list; a needed change outside them is a question for the Owner, not a new ticket. The same plan PR sets the previous milestone to `Status: done` (once it's merged) and this one to `Status: active`.
+From Level 2, the milestone is designed first: `docs/milestones/M<n>-design.md` holds its scenarios (`S-1`, `S-2`, ...), interfaces, data flow and state owners (the `design` skill). Cut the tickets from the scenarios: every scenario belongs to exactly one ticket, which lists it under "Scenarios" and turns it into a done-when condition with the test the design names; interfaces a ticket introduces come from the design, not from the builder. Then, as described in `SKILL.md` and [tickets.md](tickets.md), every ticket gets `Milestone: M<n>`, and the milestone's "Tickets" section lists them. Tickets stay inside the milestone's goal and outside its "Not in this milestone" list; a needed change outside them is a question for the Owner, not a new ticket. The same plan PR sets the previous milestone to `Status: done` (once it's merged) and this one to `Status: active`.
 
 ## The milestone branch
 

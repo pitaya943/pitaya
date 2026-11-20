@@ -19,8 +19,9 @@ Mark every item pass or fail, with evidence: the command and its output, or the 
    - Behaviour the spec doesn't decide isn't a fail: list it under "Spec questions".
 9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file in that net diff is inside it; mention any out-of-scope commit that a later commit reverted. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md` or CI config unless the ticket names that exact file. A file ticket's own PR changes only its `Status:` line, to `done`.
 10. **Blast radius.** When the diff touches a shared module, a public interface, a data format or more than a handful of files, find the one fact the change's safety depends on (for example "every caller passes a sorted list", "the old field is never read"). Look past grep: library source at the pinned version, data on disk or the wire, flags, downstream code. Prove that fact with a command or test that runs real code. List confirmed risks and checks you cleared separately; an unproven fact is a FAIL with the fact named. For a small, self-contained diff, write "small diff" and skip.
-11. **Decision log.** Read the PR's decision log. A decision the code contradicts, or a "kept" row whose evidence doesn't hold up, is a finding. Missing rows aren't a fail by themselves, but a choice between real alternatives with no row goes under "Spec questions".
-12. **Evidence and hygiene.**
+11. **Real app.** When the project has a verification skill (`.claude/skills/verify-*/`, from the verify-app recipe) and the change touches a user-facing feature, drive that feature with it and attach the evidence. For other changes, write "not user-facing".
+12. **Decision log.** Read the PR's decision log. A decision the code contradicts, or a "kept" row whose evidence doesn't hold up, is a finding. Missing rows aren't a fail by themselves, but a choice between real alternatives with no row goes under "Spec questions".
+13. **Evidence and hygiene.**
     - The PR's evidence section covers every condition, including the red output. A condition with no red needs a note saying why, and a mutation in item 5 that makes its test fail.
     - Nothing in the diff, PR or logs exposes a secret.
     - No test talks to a shared or production system.

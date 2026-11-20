@@ -40,7 +40,7 @@ Stop, post why on the tracking issue, and cancel your wake-up when any of these 
 
 ## Between milestones
 
-When you wake to find the Owner merged the milestone PR, start a fresh session with `/pitaya:plan M<n+1>`: its plan PR sets M<n> done and cuts the next milestone. Stop until the Owner merges it, then carry on with the new milestone. The two Owner gates between milestones are the sign-off and the next cut; everything inside a milestone runs on its own.
+When you wake to find the Owner merged the milestone PR, start a fresh session with `/pitaya:design M<n+1>` and then `/pitaya:plan M<n+1>`: one plan PR carries the design, sets M<n> done and cuts the next milestone. Stop until the Owner merges it, then carry on with the new milestone. The two Owner gates between milestones are the sign-off and the next cut; everything inside a milestone runs on its own.
 
 ## Never
 

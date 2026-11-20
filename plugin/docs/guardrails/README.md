@@ -41,7 +41,7 @@ The copyable checks use only Python's standard library and git, one standalone f
 | Level | Recipe |
 | --- | --- |
 | 1 | [protect-main](protect-main.md) (the steps `/setup` hands to the Owner) |
-| 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md), [multi-account](multi-account.md) |
+| 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md), [multi-account](multi-account.md), [verify-app](verify-app.md) |
 | 3 | [progress-file](progress-file.md), [agent-merge](agent-merge.md) |
 | 4 | [second-model-review](second-model-review.md), [project-evals](project-evals.md) |
 

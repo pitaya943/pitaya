@@ -19,8 +19,9 @@
 | 8 | Spec edge cases | | |
 | 9 | Scope | | |
 | 10 | Blast radius | | <the one fact, and the command that proves it; or "small diff"> |
-| 11 | Decision log | | |
-| 12 | Evidence and hygiene | | |
+| 11 | Real app | | <feature, evidence path; or "not user-facing"> |
+| 12 | Decision log | | |
+| 13 | Evidence and hygiene | | |
 
 ## Problems
 

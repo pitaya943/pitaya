@@ -6,6 +6,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- New Level 2 skill `design` (D47): scenarios first, then interfaces, data flow, notifications and state owners; tickets are cut from the scenarios, and `/report M<n>` checks each one. `/verify` drives the real app when the project has a verification skill.
+
 - Adapted from pstack (D46): `/plan` sharpens the brief and explores how and why first (`plan/sharpen.md`); PRs carry an append-only decision log, failures included; `/verify` checks blast radius and reads the decision log; `/retro` follows the correct ladder (architecture, types/lint/CI, tests, docs) and keeps only lessons that hold for six months; `/report` draws on decision logs.
 
 - Milestone branches (D44): `/plan` creates `milestone/M<n>` once a cut is approved; `/build` branches from it and targets it; `/autopilot` merges ticket PRs only into it, opens the milestone PR into `main` and stops for the Owner's sign-off, then starts the next cut. `/verify` posts the verdict as a comment from the machine account.
@@ -44,6 +46,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes
+
+- New Level 2 recipe `verify-app`: a project skill that drives the real app, with templates for the skill and its feature map.
 
 - `protect-main` adds a `protect-milestones` ruleset for `milestone/*`. `agent-merge` gates merges into milestone branches; it reads verdict comments from the machine account (edited ones don't count, any FAIL on the head is final) and refuses plan and milestone PRs. New `multi-account` recipe holds CODEOWNERS for repositories with several agent accounts.
 
