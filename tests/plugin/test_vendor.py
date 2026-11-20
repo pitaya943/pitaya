@@ -6,6 +6,10 @@ relative link in the skills still resolves, and `/setup`'s installer still
 finds its templates. Like the template installer, it never overwrites a file
 the project changed; it upgrades only copies it can prove are its own,
 recorded with a hash in `.claude/pitaya.json`.
+
+Each skill is copied as `pitaya-<name>` (D52), so `/pitaya:help` becomes
+`/pitaya-help`: the copy can't collide with Claude Code's built-in commands
+(`/help`) or with a project's own skills (`build`, `plan`).
 """
 
 from __future__ import annotations
@@ -37,6 +41,11 @@ def lines(proc) -> dict[str, str]:
     return out
 
 
+def shipped_skills() -> list[str]:
+    return [s.removeprefix("./skills/") for s in
+            json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text())["skills"]]
+
+
 def manifest(target: Path) -> dict:
     return json.loads((target / ".claude" / "pitaya.json").read_text())
 
@@ -45,13 +54,16 @@ def test_fresh_copy_puts_the_plugin_under_dot_claude(tmp_path):
     proc = vendor(tmp_path)
     assert proc.returncode == 0, proc.stderr
     claude = tmp_path / ".claude"
-    for skill in json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text())["skills"]:
-        assert (claude / skill.removeprefix("./") / "SKILL.md").is_file(), skill
+    for skill in shipped_skills():
+        skill_md = claude / "skills" / f"pitaya-{skill}" / "SKILL.md"
+        assert skill_md.is_file(), skill
+        assert f"\nname: pitaya-{skill}\n" in skill_md.read_text(), skill  # the name matches its folder
+        assert not (claude / "skills" / skill).exists(), skill
     assert (claude / "docs" / "levels.md").is_file()
     assert (claude / "templates" / "AGENTS.md").is_file()
     data = manifest(tmp_path)
     assert data["version"] == VERSION
-    assert "skills/help/SKILL.md" in data["files"]
+    assert "skills/pitaya-help/SKILL.md" in data["files"]
     assert not any("__pycache__" in rel for rel in data["files"])
 
 
@@ -60,6 +72,25 @@ def test_relative_links_in_the_vendored_skills_resolve(tmp_path):
     for md in (tmp_path / ".claude" / "skills").rglob("*.md"):
         for target in LINK.findall(md.read_text()):
             assert (md.parent / target).resolve().exists(), f"{md}: {target}"
+
+
+def test_the_copy_names_skills_as_the_user_types_them(tmp_path):
+    vendor(tmp_path)
+    for md in (tmp_path / ".claude").rglob("*.md"):
+        assert "/pitaya:" not in md.read_text(), md
+    help_md = (tmp_path / ".claude" / "skills" / "pitaya-help" / "SKILL.md").read_text()
+    assert "/pitaya-verify" in help_md
+
+
+def test_copying_twice_from_a_copy_adds_no_second_prefix(tmp_path):
+    first, second = tmp_path / "first", tmp_path / "second"
+    vendor(first)
+    script = first / ".claude" / "skills" / "pitaya-setup" / "scripts" / "vendor_plugin.py"
+    proc = subprocess.run([sys.executable, str(script), "--target", str(second)], capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    assert (second / ".claude" / "skills" / "pitaya-help" / "SKILL.md").read_bytes() == \
+        (first / ".claude" / "skills" / "pitaya-help" / "SKILL.md").read_bytes()
+    assert not (second / ".claude" / "skills" / "pitaya-pitaya-help").exists()
 
 
 def test_rerun_changes_nothing(tmp_path):
@@ -74,14 +105,24 @@ def test_check_writes_nothing(tmp_path):
     assert not (tmp_path / ".claude").exists()
 
 
-def test_a_projects_own_skill_is_left_alone(tmp_path):
+def test_a_projects_own_skill_with_a_common_name_does_not_collide(tmp_path):
     own = tmp_path / ".claude" / "skills" / "build" / "SKILL.md"
     own.parent.mkdir(parents=True)
     own.write_text("our own build skill\n")
     proc = vendor(tmp_path)
-    assert lines(proc)["skills/build/SKILL.md"] == "differs"
+    assert "skills/build/SKILL.md" not in lines(proc)
+    assert lines(proc)["skills/pitaya-build/SKILL.md"] == "created"
     assert own.read_text() == "our own build skill\n"
-    assert "skills/build/SKILL.md" not in manifest(tmp_path)["files"]
+
+
+def test_a_file_in_the_way_is_left_alone(tmp_path):
+    own = tmp_path / ".claude" / "skills" / "pitaya-build" / "SKILL.md"
+    own.parent.mkdir(parents=True)
+    own.write_text("someone else's file\n")
+    proc = vendor(tmp_path)
+    assert lines(proc)["skills/pitaya-build/SKILL.md"] == "differs"
+    assert own.read_text() == "someone else's file\n"
+    assert "skills/pitaya-build/SKILL.md" not in manifest(tmp_path)["files"]
 
 
 def test_upgrade_replaces_only_unmodified_copies(tmp_path):
@@ -89,29 +130,30 @@ def test_upgrade_replaces_only_unmodified_copies(tmp_path):
     claude = tmp_path / ".claude"
     data = manifest(tmp_path)
     # Pretend an older version was vendored: its copy, and its recorded hash.
-    old = claude / "skills" / "help" / "SKILL.md"
+    fresh = (claude / "skills" / "pitaya-help" / "SKILL.md").read_bytes()
+    old = claude / "skills" / "pitaya-help" / "SKILL.md"
     old.write_text("help from an older version\n")
-    data["files"]["skills/help/SKILL.md"] = hashlib.sha256(old.read_bytes()).hexdigest()
+    data["files"]["skills/pitaya-help/SKILL.md"] = hashlib.sha256(old.read_bytes()).hexdigest()
     # And a copy the project edited by hand after vendoring.
-    edited = claude / "skills" / "tdd" / "SKILL.md"
+    edited = claude / "skills" / "pitaya-tdd" / "SKILL.md"
     edited.write_text(edited.read_text() + "\nour local rule\n")
     (claude / "pitaya.json").write_text(json.dumps(data))
 
     report = lines(vendor(tmp_path))
-    assert report["skills/help/SKILL.md"] == "stale"
-    assert report["skills/tdd/SKILL.md"] == "differs"
+    assert report["skills/pitaya-help/SKILL.md"] == "stale"
+    assert report["skills/pitaya-tdd/SKILL.md"] == "differs"
     assert old.read_text() == "help from an older version\n"
 
     report = lines(vendor(tmp_path, "--upgrade"))
-    assert report["skills/help/SKILL.md"] == "upgraded"
-    assert report["skills/tdd/SKILL.md"] == "differs"
-    assert old.read_bytes() == (PLUGIN / "skills" / "help" / "SKILL.md").read_bytes()
+    assert report["skills/pitaya-help/SKILL.md"] == "upgraded"
+    assert report["skills/pitaya-tdd/SKILL.md"] == "differs"
+    assert old.read_bytes() == fresh
     assert "our local rule" in edited.read_text()
 
 
 def test_setup_installs_templates_from_the_vendored_copy(tmp_path):
     vendor(tmp_path)
-    installer = tmp_path / ".claude" / "skills" / "setup" / "scripts" / "install_templates.py"
+    installer = tmp_path / ".claude" / "skills" / "pitaya-setup" / "scripts" / "install_templates.py"
     proc = subprocess.run([sys.executable, str(installer), "--target", str(tmp_path), "--level", "1",
                            "--test-command", "pytest -q", "--check"], capture_output=True, text=True, timeout=60)
     assert proc.returncode == 0, proc.stderr
@@ -133,8 +175,8 @@ def test_every_gh_command_names_the_github_tool_alternative():
 
 def test_skills_that_name_other_skills_say_the_prefix_is_optional():
     for rel in ("autopilot/SKILL.md", "help/SKILL.md"):
-        assert "without the `pitaya:` prefix" in (SKILLS / rel).read_text(), rel
-    assert "without the `pitaya:` prefix" in (PLUGIN / "templates" / "AGENTS.md").read_text()
+        assert "replace the `pitaya:` prefix with `pitaya-`" in (SKILLS / rel).read_text(), rel
+    assert "replace the `pitaya:` prefix with `pitaya-`" in (PLUGIN / "templates" / "AGENTS.md").read_text()
 
 
 def test_readme_explains_cloud_sessions():

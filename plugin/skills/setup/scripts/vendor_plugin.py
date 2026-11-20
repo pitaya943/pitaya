@@ -12,7 +12,12 @@ commits, such as `.claude/skills/`. So this copies the plugin's `skills/`,
 `docs/` and `templates/` into `<target>/.claude/`, keeping their layout:
 `.claude/` takes the place of the plugin root, every relative link in the skills
 still resolves, and `/setup`'s installer still finds `.claude/templates/`.
-The skills then run without the `pitaya:` prefix (`/build`, not `/pitaya:build`).
+
+Each skill is copied as `pitaya-<name>` (D52): `skills/help/` becomes
+`skills/pitaya-help/`, its `name:` becomes `pitaya-help`, links to it are
+rewritten, and `/pitaya:<skill>` in the text becomes `/pitaya-<skill>`. So the
+copy can't collide with Claude Code's built-in `/help` or a project's own
+`build` skill, and the names stay one character away from the plugin's.
 
 Rules, so a re-run is always safe:
 
@@ -34,6 +39,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -42,6 +48,8 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[3]
 PARTS = ("skills", "docs", "templates")
 MANIFEST = "pitaya.json"
 IGNORED = {"__pycache__", ".pytest_cache"}
+PREFIX = "pitaya-"
+TEXT = {".md", ".json"}  # rewritten for the new names; scripts and workflows are copied byte for byte
 
 
 def plugin_version() -> str:
@@ -52,8 +60,36 @@ def plugin_version() -> str:
     return json.loads(vendored.read_text())["version"] if vendored.is_file() else "unknown"
 
 
-def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def skill_names() -> list[str]:
+    """The skills' names as the plugin ships them, without a prefix (also when copying from a copy)."""
+    return sorted(p.parent.name.removeprefix(PREFIX) for p in (PLUGIN_ROOT / "skills").glob("*/SKILL.md"))
+
+
+def destination(rel: str) -> str:
+    """skills/<name>/... -> skills/pitaya-<name>/...; everything else keeps its path."""
+    parts = rel.split("/")
+    if parts[0] == "skills" and len(parts) > 2 and not parts[1].startswith(PREFIX):
+        parts[1] = PREFIX + parts[1]
+    return "/".join(parts)
+
+
+def content(rel: str, src: Path, names: list[str]) -> bytes:
+    """The file as it goes into the copy: text renamed to the prefixed skills, the rest unchanged."""
+    data = src.read_bytes()
+    if src.suffix not in TEXT:
+        return data
+    text = data.decode()
+    alternation = "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+    text = re.sub(rf"(skills/)({alternation})/", rf"\g<1>{PREFIX}\2/", text)  # links and paths
+    text = re.sub(rf"(?<![\w-])\.\./({alternation})/", rf"../{PREFIX}\1/", text)  # sibling-skill links
+    text = text.replace("/pitaya:", "/" + PREFIX)  # commands as the user types them
+    if src.name == "SKILL.md":
+        text = re.sub(r"(?m)^name: (?!pitaya-)(\S+)$", rf"name: {PREFIX}\1", text, count=1)
+    return text.encode()
 
 
 def sources() -> dict[str, Path]:
@@ -80,22 +116,27 @@ def main(argv: list[str] | None = None) -> int:
     version = plugin_version()
     print(f"pitaya {version} -> {claude.resolve()}")
 
-    shipped = sources()
-    for rel, src in shipped.items():
+    names = skill_names()
+    shipped = {}
+    for src_rel, src in sources().items():
+        rel = destination(src_rel)
+        shipped[rel] = data = content(src_rel, src, names)
         dest = claude / rel
-        want = digest(src)
-        if not dest.exists():
+        want = digest(data)
+        have = digest(dest.read_bytes()) if dest.exists() else None
+        if have is None:
             status = "created"
-        elif digest(dest) == want:
+        elif have == want:
             status = "unchanged"
-        elif owned.get(rel) == digest(dest):
+        elif owned.get(rel) == have:
             status = "upgraded" if args.upgrade else "stale"
         else:
             status = "differs"
         if status in ("created", "upgraded"):
             if not args.check:
                 dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, dest)  # keeps the executable bit on hooks and scripts
+                dest.write_bytes(data)
+                shutil.copymode(src, dest)  # keeps the executable bit on hooks and scripts
             owned[rel] = want
         elif status == "unchanged":
             owned[rel] = want
@@ -106,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for rel in sorted(set(owned) - set(shipped)):
         dest = claude / rel
-        if dest.exists() and digest(dest) == owned[rel] and args.upgrade:
+        if dest.exists() and digest(dest.read_bytes()) == owned[rel] and args.upgrade:
             if not args.check:
                 dest.unlink()
             owned.pop(rel)

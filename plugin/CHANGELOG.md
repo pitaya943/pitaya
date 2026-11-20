@@ -6,11 +6,11 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
-- Cloud sessions (D51): they load no plugins, so `setup/scripts/vendor_plugin.py` copies the plugin's `skills/`, `docs/` and `templates/` into a project's `.claude/`, recording each file's hash in `.claude/pitaya.json`; it never overwrites a file it didn't write, and `--upgrade` replaces only its own unmodified copies. `install_templates.py` reads the version from that record. Every `gh` command in the skills names the GitHub tool alternative, and skills that name others say the `pitaya:` prefix is dropped in a copied install.
+- Cloud sessions (D51): they load no plugins, so `setup/scripts/vendor_plugin.py` copies the plugin's `skills/`, `docs/` and `templates/` into a project's `.claude/`, recording each file's hash in `.claude/pitaya.json`; it never overwrites a file it didn't write, and `--upgrade` replaces only its own unmodified copies. `install_templates.py` reads the version from that record. Every `gh` command in the skills names the GitHub tool alternative, and a copied skill is named `pitaya-<name>` (D52), so `/pitaya:help` becomes `/pitaya-help` and can't collide with the built-in `/help` or a project's own skills.
 
 ### Templates
 
-- `AGENTS.md`: skills run without the `pitaya:` prefix when copied into `.claude/skills/`.
+- `AGENTS.md`: copied skills are typed `/pitaya-<name>`.
 
 ### Docs
 

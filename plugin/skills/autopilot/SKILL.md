@@ -9,7 +9,7 @@ argument-hint: "[M<n>] [budget, such as 5 tickets or 4 hours]"
 
 You coordinate; you don't build, verify or plan. Each piece of work goes to a fresh session or agent, so nothing piles up in your context. You are **stateless**: every time you wake, rebuild the picture from the repository and GitHub, never from memory, so a lost session costs nothing.
 
-Skill names below carry the plugin's `pitaya:` prefix; when the skills were copied into `.claude/skills/` (cloud sessions), use them without the `pitaya:` prefix.
+Skill names below carry the plugin's `pitaya:` prefix; when the skills were copied into `.claude/skills/` (cloud sessions), replace the `pitaya:` prefix with `pitaya-`.
 
 ## Before the first tick
 
