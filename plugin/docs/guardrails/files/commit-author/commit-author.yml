@@ -1,4 +1,4 @@
-# pitaya template 0.1.5 · docs/guardrails/files/commit-author/commit-author.yml
+# pitaya template 0.1.6 · docs/guardrails/files/commit-author/commit-author.yml
 # Fails a pull request with a commit not authored by the machine account (by GitHub login).
 # Copy to .github/workflows/commit-author.yml, and check_commit_author.py to .github/guardrails/check_commit_author.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login, then

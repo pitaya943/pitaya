@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.5 · docs/agents/architecture.md -->
+<!-- pitaya template 0.1.6 · docs/agents/architecture.md -->
 # Architecture
 
 A map of the codebase, for orientation before changing it: the main modules, where they live and what each is for. Keep it short; the code is the detail.

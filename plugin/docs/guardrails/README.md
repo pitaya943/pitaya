@@ -49,6 +49,10 @@ The copyable checks use only Python's standard library and git, one standalone f
 
 Installing a recipe changes `.github/` and the harness file, which agents don't change on their own. Either the Owner opens that pull request, or it's a ticket whose "## Scope" lists the exact files, so the ticket-based checks, including the one being installed, can pass on it.
 
+## What the checks trust
+
+Each workflow loads its Python check from the base branch, so a pull request can't change the script that judges it. The workflow file is different: GitHub runs a `pull_request` event with the pull request's own copy of the YAML, so a PR that rewrote a workflow's steps would be judged by its own version. pitaya trusts cooperating agents not to do that ([access](../concepts/access.md#what-pitaya-assumes)). What stands in the way of the honest mistake: `.github/` is read-only in ticket PRs, the rule-file hook asks before a session edits it, the agents' token has no Workflows permission, and the verifier reports any change under `.github/` in a ticket PR as a `gate-change` row for the Owner. Moving the checks to `pull_request_target`, so only the base's workflow runs, is the stricter defence, and isn't built.
+
 ## How the checks find the ticket
 
 Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" step looks in two places:
@@ -56,15 +60,15 @@ Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" ste
 - `docs/tickets/<id>.md` on the **base** branch, when the PR branch is named `ticket/<id>-<slug>`;
 - otherwise, the GitHub issue whose number is in the branch name, `ticket/<number>-<slug>`.
 
-Pull requests opened by agent accounts, the logins in the repository variable `MACHINE_ACCOUNT` (comma separated, any case; Settings → Secrets and variables → Actions → Variables), must use a ticket branch, or the check fails, so an agent can't avoid the checks by naming its branch differently. When the variable is empty, the check fails rather than guessing. People's pull requests from a branch without a ticket are skipped, with a note. A milestone PR (`milestone/<id>` into `main`) is skipped too: its tickets passed these checks on their way into the milestone, and the Owner reviews it as a whole.
+Pull requests opened by agent accounts, the logins in the repository variable `MACHINE_ACCOUNT` (comma separated, any case; Settings → Secrets and variables → Actions → Variables), must use a ticket branch, or the check fails, so an agent can't avoid the checks by naming its branch differently. When the variable is empty, the check fails rather than guessing. People's pull requests from a branch without a ticket are skipped, with a note. A branch name earns an exception only on the base it belongs to; the three kinds follow.
 
 When `docs/tickets/` exists on the base branch, tickets are files: a branch naming an issue number doesn't fall back to that issue, so an agent can't open its own issue and use it as a wider ticket. A ticket whose `Status:` is `done` (or a closed issue) can't be claimed, and neither can a ticket another open PR already works on.
 
-A branch named `milestone/<id>` is a milestone PR, which the Owner reviews as a whole: the step skips the ticket checks for it.
+A branch named `milestone/<id>` is a milestone PR only when it targets the default branch: its tickets passed these checks on their way into the milestone, the Owner reviews it as a whole, and the step skips the ticket checks for it. An agent's PR from a branch named like a milestone into any other branch fails: before, that name alone skipped every ticket check.
 
 A branch named `sync/<slug>` into `milestone/<id>` is a sync PR: it brings what the default branch gained into a milestone. The step skips the ticket checks for it only after proving two things: its tree is exactly the milestone merged with the newest default-branch commit it contains, and every commit it adds is a true merge (two parents, and the tree git gets by merging them). The second proof matters because `git merge -s ours` keeps the tree and still records a commit as merged, so that commit's changes would be dropped when it reaches the default branch later. Anything else fails; a conflict is the Owner's to resolve.
 
-A branch named `plan/<slug>` is a plan PR: it adds ticket files for the Owner to merge. The step skips the ticket checks for it, but fails it if it changes anything besides `docs/tickets/*.md`, `docs/milestones/*.md`, `docs/agents/glossary.md`, `docs/agents/architecture.md` and `docs/decisions.md`.
+A branch named `plan/<slug>` is a plan PR: it adds ticket files for the Owner to merge. It targets the default branch (or a milestone branch, for a cut made inside it at Level 4); into any other branch it fails. The step skips the ticket checks for it, but fails it if it changes anything besides `docs/tickets/*.md`, `docs/milestones/*.md`, `docs/adr/*.md`, `docs/reports/*.md`, `docs/agents/glossary.md`, `docs/agents/architecture.md` and `docs/decisions.md`. It may add tickets and re-plan open ones, but it fails if it changes or deletes a ticket that is done, or one an open PR is building.
 
 When a ticket file is found, the step also outputs its path, `ticket_path`. The scope and read-only checks use it for one exception: the PR may change its own ticket's `Status:` line, to mark it done, and nothing else in any ticket file (`docs/tickets/**` is read-only by default).
 

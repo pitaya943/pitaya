@@ -37,7 +37,7 @@ Every hand-off comment and every verdict names the model that did the work.
 ## Where it goes
 
 - **PR description:** under an "Evidence" heading, one entry per completion condition, in the ticket's order.
-- **Hand-off or verdict comment:** a table with one row per condition or check: what was checked, the result, and a link or code block. The model goes at the top.
+- **Hand-off or verdict comment:** a table with one row per condition or check: what was checked, the result, and a link or code block. The model goes at the top, with the session line the `build` and `verify` skills ask for on a line of its own.
 
 ## Don't
 

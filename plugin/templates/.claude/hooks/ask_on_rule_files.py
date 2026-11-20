@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.5 · .claude/hooks/ask_on_rule_files.py
+# pitaya template 0.1.6 · .claude/hooks/ask_on_rule_files.py
 """PreToolUse hook: ask the user before an agent changes the harness's own rules.
 
 What it guards against: an agent loosening its own rules to get past them,
@@ -13,11 +13,18 @@ sees a confirmation prompt with the reason. Reads are let through.
 
 Rule files: any AGENTS.md or CLAUDE.md, docs/agents/harness.md, everything
 under .claude/, and everything under .github/ (workflows, guardrail scripts,
-CODEOWNERS).
+CODEOWNERS). Also the files another tool, git or a dev container loads or runs
+by itself: .mcp.json, .gitmodules, any .gitattributes or GEMINI.md, and
+everything under .githooks/, .devcontainer/, .cursor/ and .codex/. A pull
+request that adds .mcp.json makes later sessions offer to start the server it
+names. Test configuration (conftest.py, package.json and the like) isn't on
+the list: sessions edit it all the time, and the read-only-paths check guards
+it in ticket PRs.
 
 Limits: it asks rather than denies, because maintaining the rules is normal
-work. Shell detection covers common write forms, not every possible one.
-Only Claude Code runs hooks.
+work. Shell detection covers common write forms, not every possible one, and
+tools other than the file tools and Bash aren't checked: it prevents
+accidents, and is not a security boundary. Only Claude Code runs hooks.
 
 When to remove: when rule files sit behind a CODEOWNERS review that agents
 can't satisfy, so CI enforces the same thing at merge time.
@@ -35,10 +42,11 @@ import shlex
 import sys
 from pathlib import Path
 
-RULE_NAMES = {"AGENTS.md", "CLAUDE.md"}
-RULE_FILES = {"docs/agents/harness.md"}
-RULE_DIRS = (".claude/", ".github/")
-RULE_MARKERS = ("AGENTS.md", "CLAUDE.md", "docs/agents/harness.md", ".claude/", ".github/")
+# The harness's own rules, then the files another tool, git or a dev container loads or runs by itself.
+RULE_NAMES = {"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".gitattributes"}
+RULE_FILES = {"docs/agents/harness.md", ".mcp.json", ".gitmodules"}
+RULE_DIRS = (".claude/", ".github/", ".githooks/", ".devcontainer/", ".cursor/", ".codex/")
+RULE_MARKERS = tuple(sorted(RULE_NAMES | RULE_FILES)) + RULE_DIRS
 INTERPRETERS = {"python", "python3", "node", "perl", "ruby", "deno", "bun"}
 SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 FILE_TOOLS = {"Edit": "file_path", "Write": "file_path", "MultiEdit": "file_path", "NotebookEdit": "notebook_path"}
@@ -120,8 +128,9 @@ def ask(rel: str, how: str) -> dict:
         "hookEventName": "PreToolUse",
         "permissionDecision": "ask",
         "permissionDecisionReason": (
-            f"{how} {rel}, a harness rule file (.claude/hooks/ask_on_rule_files.py). "
-            "Rule files change only with the user's agreement. Approve if you asked for this change."
+            f"{how} {rel}, a rule file: one of the harness's own, or one a tool loads or runs by itself "
+            "(.claude/hooks/ask_on_rule_files.py). Rule files change only with the user's agreement. "
+            "Approve if you asked for this change."
         ),
     }
 

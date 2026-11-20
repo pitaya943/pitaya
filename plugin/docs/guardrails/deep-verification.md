@@ -15,9 +15,9 @@ When the project runs at Level 4. The extra agents are what Level 4's authority 
 ## How to add it
 
 1. Add [second-model-review](second-model-review.md) and set "Second model" in the harness file.
-2. Tag every ticket `Risk: low` or `Risk: high` (the `plan` skill's `tickets.md` has the rules); the Owner may override in the plan PR.
+2. Tag every ticket `Risk: low` or `Risk: high` (the `plan` skill's `tickets.md` has the rules); the Owner may override in the plan PR. The tag already matters at Level 3, where a high-risk ticket's PASS doesn't carry over a merge of its base; this level adds the interrogation.
 3. `/verify` then interrogates each high-risk PR (`verify/interrogate.md`): adversaries in worktrees, and only findings a run reproduces survive.
-4. `/report M<n>` runs a swarm over the design's scenarios and a decision-log audit that writes an Attention section for the Owner (`report/milestone-level4.md`).
+4. `/report M<n>` runs a swarm over the design's scenarios and a decision-log audit that adds its findings to the report's Attention table for the Owner (`report/milestone-level4.md`).
 5. `/design` runs an arena when two shapes come out close (`design/arena.md`).
 6. Set Autonomy to "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main", so `/autopilot` cuts the next milestone inside its branch.
 

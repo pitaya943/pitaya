@@ -1,4 +1,4 @@
-"""The three Level 1 hooks (docs/design.md section 8, D6), driven the way Claude Code drives them.
+"""The four Level 1 hooks (docs/design.md section 8, D6), driven the way Claude Code drives them.
 
 Each hook reads the PreToolUse JSON on stdin. It prints a hookSpecificOutput
 decision ("deny" or "ask") to stdout, or prints nothing to let the call
@@ -338,3 +338,81 @@ def test_rule_hook_covers_all_of_github(repo, rel):
 def test_rule_hook_asks_when_a_script_names_a_rule_file(repo, command):
     out = run_hook("ask_on_rule_files.py", bash(command, repo), env=dict(os.environ, CLAUDE_PROJECT_DIR=str(repo)))
     assert out and out["permissionDecision"] == "ask", command
+
+
+# --- review of 0.1.4, F24 (D62, Q5): the plainly accidental wipes ------------------------
+
+@pytest.mark.parametrize("command", [
+    "rm -rf .git",
+    "rm -rf ./.git",
+    "rm -rf .git/",
+    "rm -rf ./*",
+    "rm -rf *",
+    'rm -rf "$PWD"',
+    "rm -rf $PWD/",
+    "find . -delete",
+    "find -delete",
+    "find . -mindepth 1 -delete",
+    "find . -type f -delete",
+    "find ./ -depth -delete",
+    "git checkout -- .",
+    "git checkout .",
+    "git checkout HEAD -- .",
+    "git restore .",
+    "git restore --worktree .",
+    "git restore --staged --worktree .",
+    "git restore -SW .",
+    "git restore --source=HEAD~1 .",
+    'bash -c "find . -delete"',
+])
+def test_destructive_hook_denies_accidental_wipes(repo, command):
+    out = run_hook("no_destructive.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "deny", command
+    assert "instead" in out["permissionDecisionReason"].lower()
+
+
+@pytest.mark.parametrize("command", [
+    "rm -rf .gitignore.bak",
+    "rm -rf build/*",
+    "rm -rf ./dist/*",
+    "rm .git/index.lock",                        # not recursive
+    "find . -name '*.pyc' -delete",
+    "find . -name __pycache__ -type d -delete",
+    "find build -delete",
+    "find . -type f -newer stamp -delete",
+    "find . -type f",
+    "git checkout main",
+    "git checkout -b ticket/T-1-x",
+    "git checkout -- src/app.py",
+    "git checkout HEAD -- docs/",
+    "git restore src/app.py",
+    "git restore --staged .",                    # only unstages; the files keep their content
+    "git restore -S .",
+    "git stash",
+])
+def test_destructive_hook_allows_near_misses(repo, command):
+    assert run_hook("no_destructive.py", bash(command, repo)) is None, command
+
+
+# --- review of 0.1.4, F21: the control plane is every file a tool loads or runs by itself ---
+
+CONTROL_PLANE = [".mcp.json", ".gitattributes", ".gitmodules", ".githooks/pre-commit", ".devcontainer/devcontainer.json",
+                 ".cursor/rules/style.mdc", ".codex/config.toml", "GEMINI.md", "packages/api/GEMINI.md"]
+
+
+@pytest.mark.parametrize("rel", CONTROL_PLANE)
+def test_rule_hook_asks_for_files_tools_load_by_themselves(repo, rel):
+    out = run_hook("ask_on_rule_files.py", edit(str(repo / rel), repo, "Write"))
+    assert out and out["permissionDecision"] == "ask", rel
+
+
+@pytest.mark.parametrize("command", ["echo '{}' > .mcp.json", "cp hook.sh .githooks/pre-commit", "rm .gitattributes"])
+def test_rule_hook_asks_for_shell_writes_to_them(repo, command):
+    out = run_hook("ask_on_rule_files.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "ask", command
+
+
+@pytest.mark.parametrize("rel", ["src/mcp.json", "docs/cursor/notes.md", "conftest.py", "package.json", ".gitignore"])
+def test_rule_hook_still_allows_ordinary_files(repo, rel):
+    """Test configuration stays editable in a session: the read-only check guards it in ticket PRs instead."""
+    assert run_hook("ask_on_rule_files.py", edit(str(repo / rel), repo)) is None, rel

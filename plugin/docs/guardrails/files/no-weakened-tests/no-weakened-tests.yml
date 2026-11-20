@@ -1,4 +1,4 @@
-# pitaya template 0.1.5 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
+# pitaya template 0.1.6 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
 # Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
 # Copy to .github/workflows/no-weakened-tests.yml, and compare_junit.py to .github/guardrails/compare_junit.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
@@ -84,13 +84,16 @@ jobs:
               --jq ".[] | select(.number != $PR_NUMBER) | .headRefName" | grep -E "^ticket/$1(-|\$)" || true)
             [ -z "$others" ] || fail "another open PR already works on ticket $1: $others." "one ticket, one PR: close one of them."
           }
-          # A plan PR (plan/<slug>) adds ticket files for the Owner to merge; it may touch
-          # only ticket and planning files, and the ticket checks don't apply to it.
-          if [ "${HEAD_REF#milestone/}" != "$HEAD_REF" ]; then
-            # A milestone PR (milestone/M<n> into main) gathers tickets that passed these checks
-            # on their way into the milestone; the Owner reviews it as a whole.
+          # A branch name skips the ticket checks only on the base it belongs to: a milestone PR
+          # targets the default branch, a sync PR a milestone, a plan PR the default branch or a milestone.
+          if [ "${HEAD_REF#milestone/}" != "$HEAD_REF" ] && [ "$BASE_REF" = "$DEFAULT_BRANCH" ]; then
+            # A milestone PR (milestone/M<n> into the default branch) gathers tickets that passed these
+            # checks on their way into the milestone; the Owner reviews it as a whole.
             echo "This is a milestone PR: the Owner reviews and merges it; ticket checks don't apply."
             echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ "${HEAD_REF#milestone/}" != "$HEAD_REF" ] && is_agent; then
+            fail "the branch $HEAD_REF is named like a milestone, but this PR targets $BASE_REF: only a PR into $DEFAULT_BRANCH is a milestone PR." \
+              "work for a milestone goes on ticket/<id>-<slug> and targets the milestone's branch; the milestone PR itself targets $DEFAULT_BRANCH."
           elif [ "${HEAD_REF#sync/}" != "$HEAD_REF" ] && [ "${BASE_REF#milestone/}" != "$BASE_REF" ]; then
             # A sync PR (sync/<slug> into milestone/M<n>) brings in what the default branch gained,
             # all of it already merged there. It passes only if its tree is exactly the base merged
@@ -115,6 +118,13 @@ jobs:
             echo "This is a sync PR: it only merges $DEFAULT_BRANCH ($(git rev-parse --short "$newest")) into $BASE_REF, so ticket checks don't apply."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif [ "${HEAD_REF#plan/}" != "$HEAD_REF" ]; then
+            # A plan PR (plan/<slug>) adds ticket files for the Owner to merge; it may touch only
+            # ticket and planning files, and the ticket checks don't apply to it.
+            case "$BASE_REF" in
+              "$DEFAULT_BRANCH"|milestone/*) ;;
+              *) fail "a plan PR targets $DEFAULT_BRANCH (or a milestone branch, for a cut made inside it), not $BASE_REF." \
+                   "open the plan PR into $DEFAULT_BRANCH; changes for a ticket go on its ticket/<id>-<slug> branch.";;
+            esac
             other=$(git diff --name-only "origin/$BASE_REF...HEAD" \
               | grep -vE '^(docs/(tickets|milestones|adr|reports)/[^/]+\.md|docs/agents/(glossary|architecture)\.md|docs/decisions\.md)$' || true)
             if [ -n "$other" ]; then
@@ -123,6 +133,22 @@ jobs:
               echo "To fix: move those changes to a ticket branch, ticket/<id>-<slug>."
               exit 1
             fi
+            # A plan PR adds tickets and may re-plan open ones. It can't change a finished ticket (a record),
+            # or a ticket an open PR is building: its scope and conditions don't move under the builder.
+            for f in $(git diff --name-only --no-renames --diff-filter=MD "origin/$BASE_REF...HEAD" -- docs/tickets/ | grep '\.md$' || true); do
+              n=$(basename "$f" .md)
+              # A ticket is marked done on its milestone's branch first, so look there as well as on the base.
+              for ref in "origin/$BASE_REF" $(git for-each-ref --format='%(refname:short)' 'refs/remotes/origin/milestone/'); do
+                if git show "$ref:$f" 2>/dev/null | grep -qiE '^Status:[[:space:]]*done'; then
+                  fail "this plan PR changes ticket $n, which is done (on ${ref#origin/})." "leave a finished ticket as the record it is; write a new ticket for what's missing."
+                fi
+              done
+              [ -n "${PR_NUMBER:-}" ] || continue
+              others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,headRefName \
+                --jq ".[] | select(.number != $PR_NUMBER) | .headRefName" | grep -E "^ticket/$n(-|\$)" || true)
+              [ -z "$others" ] || fail "this plan PR changes ticket $n while an open PR is building it: $others." \
+                "merge or close that PR first, or leave ticket $n as it is."
+            done
             echo "This is a plan PR: only ticket and planning files changed, so ticket checks don't apply."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif find_ticket "$HEAD_REF" "$RUNNER_TEMP/ticket.md"; then

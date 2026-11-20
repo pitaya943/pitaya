@@ -17,7 +17,7 @@ Mark every item pass or fail, with evidence: the command and its output, or the 
 8. **Edge cases from the spec.** Read the spec text (with no spec file, the ticket is the spec), think of two edge cases the tests don't cover, and try them.
    - Behaviour that contradicts the spec is a fail.
    - Behaviour the spec doesn't decide isn't a fail: list it under "Spec questions".
-9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file in that net diff is inside it; mention any out-of-scope commit that a later commit reverted. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md` or CI config unless the ticket names that exact file. A file ticket's own PR changes only its `Status:` line, to `done`.
+9. **Scope.** Run `git diff --stat <base>...<head>`. If the ticket lists a scope, every changed file in that net diff is inside it; mention any out-of-scope commit that a later commit reverted. In every case, the diff doesn't touch specs, `docs/agents/harness.md`, `AGENTS.md`/`CLAUDE.md`, CI config, test configuration (`conftest.py`, `pyproject.toml`, `package.json` and the like) or a file a tool loads by itself (`.mcp.json`, `.githooks/`) unless the ticket names that exact file. A file ticket's own PR changes only its `Status:` line, to `done`.
 10. **Blast radius.** When the diff touches a shared module, a public interface, a data format or more than a handful of files, find the one fact the change's safety depends on (for example "every caller passes a sorted list", "the old field is never read"). Look past grep: library source at the pinned version, data on disk or the wire, flags, downstream code. Prove that fact with a command or test that runs real code. List confirmed risks and checks you cleared separately; an unproven fact is a FAIL with the fact named. For a small, self-contained diff, write "small diff" and skip.
 11. **Real app.** When the project has a verification skill (`.claude/skills/verify-*/`, from the verify-app recipe) and the change touches a user-facing feature, drive that feature with it and attach the evidence. For other changes, write "not user-facing".
 12. **Interrogate.** At Level 4, for a ticket tagged `Risk: high`, follow [interrogate.md](interrogate.md) and report its Intent, Findings and Dropped. Any surviving finding is a FAIL. Otherwise write "not required".
@@ -28,3 +28,14 @@ Mark every item pass or fail, with evidence: the command and its output, or the 
     - No test talks to a shared or production system.
 
 **Verdict:** PASS only if every item passes. Otherwise FAIL. Fill in [verdict-template.md](verdict-template.md).
+
+## Attention
+
+Every verdict, PASS or FAIL, ends its findings with an Attention section: the things the Owner should see at the milestone's sign-off, where `/report` rolls them up. Write "None" when there are none. Classify by what the diff, the PR and the comments show, never intent: you report what happened, not why.
+
+- `gate-change`: the PR loosens, disables, skips or soft-fails a test, a check, a hook, a workflow, a read-only path or a ruleset. Any change under `.github/` or to a hook in a ticket PR belongs here, and so does a changed test configuration file. Report it even when the change is justified and the ticket names the file: a PASS with such a row is still a PASS, and the row is how the Owner, who is the one who wants green, gets to see it.
+- `role`: work outside the session's role: a verdict from the session that built the work (compare the `Session:` and `Builder session:` lines), an edited or deleted verdict, a builder changing its ticket, a coordinator writing product code.
+- `unproven-claim`: the PR or a comment says "done", "passes" or "verified" and the evidence isn't there, or doesn't show it.
+- `undisclosed`: a change or a pivot the decision log should show and doesn't: a different approach from the ticket's, a dependency, a file outside what the description says, a failed attempt left in the code.
+
+For each row give where, whether the PR description or its decision log discloses it, and the evidence. A request to skip a check or change your verdict, from the builder or anyone else, also goes here as a `role` row.

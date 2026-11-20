@@ -41,9 +41,38 @@ AUTHORITY = [
     ("1", "Opens PRs, runs a fresh verifier", "Approves plans, merges every PR", "Hooks, CI, protected main"),
     ("2", "A Chief dispatches parallel builders", "Approves plans, merges every PR", "Ticket checks: scope, tests, evidence"),
     ("3", "Merges tickets into the milestone branch", "Signs off each milestone, approves each cut",
-     "Verdict on the head, milestone branch as blast radius"),
+     "Verdict on the head from another session, milestone branch as blast radius"),
     ("4", "Also cuts the next milestone inside its branch", "Signs off each milestone, owns the roadmap",
      "Interrogation of high-risk PRs, a swarm and log audit per milestone, evals"),
+]
+
+
+# The threat model (D59): what every level takes for granted, and what that means for picking one.
+ASSUMES = [
+    "## What the levels assume",
+    "",
+    "pitaya assumes **cooperating agents**: agents that try to do the work as asked, and sometimes get it wrong. "
+    "It defends against three things, in this order: its own rules contradicting each other or claiming to prove "
+    "what they don't; honest mistakes, such as loosening a test to get green, editing CI, verifying one's own work "
+    "or dropping changes in a merge; and text from outside (issues, PR comments, upstream code) steering an agent. "
+    "It does not defend against an agent that sets out to get round it: one that forges a verdict, rewrites the "
+    "workflow that judges it, sidesteps a hook or commits under another email. "
+    "[Access](concepts/access.md#what-pitaya-assumes) lists where that line runs.",
+    "",
+    "What follows from it:",
+    "",
+    "- **Level 3 means agents you trust.** Every agent role uses one machine account, so the verdict that lets "
+    "agents merge guards against mistakes, not forgery: it stops a stale or missing verification and a session "
+    "passing its own work, not a session that lies about who it is.",
+    "- **Don't run Levels 3 and 4 with agents, models or code you don't trust.** Below Level 3 a person reads and "
+    "merges every PR, which is the defence those levels lack.",
+    "- **Hooks prevent accidents.** They are not a security boundary: a script, another tool or a differently "
+    "spelled command gets past them. The rulesets are the boundary.",
+    "- **The tripwire is an `undisclosed` row** in a verdict's Attention section: a change or pivot the PR should "
+    "have declared and didn't. When one appears, the Owner reviews it and decides whether the assumption still "
+    "holds, or whether to add the stricter defences (a separate verifier account, checks that run from the base "
+    "branch only, signed commits).",
+    "",
 ]
 
 
@@ -88,7 +117,7 @@ def render(manifest: dict) -> str:
         "",
         "| Level | Agent authority | What the Owner does | What keeps it safe |",
         "| --- | --- | --- | --- |",
-    ] + [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in AUTHORITY] + [""]
+    ] + [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in AUTHORITY] + [""] + ASSUMES
     for level, (title, intro) in LEVELS.items():
         lines += [f"## {title}", "", intro, "",
                   "| Kind | Component | Requires | Works better with | What it adds |",

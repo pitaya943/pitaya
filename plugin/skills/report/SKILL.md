@@ -19,7 +19,7 @@ Use only sources anyone can open:
 
 - the merged PRs and their descriptions;
 - the tickets and their done-when conditions;
-- the verifier's verdict comments and the CI results;
+- the verifier's verdict comments, with every Attention row in them, and the CI results;
 - each PR's decision log: the choices and dead ends worth the Owner's attention;
 - `docs/decisions.md`, when the project keeps one.
 
@@ -35,6 +35,8 @@ Use [report-template.md](report-template.md), in the document language.
 - **How to verify** is a list of steps the Owner can run with any model or by hand: commands, expected output, manual checks.
 - **Decisions the agents made** that no spec or ticket stated get their own section, even if it's "None".
 - **What isn't done** is said plainly: never "could be improved later".
+- **Attention** collects every Attention row from the verdicts in range into one table, with the PR and a link to the verdict, so the Owner sees at sign-off each `gate-change`, `role`, `unproven-claim` and `undisclosed` row without opening every PR. Copy the rows; don't judge or drop them. The verdict comments stay the record.
+- An `undisclosed` row goes first and is named in the Conclusion: it is the sign that the trust in the agents may not hold, and the Owner decides whether to add stricter defences (the plugin's `docs/levels.md`, "What the levels assume").
 - Don't overstate. Passing tests mean the spec is met, not that the spec is right.
 
 Markdown by default; HTML if the Owner asks for it.

@@ -26,7 +26,7 @@ Every active milestone has this branch, at every level (D44). Once the Owner mer
 3. The ticket checks pass it when its tree is exactly the milestone merged with `main` and every commit it adds is a true merge, and `agent-merge` gives it a `verdict` without a verifier for the same reason. Anything else in it fails both. A conflict fails too: the Owner resolves it.
 4. Merge it like a ticket PR: the Owner below Level 3, agents from Level 3.
 
-A ticket PR that falls behind its milestone branch uses GitHub's "Update branch" as usual. From Level 3 its PASS carries over that merge, and only that merge (the [agent-merge](../../docs/guardrails/agent-merge.md) recipe).
+A ticket PR that falls behind its milestone branch uses GitHub's "Update branch" as usual. From Level 3 its PASS carries over that merge, and only that merge, unless the ticket is `Risk: high`, whose PASS never carries (the [agent-merge](../../docs/guardrails/agent-merge.md) recipe).
 
 The milestone branch is the blast radius: whatever goes wrong inside it stays out of `main`, and the Owner can throw the whole branch away.
 

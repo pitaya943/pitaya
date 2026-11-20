@@ -1,5 +1,5 @@
 <!-- Ticket body written by /plan. Use the document language from docs/agents/harness.md. Delete optional sections that don't apply.
-File tickets (docs/tickets/T-<nnn>.md) start with the title and the Status line; add the Issue line when the ticket has an issue mirror. Issue-only tickets start at "## Goal". -->
+File tickets (docs/tickets/T-<nnn>.md) start with the title and the Status line; add the Issue line when the ticket has an issue mirror. Issue-only tickets start with the Risk line, then "## Goal". -->
 
 # T-<nnn>: <title>
 

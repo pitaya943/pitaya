@@ -12,6 +12,6 @@ At Level 4 agents merge and cut tickets inside the milestone, so the milestone r
 
 ## Audit the decision logs
 
-Start one fresh reviewer on the harness file's "Second model". Give it every decision log from the milestone's ticket PRs and the milestone's diff. Ask it to check that each "kept" decision matches the code, that failed attempts didn't leave dead code behind, and that no choice the Owner should know about is missing. It writes an **Attention** section: the few things the Owner should look at before merging, each with a link. Put it at the top of the milestone PR's description.
+Start one fresh reviewer on the harness file's "Second model". Give it every decision log from the milestone's ticket PRs and the milestone's diff. Ask it to check that each "kept" decision matches the code, that failed attempts didn't leave dead code behind, and that no choice the Owner should know about is missing. It adds what it finds to the same **Attention** table the report rolls up from the verdicts, with the same kinds: a missing choice is `undisclosed`, a "kept" row the code contradicts is `unproven-claim`. Put the table at the top of the milestone PR's description.
 
 Neither check replaces the Owner's review; they decide what the Owner reads first.
