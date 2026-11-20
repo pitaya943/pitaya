@@ -14,6 +14,7 @@ Planning has two levels: `/plan --roadmap` cuts the whole project into milestone
 1. Read `docs/agents/harness.md`: where tickets live, the level, the "Guardrails" list and the sensitive areas. If it's missing, suggest `/setup` once, then continue with GitHub Issues labelled `ticket`.
 2. Read the request in full. If it's an issue or spec reference, fetch it with its comments.
 3. Read `docs/agents/learnings.md`, then the parts of `docs/agents/architecture.md` and `docs/agents/glossary.md` the request touches. Explore that code too, so tickets use the glossary's terms and fit the structure.
+4. For a roadmap, or a goal that's still vague, sharpen the brief and explore how and why the touched code works first: [sharpen.md](sharpen.md).
 
 ## Ask until the goal is clear
 

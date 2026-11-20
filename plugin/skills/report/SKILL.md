@@ -20,6 +20,7 @@ Use only sources anyone can open:
 - the merged PRs and their descriptions;
 - the tickets and their done-when conditions;
 - the verifier's verdict comments and the CI results;
+- each PR's decision log: the choices and dead ends worth the Owner's attention;
 - `docs/decisions.md`, when the project keeps one.
 
 Never write from memory of the sessions. If something isn't in those sources, it doesn't go in the report, or it goes in as "unverified".

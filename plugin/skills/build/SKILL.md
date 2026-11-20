@@ -22,6 +22,7 @@ argument-hint: "<ticket: issue number, URL or path>"
 2. Run the full test suite. Nothing that passed before may now fail or disappear.
 3. Check scope: `git diff --stat <base>...HEAD`. If the ticket lists a scope, every changed file must be inside it. If it doesn't, still touch only what the ticket needs. Never edit specs, the harness file, `AGENTS.md`/`CLAUDE.md`, or CI config unless the ticket names that exact file.
 4. Commit in small steps, with English commit messages.
+5. Keep the PR's **Decision log** as you go (see [pr-template.md](pr-template.md)): each real choice, each dead end and failed attempt with what it showed. Add rows, never edit them. Whoever merges reads it, and `/retro` learns from the failures.
 
 ## Hand over
 

@@ -18,7 +18,9 @@
 | 7 | Bad input | | |
 | 8 | Spec edge cases | | |
 | 9 | Scope | | |
-| 10 | Evidence and hygiene | | |
+| 10 | Blast radius | | <the one fact, and the command that proves it; or "small diff"> |
+| 11 | Decision log | | |
+| 12 | Evidence and hygiene | | |
 
 ## Problems
 
