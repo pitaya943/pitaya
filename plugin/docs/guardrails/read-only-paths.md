@@ -20,7 +20,7 @@ Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it 
 
 Read-only by default, in three groups:
 
-- the harness: every `AGENTS.md` and `CLAUDE.md`, `docs/agents/**`, `.claude/**`, `.github/**`, `docs/decisions.md`, `docs/adr/**`, `docs/tickets/**` and `docs/milestones/**`;
+- the harness: every `AGENTS.md` and `CLAUDE.md`, `docs/agents/**`, `.claude/**`, `.github/**` (which holds the test command, `.github/scripts/test.sh`, so a ticket PR can't narrow what the tests run), `docs/decisions.md`, `docs/adr/**`, `docs/tickets/**` and `docs/milestones/**`;
 - files another tool, git or a dev container loads or runs by itself: `.mcp.json`, `.gitattributes`, `.gitmodules`, `.githooks/**`, `.devcontainer/**`, `.cursor/**`, `.codex/**` and every `GEMINI.md`;
 - test configuration, at any depth: `conftest.py`, `pytest.ini`, `tox.ini`, `setup.cfg`, `pyproject.toml`, `package.json`, `jest.config.*`, `vitest.config.*` and `Makefile`. Add your project's other test and build configuration to `--also`.
 

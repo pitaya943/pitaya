@@ -49,4 +49,4 @@ The one definition is "Fix rounds" in the plugin's `docs/concepts/states.md`: a 
 - Don't connect to shared or production systems. Use local, throwaway resources only.
 - Don't print secrets in code, logs, commits or PRs.
 - Don't merge your own PR, and don't push to `main`.
-- Don't force-push. If a push is rejected because the branch moved, another builder took the ticket over: stop and leave the branch to it.
+- Don't force-push. If a push is rejected because the branch moved, fetch it and look at what it gained. Only merges of the base branch ("Update branch" on the PR): bring them in with a plain `git merge` of the fetched branch, never a rebase, and push again. Anything else is another builder's work, and that builder took the ticket over: stop, leave the branch to it, and don't merge its commits into yours.

@@ -18,7 +18,7 @@ A ticket PR changes only the data plane, only inside its ticket's scope, and tes
 | Path | Owner | Chief | Builder | Verifier | Adversary | Enforced by |
 | --- | --- | --- | --- | --- | --- | --- |
 | `AGENTS.md`, `CLAUDE.md` | W | R | R | R | · | read-only check; rule-file hook |
-| `.claude/`, `.github/` | W | R | R | R (its `verify-*` skill) | · | read-only check; rule-file hook |
+| `.claude/`, `.github/` (workflows, check scripts, and the test command in `.github/scripts/test.sh`) | W | R | R | R (its `verify-*` skill) | · | read-only check; rule-file hook |
 | `docs/agents/harness.md` | W | R | R | R | · | read-only check; rule-file hook |
 | `.mcp.json`, `.gitattributes`, `.gitmodules`, `.githooks/`, `.devcontainer/`, `.cursor/`, `.codex/`, `GEMINI.md` | W | R | R | · | · | read-only check; rule-file hook |
 | Test configuration: `conftest.py`, `pytest.ini`, `tox.ini`, `setup.cfg`, `pyproject.toml`, `package.json`, `jest.config.*`, `vitest.config.*`, `Makefile` | W | R | R; W only a file the ticket's scope names exactly | R | R | read-only check |

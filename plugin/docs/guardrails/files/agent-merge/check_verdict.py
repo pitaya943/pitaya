@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.8 · docs/guardrails/files/agent-merge/check_verdict.py
+# pitaya template 0.1.9 · docs/guardrails/files/agent-merge/check_verdict.py
 """Guardrail "agent-merge": a PASS verdict exists for the pull request's current head commit.
 
 Usage (in CI)::
@@ -60,15 +60,20 @@ it passes without a verdict in two cases, and only with `--git-dir`:
 
 - the report PR, which closes `milestone/<id>` from inside, from any `plan/` branch:
   it changes nothing but `docs/reports/<id>.md` and the `Status:` line of
-  `docs/milestones/<id>.md`, which may only become `done`, and no ticket file
-  of that milestone is still open. The report alone is enough (a new report
+  `docs/milestones/<id>.md`, which may only become exactly `done`, and no ticket
+  file of that milestone is still open once it merges (the tickets are read from
+  the merge result, so a stale branch is judged like a fresh one; "done" with
+  anything after it isn't done). The report alone is enough (a new report
   after the Owner sent the milestone back). The Owner reads both in the
   milestone PR, whose merge is the sign-off.
 - a cut, where the Owner lets agents merge it: the "Autonomy" line of
-  `docs/agents/harness.md` on the default branch starts with "Agents merge"
-  and names plan PRs (Level 4). It changes only plan files and deletes nothing,
-  it adds tickets without changing one that exists, and it changes no milestone
-  file but its own.
+  `docs/agents/harness.md` on the default branch has the Level 4 value the
+  harness template offers ("Agents merge ticket and plan PRs into milestone
+  branches; ..."), not just a sentence that mentions plan PRs. It changes only
+  plan files and deletes nothing. It adds plan files and fills in its own
+  milestone, without setting it to `done`, and changes no milestone file but
+  its own; of the other plan files that exist it may change only the glossary,
+  the architecture map and `docs/decisions.md`.
 
 Anything else in such a PR waits for the Owner. A FAIL on its head blocks it like
 any other.
@@ -98,12 +103,18 @@ BUILDER_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Builder session:[ \t]*`?([^\s`]+)", 
 RISK_HIGH_RE = re.compile(r"^Risk:[ \t]*high\b", re.I | re.M)
 MILESTONE_RE = re.compile(r"(^|/)milestone/([^/]+)$")
 STATUS_RE = re.compile(r"^Status:[ \t]*(\S+)[ \t]*$", re.I)
-DONE_RE = re.compile(r"^Status:[ \t]*done\b", re.I | re.M)
+# Exactly "Status: done": "done, criteria waived" is another claim, and the Owner reads it.
+DONE_RE = re.compile(r"^Status:[ \t]*done[ \t]*$", re.I | re.M)
 AUTONOMY_RE = re.compile(r"^[ \t]*-[ \t]*Autonomy:[ \t]*(.*)$", re.M)
 # The files a plan PR may change: the same list as the ticket checks' shared step.
 PLAN_FILES_RE = re.compile(r"^(docs/(tickets|milestones|adr|reports)/[^/]+\.md|docs/agents/(glossary|architecture)\.md"
                            r"|docs/decisions\.md)$")
 HARNESS = "docs/agents/harness.md"
+# The Autonomy value `/setup` offers for Level 4, up to its first semicolon. Only this value lets
+# a cut merge: a hand-written sentence that mentions plan PRs may be forbidding them.
+AGENTS_MERGE_PLANS = "agents merge ticket and plan prs into milestone branches"
+# Plan files that are kept current rather than added: a cut may change these, and its own milestone file.
+LIVING_PLAN_FILES = {"docs/agents/glossary.md", "docs/agents/architecture.md", "docs/decisions.md"}
 
 
 def fail(message: str, fix: str) -> int:
@@ -238,10 +249,12 @@ def agents_merge_plans(harness: str) -> bool:
 
     Only the field's own value counts, up to its first semicolon: the note under it quotes
     the alternatives, and the part after the semicolon says who merges the default branch.
+    The value must be the one the harness template offers, whatever its case, spacing,
+    quoting or final period; any other sentence leaves the cut to the Owner.
     """
     match = AUTONOMY_RE.search(harness)
-    value = match.group(1).split(";")[0].strip().lower() if match else ""
-    return value.startswith("agents merge") and bool(re.search(r"\bplan\b", value))
+    value = match.group(1).split(";")[0] if match else ""
+    return " ".join(value.replace("`", " ").replace('"', " ").lower().split()).strip(" .") == AGENTS_MERGE_PLANS
 
 
 def changed(repo: Path, base: str, head: str) -> list[tuple[str, str]] | None:
@@ -275,8 +288,13 @@ def plan_into_milestone(repo: Path, head: str, base: str, default: str) -> tuple
                     STATUS_RE.match(a) and DONE_RE.match(b) for a, b in differing):
                 return "", (f"it changes more of {milestone_file} than its Status line to \"Status: done\": the goal, "
                             "the exit criteria and the ticket list are the Owner's")
-        for path in (git(repo, "ls-tree", "--name-only", head, "docs/tickets/") or "").splitlines():
-            text = git(repo, "show", f"{head}:{path}") or ""
+        # Read the tickets as they are once this merges: one opened on the milestone branch after
+        # the report branch was made is still open then.
+        result = merged_tree(repo, base, head)
+        if not result:
+            return "", f"it doesn't merge into {base} cleanly, so the check can't read the result"
+        for path in (git(repo, "ls-tree", "--name-only", result, "docs/tickets/") or "").splitlines():
+            text = git(repo, "show", f"{result}:{path}") or ""
             if path.endswith(".md") and re.search(rf"^Milestone:[ \t]*{re.escape(milestone)}[ \t]*$", text, re.I | re.M) \
                     and not DONE_RE.search(text):
                 return "", f"ticket {Path(path).stem} of {milestone} isn't done, so the milestone isn't either"
@@ -287,15 +305,22 @@ def plan_into_milestone(repo: Path, head: str, base: str, default: str) -> tuple
         return "", "it changes files that aren't plan files: " + ", ".join(other)
     harness = (git(repo, "show", f"{default}:{HARNESS}") or "") if default else ""
     if not agents_merge_plans(harness):
-        return "", (f"the Autonomy line in {HARNESS} on the default branch doesn't let agents merge plan PRs, "
+        return "", (f"the Autonomy line in {HARNESS} on the default branch isn't the Level 4 value "
+                    f"(\"{AGENTS_MERGE_PLANS.capitalize().replace('prs', 'PRs')}; ...\"), "
                     "and it isn't a report PR (only the milestone's Status line and its report)")
-    # A cut fills in its own milestone and adds tickets. A ticket that exists, and every other
-    # milestone's file, stay as the Owner approved them.
+    # A cut fills in its own milestone and adds plan files. Every plan file that exists stays as
+    # the Owner read it (a ticket, another milestone's file, a design, a report, an ADR), except
+    # the ones `/plan` keeps current.
     kept = [path for status, path in files if status != "A" and path != milestone_file
-            and path.startswith(("docs/tickets/", "docs/milestones/"))]
+            and path not in LIVING_PLAN_FILES]
     if kept:
-        return "", ("a cut adds tickets and fills in its own milestone; this changes tickets or milestones "
+        return "", ("a cut adds plan files and fills in its own milestone; this changes plan files "
                     "that exist: " + ", ".join(kept))
+    # Closing a milestone is the report PR's, which also checks that none of its tickets is open.
+    if milestone_file in paths and DONE_RE.search(git(repo, "show", f"{head}:{milestone_file}") or "") \
+            and not DONE_RE.search(git(repo, "show", f"{start}:{milestone_file}") or ""):
+        return "", (f"it sets {milestone} to \"Status: done\" together with other changes: only the report PR "
+                    f"closes a milestone, with nothing but that line and {report}")
     return "cut; it only adds plan files, and the Owner's Autonomy setting lets agents merge it", ""
 
 

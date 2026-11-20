@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.8 · docs/guardrails/files/progress-file/progress.md -->
+<!-- pitaya template 0.1.9 · docs/guardrails/files/progress-file/progress.md -->
 # Progress
 
 Updated by every session before it ends; read by every session before it starts. Newest entry first. Link, don't paste.

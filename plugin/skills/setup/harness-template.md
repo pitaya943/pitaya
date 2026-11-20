@@ -5,21 +5,21 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 ## Level
 
 - Level: 1. What it includes: `docs/levels.md` in the pitaya plugin; what each part achieves: `docs/suggestion.md`. Raise it by adding guardrail recipes; record each under "Guardrails" below.
-- Templates: pitaya 0.1.8. The version `/setup` installed; re-run `/setup` to find stale copies.
+- Templates: pitaya 0.1.9. The version `/setup` installed; re-run `/setup` to find stale copies.
 
 ## People and accounts
 
 - Owner: example-owner.
 - Machine account: example-bot. Agents push, open PRs and comment as this account. If it's "none", agents use the current session's account.
 - Autonomy: Only the Owner merges `main`.
-  The alternatives: at Level 3 with the agent-merge recipe, "Agents merge ticket PRs into milestone branches; only the Owner merges main"; at Level 4, "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main". The `ask_on_merge.py` hook reads only the value after "Autonomy:".
+  The alternatives: at Level 3 with the agent-merge recipe, "Agents merge ticket PRs into milestone branches; only the Owner merges main"; at Level 4, "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main". Either value also covers the PRs the `verdict` check proves need no verifier: a sync PR and a milestone's report PR. The `ask_on_merge.py` hook reads only the value after "Autonomy:", and the `verdict` check reads the Level 4 value word for word, so copy it rather than rephrase it.
 
 ## Work
 
 - Issue tracker: GitHub Issues in this repo.
 - Tickets: `docs/tickets/T-<nnn>.md` files, each mirrored by a GitHub issue labelled `ticket` that links to the file. The file is the source of truth; checks read it from the base branch. (Alternatives: "files only", or "GitHub Issues labelled `ticket`" for the lightest setup.)
 - Milestones: `docs/milestones/M<n>.md`, written by `/plan --roadmap`; one is active at a time.
-- Test command: `pytest -q`. Recorded exactly as it runs here. From Level 2 it must also write JUnit XML.
+- Test command: `sh .github/scripts/test.sh`. The script holds the project's command, the one place it is written: CI, the JUnit checks and the allow rule run the script too. To change the command, change the script. From Level 2 it must also write JUnit XML when `JUNIT` is set.
 - Document language: en. Used for PRs, issues, comments and reports. Code, identifiers and commit messages stay in English.
 
 ## Review

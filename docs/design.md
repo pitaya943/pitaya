@@ -227,7 +227,7 @@ Standard library and git only; one standalone file per check; configuration in h
 
 | Part | How users get it | How it updates |
 | --- | --- | --- |
-| Skills | The `pitaya` plugin: `/plugin marketplace add <owner>/pitaya`, then `/plugin install pitaya@pitaya`; in cloud sessions, the same two commands (`claude plugin ...`) in the environment's setup script (D54); or copy `skills/<name>/` | Automatically when the plugin version changes; in the cloud, each time a container is built fresh |
+| Skills | The `pitaya` plugin: `/plugin marketplace add <owner>/pitaya#v<version>`, then `/plugin install pitaya@pitaya`; in cloud sessions, the same two commands (`claude plugin ...`) in the environment's setup script (D54); or copy `skills/<name>/`. The `#v<version>` pins a release tag (D70) | By adding the marketplace again with a newer tag; in the cloud, by changing the tag in the setup script, which runs each time a container is built fresh |
 | Level 1 files | `/setup` copies `templates/` | Re-run `/setup`: it lists stale copies and diffs, and the user decides |
 | Recipe files | The user copies them | `CHANGELOG.md` flags recipe fixes; headers carry the version |
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.8 · .claude/hooks/ask_on_rule_files.py
+# pitaya template 0.1.9 · .claude/hooks/ask_on_rule_files.py
 """PreToolUse hook: ask the user before an agent changes the harness's own rules.
 
 What it guards against: an agent loosening its own rules to get past them,
@@ -38,9 +38,17 @@ from __future__ import annotations
 
 import json
 import os
-import shlex
 import sys
 from pathlib import Path
+
+sys.dont_write_bytecode = True  # importing the shared parser must not leave __pycache__ in .claude/hooks/
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # the shared parser sits next to this file
+try:
+    from shell_words import commands
+except ImportError:  # fail open, but say so
+    print("ask_on_rule_files.py could not check this call: .claude/hooks/shell_words.py, which the pitaya hooks share, "
+          "is missing. Re-run /setup, or copy it from the pitaya templates.", file=sys.stderr)
+    sys.exit(1)
 
 # The harness's own rules, then the files another tool, git or a dev container loads or runs by itself.
 RULE_NAMES = {"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".gitattributes"}
@@ -48,11 +56,9 @@ RULE_FILES = {"docs/agents/harness.md", ".mcp.json", ".gitmodules"}
 RULE_DIRS = (".claude/", ".github/", ".githooks/", ".devcontainer/", ".cursor/", ".codex/")
 RULE_MARKERS = tuple(sorted(RULE_NAMES | RULE_FILES)) + RULE_DIRS
 INTERPRETERS = {"python", "python3", "node", "perl", "ruby", "deno", "bun"}
-SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 FILE_TOOLS = {"Edit": "file_path", "Write": "file_path", "MultiEdit": "file_path", "NotebookEdit": "notebook_path"}
 WRITE_PROGRAMS = {"mv", "rm", "cp", "tee", "truncate", "touch", "ln", "install"}
 REDIRECTS = {">", ">>", ">|", "&>", "&>>", "1>", "2>"}
-CONTROL = {"&&", "||", ";", "|", "&", "(", ")"}
 
 
 def project_root(payload: dict) -> Path:
@@ -70,37 +76,6 @@ def rule_path(path: str, root: Path, cwd: Path) -> str | None:
     if full.name in RULE_NAMES or rel in RULE_FILES or rel.startswith(RULE_DIRS):
         return rel
     return None
-
-
-def segments(command: str) -> list[list[str]]:
-    """Split a shell command into simple commands, keeping redirect operators as words."""
-    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
-    lexer.whitespace_split = True
-    try:
-        tokens = list(lexer)
-    except ValueError:
-        tokens = command.split()
-    out, current = [], []
-    for tok in tokens:
-        if tok in CONTROL:
-            if current:
-                out.append(current)
-            current = []
-        else:
-            current.append(tok)
-    if current:
-        out.append(current)
-    return out
-
-
-def expand(words: list[str], depth: int = 0) -> list[list[str]]:
-    """The simple commands in `words`, looking inside `sh -c '...'` and `eval '...'`."""
-    name = Path(words[0]).name if words else ""
-    if depth < 4 and name in SHELLS and "-c" in words[1:-1]:
-        return [c for seg in segments(words[words.index("-c") + 1]) for c in expand(seg, depth + 1)]
-    if depth < 4 and name == "eval":
-        return [c for seg in segments(" ".join(words[1:])) for c in expand(seg, depth + 1)]
-    return [words]
 
 
 def inline_script_marker(words: list[str]) -> str | None:
@@ -145,7 +120,7 @@ def decide(payload: dict) -> dict | None:
         rel = rule_path(path, root, cwd) if path else None
         return ask(rel, f"{tool} changes") if rel else None
     if tool == "Bash":
-        for words in (c for seg in segments(tool_input.get("command") or "") for c in expand(seg)):
+        for words in commands(tool_input.get("command") or ""):
             marker = inline_script_marker(words)
             if marker:
                 return ask(marker, "This inline script names")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.8 · .claude/hooks/ask_on_merge.py
+# pitaya template 0.1.9 · .claude/hooks/ask_on_merge.py
 """PreToolUse hook: ask a person before an agent merges a pull request.
 
 What it guards against: an agent merging its own PR while the project's
@@ -32,62 +32,22 @@ from __future__ import annotations
 import json
 import os
 import re
-import shlex
 import sys
 from pathlib import Path
 
-CONTROL = {"&&", "||", ";", "|", "&", "(", ")"}
-WRAPPERS = {"sudo", "command", "env", "time", "nohup", "exec"}
+sys.dont_write_bytecode = True  # importing the shared parser must not leave __pycache__ in .claude/hooks/
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # the shared parser sits next to this file
+try:
+    from shell_words import commands
+except ImportError:  # fail open, but say so
+    print("ask_on_merge.py could not check this call: .claude/hooks/shell_words.py, which the pitaya hooks share, "
+          "is missing. Re-run /setup, or copy it from the pitaya templates.", file=sys.stderr)
+    sys.exit(1)
+
 MERGE_API = re.compile(r"(^|/)pulls/\d+/merge$")
 HARNESS = Path("docs") / "agents" / "harness.md"
 MERGE_MUTATIONS = ("mergePullRequest", "enablePullRequestAutoMerge")
 AUTONOMY = re.compile(r"^\s*-\s*Autonomy:\s*(.*)$")
-
-
-def segments(command: str) -> list[list[str]]:
-    """Split a shell command into simple commands, each a list of words."""
-    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
-    lexer.whitespace_split = True
-    try:
-        tokens = list(lexer)
-    except ValueError:  # unbalanced quotes: fall back to plain words
-        tokens = command.split()
-    out, current = [], []
-    for tok in tokens:
-        if tok in CONTROL:
-            if current:
-                out.append(current)
-            current = []
-        else:
-            current.append(tok)
-    if current:
-        out.append(current)
-    return [strip_prefix(seg) for seg in out if seg]
-
-
-def strip_prefix(words: list[str]) -> list[str]:
-    """Drop leading VAR=value assignments and wrappers such as sudo."""
-    i = 0
-    while i < len(words) and ("=" in words[i] and not words[i].startswith("-") or words[i] in WRAPPERS):
-        i += 1
-    return words[i:]
-
-
-SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
-
-
-def expand(words: list[str], depth: int = 0) -> list[list[str]]:
-    """The simple commands in `words`, looking inside `sh -c '...'` and `eval '...'`."""
-    name = Path(words[0]).name if words else ""
-    if depth < 4 and name in SHELLS:
-        for i, word in enumerate(words[1:], 1):
-            if word == "-c" or (word.startswith("-") and not word.startswith("--") and "c" in word[1:]):
-                if i + 1 < len(words):
-                    return [c for seg in segments(words[i + 1]) for c in expand(seg, depth + 1)]
-                break
-    if depth < 4 and name == "eval":
-        return [c for seg in segments(" ".join(words[1:])) for c in expand(seg, depth + 1)]
-    return [words]
 
 
 def gh_args(words: list[str]) -> list[str]:
@@ -130,7 +90,7 @@ def decide(payload: dict) -> dict | None:
     cwd = Path(payload.get("cwd") or ".")
     if tool == "Bash":
         command = (payload.get("tool_input") or {}).get("command") or ""
-        merging = any(is_merge(c) for seg in segments(command) for c in expand(seg))
+        merging = any(is_merge(c) for c in commands(command))
     else:
         merging = "merge_pull_request" in tool or "auto_merge" in tool
     if not merging or agents_may_merge(cwd):

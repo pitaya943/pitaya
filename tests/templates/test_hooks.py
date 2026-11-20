@@ -416,3 +416,76 @@ def test_rule_hook_asks_for_shell_writes_to_them(repo, command):
 def test_rule_hook_still_allows_ordinary_files(repo, rel):
     """Test configuration stays editable in a session: the read-only check guards it in ticket PRs instead."""
     assert run_hook("ask_on_rule_files.py", edit(str(repo / rel), repo)) is None, rel
+
+
+# --- 0.1.9, F27: one parser for the four hooks ---------------------------------
+
+SHARED = "shell_words.py"
+
+
+@pytest.mark.parametrize("command", [
+    "sudo rm AGENTS.md",                              # a wrapper before the program
+    "env LC_ALL=C tee CLAUDE.md",
+    "FOO=1 sed -i 's/a/b/' docs/agents/harness.md",   # an assignment before the program
+    "bash -lc 'rm AGENTS.md'",                        # -c combined with other flags
+    "sh -ec 'echo x > .claude/settings.json'",
+    "bash -c 'rm AGENTS.md'",                         # -c as the last flag before the script
+    "nohup cp new.yml .github/workflows/tests.yml",
+])
+def test_rule_hook_reads_commands_the_way_the_other_hooks_do(repo, command):
+    """The drift the review found: this hook's own parser missed `-lc`, `sudo` and `env`."""
+    out = run_hook("ask_on_rule_files.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "ask", command
+
+
+@pytest.mark.parametrize("command", ["sudo cat AGENTS.md", "bash -lc 'cat AGENTS.md'", "env FOO=1 rm src/app.py"])
+def test_rule_hook_still_allows_wrapped_reads(repo, command):
+    assert run_hook("ask_on_rule_files.py", bash(command, repo)) is None, command
+
+
+@pytest.mark.parametrize("name", ALL_HOOKS)
+def test_hooks_share_one_parser(name):
+    """A fix to how commands are split lands once: no hook keeps a parser of its own."""
+    text = (HOOKS / name).read_text()
+    assert "from shell_words import" in text
+    for own in ("def segments", "def expand", "def strip_prefix", "import shlex", "shlex.shlex"):
+        assert own not in text, f"{name} has its own `{own}`"
+
+
+def test_the_shared_parser_is_not_a_hook():
+    """settings.json runs the four hooks; the shared module is only imported."""
+    settings = (HOOKS.parent / "settings.json").read_text()
+    assert SHARED not in settings
+    assert sorted(p.name for p in HOOKS.iterdir()) == sorted(ALL_HOOKS + [SHARED])
+
+
+@pytest.mark.parametrize("name", ALL_HOOKS)
+def test_hooks_leave_no_bytecode_next_to_them(name, repo, tmp_path):
+    """Importing the shared module must not put `__pycache__` in the project's `.claude/hooks/`."""
+    import shutil
+    hooks = tmp_path / "hooks"
+    shutil.copytree(HOOKS, hooks)
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONDONTWRITEBYTECODE"}
+    proc = subprocess.run([sys.executable, str(hooks / name)], input=json.dumps(bash("git status", repo)),
+                          capture_output=True, text=True, env=env, timeout=20)
+    assert proc.returncode == 0, proc.stderr
+    assert sorted(p.name for p in hooks.iterdir()) == sorted(ALL_HOOKS + [SHARED])
+
+
+@pytest.mark.parametrize("name", ALL_HOOKS)
+def test_a_hook_without_the_shared_parser_fails_open_and_says_so(name, repo, tmp_path):
+    """A half-finished upgrade: the hook was copied and the module wasn't."""
+    import shutil
+    shutil.copy(HOOKS / name, tmp_path / name)
+    proc = subprocess.run([sys.executable, str(tmp_path / name)], input=json.dumps(bash("git status", repo)),
+                          capture_output=True, text=True, timeout=20)
+    assert proc.returncode == 1 and proc.stdout == ""
+    assert SHARED in proc.stderr and "Traceback" not in proc.stderr
+
+
+def test_this_repositorys_hooks_are_the_templates():
+    """pitaya runs its own hooks (D31): every file in `.claude/hooks/` is the template, byte for byte."""
+    own = REPO_ROOT / ".claude" / "hooks"
+    assert sorted(p.name for p in own.iterdir()) == sorted(p.name for p in HOOKS.iterdir())
+    for path in HOOKS.iterdir():
+        assert (own / path.name).read_bytes() == path.read_bytes(), path.name

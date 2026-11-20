@@ -8,12 +8,16 @@ Usage::
 
 Rules, so a re-run is always safe:
 
-* A missing file is created. `<TEST_COMMAND>` is replaced with the project's
-  command, and hooks are made executable.
+* A missing file is created, and hooks are made executable. The project's
+  command goes into `.github/scripts/test.sh` and nowhere else: the tests
+  workflow, `AGENTS.md` and the allow rule in the settings run that script.
 * An existing file is never overwritten. It is reported as `unchanged` (same
   content), `stale` (a copy of an older template version, read from its
   "pitaya template <version>" header), or `differs` (the project's own file).
   Showing the diff and deciding is left to the user.
+  This holds for the test script too: once it exists it is the project's, and a
+  re-run with another `--test-command` reports `differs` and leaves it. To
+  change the command, edit the script.
 * `.claude/settings.json` is the exception: it's merged additively. Missing
   permission rules and hook entries are added; nothing is removed or changed.
 * `--check` reports what would happen and writes nothing.
@@ -40,6 +44,7 @@ DEFAULT_TEMPLATES = PLUGIN_ROOT / "templates"
 SETTINGS = ".claude/settings.json"
 DECISIONS = "docs/decisions.md"
 PLACEHOLDER = "<TEST_COMMAND>"
+TEST_SCRIPT = ".github/scripts/test.sh"  # the one file that holds the project's test command
 HEADER_RE = re.compile(r"pitaya template (\S+)")
 TEMPLATE_DOC = "README.md"  # documents a templates folder; never copied
 # Allow rules an earlier version installed and a later one withdrew. Settings are merged by adding
@@ -61,14 +66,11 @@ def header_version(text: str) -> str | None:
 
 
 def render(rel: str, text: str, test_command: str) -> str:
+    """The template's text for this project. Only the test script holds the command: the workflow,
+    AGENTS.md and the allow rule in the settings name the script, so they can't drift apart."""
     if rel == SETTINGS:
-        settings = json.loads(text)
-        allow = settings.setdefault("permissions", {}).setdefault("allow", [])
-        rule = f"Bash({test_command})"
-        if rule not in allow:
-            allow.append(rule)
-        return json.dumps(settings, indent=2) + "\n"
-    return text.replace(PLACEHOLDER, test_command)
+        return json.dumps(json.loads(text), indent=2) + "\n"
+    return text.replace(PLACEHOLDER, test_command) if rel == TEST_SCRIPT else text
 
 
 def merge_settings(existing: dict, ours: dict) -> dict:

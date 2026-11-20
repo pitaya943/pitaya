@@ -49,6 +49,12 @@ The copyable checks use only Python's standard library and git, one standalone f
 
 Installing a recipe changes `.github/` and the harness file, which agents don't change on their own. Either the Owner opens that pull request, or it's a ticket whose "## Scope" lists the exact files, so the ticket-based checks, including the one being installed, can pass on it.
 
+## Pinned actions
+
+Every workflow here names its actions by commit, with the release in a comment: `uses: actions/checkout@<40-character commit>  # v6.1.0`. A tag such as `v6` can be moved to other code, and that code would run on a runner that holds your repository's token; a commit can't change. When you add a setup step, pin it the same way: `git ls-remote --tags https://github.com/<owner>/<action>` prints the commit behind each release tag.
+
+Pinned actions don't update themselves. Dependabot does it for you: with `package-ecosystem: github-actions` in `.github/dependabot.yml` it opens a pull request that changes the commit and the comment together. `.github/` is a rule file, so the Owner merges that pull request.
+
 ## What the checks trust
 
 Each workflow loads its Python check from the base branch, so a pull request can't change the script that judges it. The workflow file is different: GitHub runs a `pull_request` event with the pull request's own copy of the YAML, so a PR that rewrote a workflow's steps would be judged by its own version. pitaya trusts cooperating agents not to do that ([access](../concepts/access.md#what-pitaya-assumes)). What stands in the way of the honest mistake: `.github/` is read-only in ticket PRs, the rule-file hook asks before a session edits it, the agents' token has no Workflows permission, and the verifier reports any change under `.github/` in a ticket PR as a `gate-change` row for the Owner. Moving the checks to `pull_request_target`, so only the base's workflow runs, is the stricter defence, and isn't built.

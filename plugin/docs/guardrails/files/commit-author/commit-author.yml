@@ -1,4 +1,4 @@
-# pitaya template 0.1.8 · docs/guardrails/files/commit-author/commit-author.yml
+# pitaya template 0.1.9 · docs/guardrails/files/commit-author/commit-author.yml
 # Fails a pull request with a commit not authored by the machine account (by GitHub login).
 # Copy to .github/workflows/commit-author.yml, and check_commit_author.py to .github/guardrails/check_commit_author.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login, then
@@ -18,7 +18,7 @@ jobs:
     name: commit-author
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
         with:
           fetch-depth: 0
       - name: Load the checks from the base branch

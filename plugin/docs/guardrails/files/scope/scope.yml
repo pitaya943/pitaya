@@ -1,4 +1,4 @@
-# pitaya template 0.1.8 · docs/guardrails/files/scope/scope.yml
+# pitaya template 0.1.9 · docs/guardrails/files/scope/scope.yml
 # Fails a pull request that changes files outside its ticket's "## Scope".
 # Copy to .github/workflows/scope.yml, and check_scope.py to .github/guardrails/check_scope.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
@@ -18,7 +18,7 @@ jobs:
     name: scope
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
         with:
           fetch-depth: 0
       - name: Load the checks from the base branch
@@ -54,36 +54,64 @@ jobs:
           }
           [ -n "${MACHINE_ACCOUNT:-}" ] || fail "the repository variable MACHINE_ACCOUNT is not set, so agents' PRs can't be told from people's." \
             "set MACHINE_ACCOUNT (Settings, Secrets and variables, Actions, Variables) to the agents' login."
-          # find_ticket <branch> <output file>. When docs/tickets/ exists on the base branch,
-          # tickets are files and only a file there counts; otherwise the open GitHub issue
-          # numbered in ticket/<number>-<slug>. A done or closed ticket can't be claimed.
-          find_ticket() {
+          # ticket_of <branch> <output file>: write the ticket the branch names to the file. When
+          # docs/tickets/ exists on the base branch, tickets are files and only a file there counts;
+          # otherwise it is the GitHub issue numbered in ticket/<number>-<slug>. Sets TICKET_ID,
+          # TICKET_PATH (empty for an issue) and TICKET_STATE: OPEN, DONE, an issue's other state, or
+          # nothing when the issue can't be read. Returns 1 when the branch names no ticket.
+          # This is the one lookup: the pull request's own ticket and other pull requests' go through it.
+          ticket_of() {
+            TICKET_ID="" TICKET_PATH="" TICKET_STATE=""
             if git cat-file -e "origin/$BASE_REF:docs/tickets" 2>/dev/null; then
               for f in $(git ls-tree --name-only "origin/$BASE_REF" docs/tickets/ | grep '\.md$'); do
                 n=$(basename "$f" .md)
                 case "$1" in "ticket/$n"|"ticket/$n-"*)
                   git show "origin/$BASE_REF:$f" > "$2"
-                  if grep -qiE '^Status:[[:space:]]*done' "$2"; then
-                    fail "ticket $n is already done." "work on an open ticket; if $n needs more, ask the Owner for a new ticket."
-                  fi
-                  echo "ticket_path=$f" >> "$GITHUB_OUTPUT"
-                  claimed "$n"
+                  TICKET_ID=$n TICKET_PATH=$f TICKET_STATE=OPEN
+                  if grep -qiE '^Status:[[:space:]]*done' "$2"; then TICKET_STATE=DONE; fi
                   return 0;;
                 esac
               done
               return 1
             fi
-            num=$(printf '%s' "$1" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
-            [ -n "$num" ] || return 1
-            state=$(gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json state -q .state)
-            [ "$state" = "OPEN" ] || fail "issue #$num is $state." "work on an open ticket issue."
-            gh issue view "$num" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$2"
-            claimed "$num"
+            TICKET_ID=$(printf '%s' "$1" | sed -n 's#^ticket/\([0-9][0-9]*\).*#\1#p')
+            [ -n "$TICKET_ID" ] || return 1
+            TICKET_STATE=$(gh issue view "$TICKET_ID" --repo "$GITHUB_REPOSITORY" --json state -q .state) || TICKET_STATE=""
+            gh issue view "$TICKET_ID" --repo "$GITHUB_REPOSITORY" --json body -q .body > "$2" || TICKET_STATE=""
+            return 0
+          }
+          # find_ticket <branch> <output file>: this pull request's ticket. A done or closed ticket can't be claimed.
+          find_ticket() {
+            ticket_of "$1" "$2" || return 1
+            case "$TICKET_STATE" in
+              OPEN) ;;
+              DONE) fail "ticket $TICKET_ID is already done." "work on an open ticket; if $TICKET_ID needs more, ask the Owner for a new ticket.";;
+              "") fail "issue #$TICKET_ID can't be read." "name the branch after an open ticket issue; re-run the check if GitHub's API failed.";;
+              *) fail "issue #$TICKET_ID is $TICKET_STATE." "work on an open ticket issue.";;
+            esac
+            if [ -n "$TICKET_PATH" ]; then echo "ticket_path=$TICKET_PATH" >> "$GITHUB_OUTPUT"; fi
+            claimed "$TICKET_ID"
+          }
+          # other_tickets: where OTHER_TICKETS names a directory (the serial-resources workflow sets it),
+          # write there the open ticket of every open pull request numbered lower than this one, as
+          # pr-<number>.md. Lower numbers only: of two pull requests that claim one resource, the one
+          # opened first goes first and the later one waits. With every other pull request listed,
+          # each of the two would block the other.
+          other_tickets() {
+            if [ -z "${OTHER_TICKETS:-}" ] || [ -z "${PR_NUMBER:-}" ]; then return 0; fi
+            mkdir -p "$OTHER_TICKETS"
+            gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number,headRefName --jq '.[] | "\(.number) \(.headRefName)"' > "$RUNNER_TEMP/open-prs.txt" \
+              || fail "the open pull requests couldn't be listed." "re-run the check."
+            while read -r pr ref || [ -n "$pr" ]; do
+              if [ "$pr" -ge "$PR_NUMBER" ]; then continue; fi
+              if ticket_of "$ref" "$OTHER_TICKETS/pr-$pr.md" && [ "$TICKET_STATE" = OPEN ]; then continue; fi
+              rm -f "$OTHER_TICKETS/pr-$pr.md"
+            done < "$RUNNER_TEMP/open-prs.txt"
           }
           # claimed <id>: fail when another open PR already works on the same ticket.
           claimed() {
             [ -n "${PR_NUMBER:-}" ] || return 0
-            others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,headRefName \
+            others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number,headRefName \
               --jq ".[] | select(.number != $PR_NUMBER) | .headRefName" | grep -E "^ticket/$1(-|\$)" || true)
             [ -z "$others" ] || fail "another open PR already works on ticket $1: $others." "one ticket, one PR: close one of them."
           }
@@ -147,7 +175,7 @@ jobs:
                 fi
               done
               [ -n "${PR_NUMBER:-}" ] || continue
-              others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,headRefName \
+              others=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number,headRefName \
                 --jq ".[] | select(.number != $PR_NUMBER) | .headRefName" | grep -E "^ticket/$n(-|\$)" || true)
               [ -z "$others" ] || fail "this plan PR changes ticket $n while an open PR is building it: $others." \
                 "merge or close that PR first, or leave ticket $n as it is."
@@ -156,6 +184,7 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif find_ticket "$HEAD_REF" "$RUNNER_TEMP/ticket.md"; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            other_tickets
           elif ! is_agent; then
             echo "Opened by $PR_AUTHOR, not an agent account, from a branch without a ticket: people review it."
             echo "skip=true" >> "$GITHUB_OUTPUT"

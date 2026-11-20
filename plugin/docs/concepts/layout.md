@@ -4,7 +4,7 @@ What a project at Level 3 or 4 looks like once pitaya is in place. Lower levels 
 
 ```text
 my-project/
-├── AGENTS.md                     C  /setup: the map, test command, done means, never
+├── AGENTS.md                     C  /setup: the map, how to run the tests, done means, never
 ├── CLAUDE.md                     C  /setup: imports AGENTS.md
 ├── .claude/
 │   ├── settings.json             C  /setup: secrets denied, hooks wired in
@@ -12,12 +12,14 @@ my-project/
 │   │   ├── no_push_main.py       C  /setup
 │   │   ├── no_destructive.py     C  /setup
 │   │   ├── ask_on_rule_files.py  C  /setup
-│   │   └── ask_on_merge.py       C  /setup
+│   │   ├── ask_on_merge.py       C  /setup
+│   │   └── shell_words.py        C  /setup: the parser the four hooks share
 │   └── skills/verify-<app>/      C  verify-app recipe: drives the real app
 ├── .github/
 │   ├── workflows/
-│   │   ├── tests.yml             C  /setup: the test command on every PR
+│   │   ├── tests.yml             C  /setup: runs the test script on every PR
 │   │   └── <recipe>.yml          C  one per guardrail recipe: scope, read-only-paths, ...
+│   ├── scripts/test.sh           C  /setup: the test command, the one place it is written
 │   ├── guardrails/               C  the recipes' check scripts
 │   └── CODEOWNERS                C  multi-account recipe only
 ├── docs/

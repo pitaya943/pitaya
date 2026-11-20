@@ -18,11 +18,11 @@ When agents work in parallel and the project has such a resource, or after the f
 4. Copy `files/serial-resources/serial-resources.yml` to `.github/workflows/serial-resources.yml`.
 5. After the first run, make `serial-resources` a required check.
 
-The workflow collects the tickets of every other open PR and fails if any of them claims the same resource. It also fails when the PR changes a resource's paths without its ticket listing that resource, so a ticket can't skip the check by not declaring it, and on a resource name it doesn't know, so a typo can't slip past. Turn on **Require branches to be up to date** in protect-main as well: once the first PR merges, the second must update its branch, which re-runs every check against the merged migration or lockfile.
+The workflow collects the tickets of the open PRs with a lower number than this one, and fails if any of them claims the same resource: of two PRs on one resource, the one opened first goes first and the later one waits. A PR whose ticket is done or closed holds nothing. It also fails when the PR changes a resource's paths without its ticket listing that resource, so a ticket can't skip the check by not declaring it, and on a resource name it doesn't know, so a typo can't slip past. Turn on **Require branches to be up to date** in protect-main as well: once the first PR merges, the second must update its branch, which re-runs every check against the merged migration or lockfile.
 
 ## How to prove it works
 
-Open two ticket PRs whose tickets both list `migrations`. The second one's check fails and names the first. Merge or close the first, re-run the second, and it passes.
+Open two ticket PRs whose tickets both list `migrations`. The second one's check fails and names the first; push to the first again, and its check still passes. Merge or close the first, re-run the second, and it passes.
 
 ## Cost and false positives
 
@@ -33,7 +33,7 @@ Open two ticket PRs whose tickets both list `migrations`. The second one's check
 ## Error message
 
 ```text
-FAIL serial-resources: another open pull request is changing the same resource:
+FAIL serial-resources: a pull request opened earlier is changing the same resource, and goes first:
   migrations: also claimed by pr-41
 To fix: wait until that pull request merges or closes, then update this branch and re-run.
 ```

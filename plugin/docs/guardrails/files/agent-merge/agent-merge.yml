@@ -1,4 +1,4 @@
-# pitaya template 0.1.8 · docs/guardrails/files/agent-merge/agent-merge.yml
+# pitaya template 0.1.9 · docs/guardrails/files/agent-merge/agent-merge.yml
 # Sets a "verdict" commit status on the pull request's head: success only when a
 # verifier gave PASS for that exact commit and none gave FAIL. Three kinds of pull request
 # into a milestone branch pass without a verdict, on what the check proves from their commits:
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.event_name != 'issue_comment' || github.event.issue.pull_request
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
         with:
           ref: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}
           fetch-depth: 0

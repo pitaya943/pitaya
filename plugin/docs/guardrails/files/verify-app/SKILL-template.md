@@ -1,5 +1,5 @@
 ---
-# pitaya template 0.1.8 · docs/guardrails/files/verify-app/SKILL-template.md
+# pitaya template 0.1.9 · docs/guardrails/files/verify-app/SKILL-template.md
 name: verify-<app>
 description: Drive <app> the way a user would and capture evidence that a feature works. Used by /verify and /report when a change touches a user-facing feature. Covers <surface: the web UI, the CLI, the HTTP API>.
 ---
@@ -25,6 +25,7 @@ How to act as a user, with the real selectors, commands or requests: `<harness, 
 ## Evidence
 
 - What counts: a screenshot, a response body, a CLI transcript, a log excerpt, saved under `docs/evidence/<ticket>/`.
+- A builder commits its evidence on the ticket's branch. A verifier's own screenshots are never on the pull request's branch, where a push would void the verdict: they go under `docs/evidence/<ticket>/verify/` on a branch of their own, `evidence/<PR>-<short sha>` (the `verify` skill).
 - Every claim names the feature and the step it proves.
 
 ## Cleanup
