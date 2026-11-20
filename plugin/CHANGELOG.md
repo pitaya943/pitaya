@@ -6,6 +6,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- New skill `help` (D49): read only; says where the project stands, what waits on whom and the next command, or how to do something. PR decision logs gain an `Options` column, filled in when there were two or more real options. `plan/adr-template.md`: big decisions with real options get a record in `docs/adr/`, linked from `docs/decisions.md`.
+
 - Level 4 (D48): tickets carry a Risk tag; `/verify` interrogates high-risk PRs (`verify/interrogate.md`, reproduce or drop); `/report M<n>` adds a scenario swarm and a decision-log audit (`report/milestone-level4.md`); `/design` runs an arena for contested designs (`design/arena.md`); `/autopilot` cuts the next milestone inside its branch.
 
 - New Level 2 skill `design` (D47): scenarios first, then interfaces, data flow, notifications and state owners; tickets are cut from the scenarios, and `/report M<n>` checks each one. `/verify` drives the real app when the project has a verification skill.
@@ -41,6 +43,7 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Docs
 
+- New concept pages (D49): `access.md` (who reads and writes what, the control and data planes, which crossings matter, what is enforced and what is prose), `states.md` (ticket, milestone, verdict and autopilot state machines and where each state lives) and `layout.md` (a full project's files and branches).
 - `docs/levels.md`: every skill, template and recipe, listed by the level it belongs to, with what each requires and works better with. Generated from `docs/components.json`.
 - `retro` and `handoff` are part of Level 1 (they were listed under Level 3 in `suggestion.md`).
 - `docs/components.json`: every component with its level, `requires`, `recommends` and project `needs`; it generates `levels.md`.
@@ -49,6 +52,7 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Recipes
 
+- `docs/adr/**` is read-only by default, plan PRs may add `docs/adr/*.md`, and the agent-merge CODEOWNERS file owns `/docs/adr/` (D49).
 - `second-model-review` becomes a swappable adapter: a different Claude model, Cursor CLI, Cursor Bugbot or a Grok action. New Level 4 recipe `deep-verification`.
 
 - New Level 2 recipe `verify-app`: a project skill that drives the real app, with templates for the skill and its feature map.

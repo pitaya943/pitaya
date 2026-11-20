@@ -14,7 +14,7 @@ This folder is what the `pitaya` plugin installs. Once installed, the skills app
 - [What each level includes](docs/levels.md): every skill, file and recipe, by level.
 - [What each level should have](docs/suggestion.md), and what each component achieves.
 - [Guardrail recipes](docs/guardrails/README.md) for Levels 2 and 3.
-- [Concepts](docs/concepts/README.md): roles, autonomy, escalation.
+- [Concepts](docs/concepts/README.md): roles, autonomy, escalation, access, states and layout.
 - [Changelog](CHANGELOG.md).
 
 ## License

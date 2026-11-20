@@ -1,0 +1,54 @@
+# Layout: a full project's repository
+
+What a project at Level 3 or 4 looks like once pitaya is in place. Lower levels have a subset: Level 1 stops at the files `/setup` copies, and the recipes add the rest one by one. The marker on the right says which layer each part belongs to (see [Access](access.md#two-layers)): **C** is the control plane, the rules and the plan; **D** is the data plane, the product and what work leaves behind.
+
+```text
+my-project/
+├── AGENTS.md                     C  /setup: the map, test command, done means, never
+├── CLAUDE.md                     C  /setup: imports AGENTS.md
+├── .claude/
+│   ├── settings.json             C  /setup: secrets denied, hooks wired in
+│   ├── hooks/
+│   │   ├── no_push_main.py       C  /setup
+│   │   ├── no_destructive.py     C  /setup
+│   │   ├── ask_on_rule_files.py  C  /setup
+│   │   └── ask_on_merge.py       C  /setup
+│   └── skills/verify-<app>/      C  verify-app recipe: drives the real app
+├── .github/
+│   ├── workflows/
+│   │   ├── tests.yml             C  /setup: the test command on every PR
+│   │   └── <recipe>.yml          C  one per guardrail recipe: scope, read-only-paths, ...
+│   ├── guardrails/               C  the recipes' check scripts
+│   └── CODEOWNERS                C  multi-account recipe only
+├── docs/
+│   ├── agents/
+│   │   ├── harness.md            C  /setup: level, Owner, accounts, autonomy, tickets
+│   │   ├── glossary.md           C  /plan: the project's words
+│   │   ├── architecture.md       C  /plan: the module map
+│   │   └── learnings.md          C  /retro: lessons, append only
+│   ├── decisions.md              C  Owner and Chief: decisions, append only
+│   ├── adr/<nnnn>-<slug>.md      C  big decisions with real options
+│   ├── milestones/
+│   │   ├── M<n>.md               C  /plan --roadmap: goal, exit criteria, Status
+│   │   └── M<n>-design.md        C  /design: scenarios, interfaces, state owners
+│   ├── tickets/T-<nnn>.md        C  /plan M<n>: Status, scope, done when, test IDs
+│   ├── progress/                 D  progress-file recipe: log and feature list
+│   ├── handoff/<branch>.md       D  /handoff
+│   ├── evidence/<ticket>/        D  /build and /verify: screenshots and output
+│   └── reports/                  D  /report, when the Owner wants files
+├── src/                          D  the product, changed only inside a ticket's scope
+└── tests/                        D  the product's tests, red before green
+```
+
+## Branches
+
+| Branch | Holds | Merged by |
+| --- | --- | --- |
+| `main` | Everything signed off | The Owner, always |
+| `milestone/M<n>` | The active milestone's merged tickets (Level 3 and up) | The Owner merges it into `main`: the sign-off |
+| `ticket/<id>-<slug>` | One ticket's work | The Owner below Level 3; the Chief into `milestone/M<n>` from Level 3 |
+| `plan/<slug>` | A roadmap, a design or a cut: plan files only | The Owner; at Level 4 the Chief merges a cut into the next milestone branch |
+
+## Where pitaya itself sits
+
+In pitaya's own repository the split is different: `plugin/` is the product that ships to users, and everything else (`docs/design.md`, `tests/`, `scripts/`, `evals/`) is for developing it. The marketplace installs `plugin/` alone.

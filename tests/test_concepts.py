@@ -5,7 +5,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = REPO_ROOT / "plugin"
 CONCEPTS = PLUGIN_ROOT / "docs" / "concepts"
-PAGES = ("roles.md", "autonomy.md", "escalation.md")
+PAGES = ("roles.md", "autonomy.md", "escalation.md", "access.md", "states.md", "layout.md")
 
 
 def test_concept_pages_exist_and_are_indexed():

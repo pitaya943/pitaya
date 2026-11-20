@@ -45,11 +45,12 @@ Then run `/pitaya:setup` in your project.
 | `/handoff` | you | Leave hand-off notes so another session picks up in minutes |
 | `/retro` | you | Turn repeated mistakes into rule-and-enforcer proposals; check what can be retired |
 | `/autopilot` | you | Level 3: run the active milestone, handing tickets to fresh builders and verifiers, stopping at the Owner's gates |
+| `/help` | you | Where the project stands, what waits on whom and the next command; or how to do something. Read only |
 | `tdd`, `evidence` | the agent | Red-then-green discipline; what counts as evidence |
 | `ask-owner` | the agent | Stop and hand a decision to the Owner with options and a recommendation |
 | `learning` | the agent, when turned on | The Owner answers four questions first, then compares with the agent's answers |
 
-The ideas behind them: [`plugin/docs/concepts/`](plugin/docs/concepts/README.md).
+The ideas behind them, including who may read and write which files, the state machines and a full project's layout: [`plugin/docs/concepts/`](plugin/docs/concepts/README.md).
 
 ## What's in this repository
 

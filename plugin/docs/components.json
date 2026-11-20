@@ -26,6 +26,8 @@
      "summary": "A summary of merged work for the Owner, every claim linked to evidence"},
     {"id": "skill:ask-owner", "kind": "skill", "level": 0, "doc": "skills/ask-owner/SKILL.md",
      "summary": "Unclear or risky decisions go to the Owner with options instead of a guess"},
+    {"id": "skill:help", "kind": "skill", "level": 0, "doc": "skills/help/SKILL.md",
+     "summary": "Where the project stands and the next command, or how to do something; read only"},
 
     {"id": "skill:setup", "kind": "skill", "level": 1, "doc": "skills/setup/SKILL.md",
      "summary": "Installs the chosen files without overwriting anything, and writes the harness file"},

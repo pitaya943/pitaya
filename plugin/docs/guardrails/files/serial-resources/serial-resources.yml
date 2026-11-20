@@ -100,9 +100,9 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif [ "${HEAD_REF#plan/}" != "$HEAD_REF" ]; then
             other=$(git diff --name-only "origin/$BASE_REF...HEAD" \
-              | grep -vE '^(docs/(tickets|milestones)/[^/]+\.md|docs/agents/(glossary|architecture)\.md|docs/decisions\.md)$' || true)
+              | grep -vE '^(docs/(tickets|milestones|adr)/[^/]+\.md|docs/agents/(glossary|architecture)\.md|docs/decisions\.md)$' || true)
             if [ -n "$other" ]; then
-              echo "FAIL: a plan PR may change only docs/tickets/*.md, docs/milestones/*.md, the glossary, the architecture map and docs/decisions.md. It also changes:"
+              echo "FAIL: a plan PR may change only docs/tickets/*.md, docs/milestones/*.md, docs/adr/*.md, the glossary, the architecture map and docs/decisions.md. It also changes:"
               printf '  %s\n' $other
               echo "To fix: move those changes to a ticket branch, ticket/<id>-<slug>."
               exit 1

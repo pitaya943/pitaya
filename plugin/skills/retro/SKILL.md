@@ -15,7 +15,7 @@ argument-hint: "<optional: the period or PRs to look at>"
    - escalations to the Owner and how they were answered;
    - PR review comments and CI failures;
    - learning proposals from verdicts and hand-off notes, and `docs/agents/learnings.md`;
-   - the PRs' **Decision log** rows, above all dead ends and failed attempts: they show where agents lost time;
+   - the PRs' **Decision log** rows, above all dead ends and failed attempts: they show where agents lost time; the "Options" column shows what else was on the table when a choice went wrong;
    - `docs/decisions.md`, when the project keeps one.
 
 ## 2. Find what repeats
