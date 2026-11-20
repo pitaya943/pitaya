@@ -12,13 +12,13 @@ When agents work in parallel and the project has such a resource, or after the f
 
 ## How to add it
 
-1. Name the project's serial resources (for example `migrations`, `lockfile`) and set them in `SERIAL_RESOURCES` in the workflow.
+1. Name the project's serial resources and the paths that make each one up, and set them in `SERIAL_RESOURCES` in the workflow, for example `migrations=migrations/**;lockfile=poetry.lock,package-lock.json`.
 2. Tickets that change one list it under "## Serial resources". `/plan` writes this when the guardrail is listed in the harness file.
 3. Copy `files/serial-resources/check_serial.py` to `.github/guardrails/check_serial.py`.
 4. Copy `files/serial-resources/serial-resources.yml` to `.github/workflows/serial-resources.yml`.
 5. After the first run, make `serial-resources` a required check.
 
-The workflow collects the tickets of every other open PR and fails if any of them claims the same resource. It also fails on a resource name it doesn't know, so a typo can't slip past.
+The workflow collects the tickets of every other open PR and fails if any of them claims the same resource. It also fails when the PR changes a resource's paths without its ticket listing that resource, so a ticket can't skip the check by not declaring it, and on a resource name it doesn't know, so a typo can't slip past. Turn on **Require branches to be up to date** in protect-main as well: once the first PR merges, the second must update its branch, which re-runs every check against the merged migration or lockfile.
 
 ## How to prove it works
 

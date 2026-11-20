@@ -7,7 +7,8 @@ Usage (from the repository root, in CI)::
     python3 check_append_only.py --base <base sha> --head <head sha> --files "CHANGELOG.md,docs/decisions.md" [--ticket ticket.md]
 
 Files come from --files and, optionally, the ticket's "## Append-only files"
-section. A changed or removed line, or deleting the file, fails. Creating the
+section. A changed or removed line, a line inserted between old ones, or deleting
+the file, fails: new lines go after the last existing one. Creating the
 file is fine.
 
 When to remove: when the files are generated (for example a changelog built
@@ -40,10 +41,29 @@ def ticket_section(text: str, title: str) -> list[str] | None:
     return items
 
 
-def removed_lines(base: str, head: str, path: str) -> list[str]:
-    diff = subprocess.run(["git", "diff", "--unified=0", "--no-renames", f"{base}...{head}", "--", path],
-                          capture_output=True, text=True, check=True).stdout
-    return [line[1:] for line in diff.splitlines() if line.startswith("-") and not line.startswith("---")]
+def show(rev: str, path: str) -> str | None:
+    out = subprocess.run(["git", "show", f"{rev}:{path}"], capture_output=True, text=True)
+    return out.stdout if out.returncode == 0 else None
+
+
+def broken_lines(base: str, head: str, path: str) -> list[str]:
+    """Lines that break append-only: old lines changed or removed, or new lines placed before the end."""
+    merge_base = subprocess.run(["git", "merge-base", base, head], capture_output=True,
+                                text=True, check=True).stdout.strip()
+    old, new = show(merge_base, path), show(head, path)
+    if old is None:
+        return []  # a new file: everything in it is an addition
+    if new is None:
+        return ["(the file was deleted)"]
+    old_lines, new_lines = old.splitlines(), new.splitlines()
+    if new_lines[:len(old_lines)] == old_lines:
+        return []
+    # Report the first place they part ways, and what the PR has there.
+    for i, line in enumerate(old_lines):
+        if i >= len(new_lines) or new_lines[i] != line:
+            shown = new_lines[i] if i < len(new_lines) else "(missing)"
+            return [f"line {i + 1}: was {line!r}, now {shown!r}"]
+    return []
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -59,11 +79,11 @@ def main(argv: list[str] | None = None) -> int:
         files += ticket_section(args.ticket.read_text(), "Append-only files") or []
     problems = {}
     for path in dict.fromkeys(files):
-        lines = removed_lines(args.base, args.head, path)
+        lines = broken_lines(args.base, args.head, path)
         if lines:
             problems[path] = lines
     if problems:
-        print("FAIL append-only: these files lost or changed lines:")
+        print("FAIL append-only: these files changed before their last original line:")
         for path, lines in problems.items():
             print(f"  {path}:")
             for line in lines[:10]:

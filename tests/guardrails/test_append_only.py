@@ -59,3 +59,13 @@ def test_ticket_can_add_append_only_files(repo, tmp_path):
     head = repo.commit()
     t = ticket(tmp_path, Append_only_files=["docs/log.md"])
     assert check(repo, base, head, files="", ticket_path=t).returncode == 1
+
+
+def test_a_line_inserted_inside_old_entries_fails(repo):
+    # D43: append-only means additions after the last existing line, not inside old entries.
+    repo.write("docs/decisions.md", "| D1 | old |\n| D2 | old |\n")
+    base = repo.commit("base")
+    repo.write("docs/decisions.md", "| D1 | old |\n| D1b | slipped in |\n| D2 | old |\n")
+    head = repo.commit()
+    proc = check(repo, base, head, files="docs/decisions.md")
+    assert proc.returncode == 1 and "D1b" in proc.stdout and "To fix:" in proc.stdout

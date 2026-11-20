@@ -159,8 +159,8 @@ def derived(name: str) -> tuple[set[str], set[str]]:
     text = (GUARDRAILS / f"{name}.md").read_text()
     if yml:
         requires.add("protect-main")  # its check only blocks a merge once it's required
-    if "vars.MACHINE_ACCOUNT" in yml:
-        requires.add("machine-account")
+    if "vars.MACHINE_ACCOUNT" in yml or "vars.OWNER_ACCOUNTS" in yml:
+        requires.add("machine-account")  # its recipe sets both variables
     if "find_ticket" in yml:
         needs.add("tickets")
     if "vars.VERIFIER_ACCOUNTS" in yml:
