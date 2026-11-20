@@ -20,3 +20,5 @@ The project's own words, so people, agents and code use the same name for the sa
 | component | One selectable part of the harness in `components.json`: a skill, a group of template files, the harness file or a recipe | module, plugin, feature |
 | preset | A level used as a starting selection: every component at or below it | profile, bundle |
 | ticket mirror | A GitHub issue that links to a `docs/tickets/T-<nnn>.md` file, for discussion and notifications; the file stays the source of truth | linked issue, copy |
+| milestone | A large, demoable outcome in `docs/milestones/M<n>.md`, cut into tickets when it becomes active and closed by the Owner's sign-off | phase, epic, sprint |
+| roadmap | The ordered list of milestones, written by `/plan --roadmap` | backlog |
