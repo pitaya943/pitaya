@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: draft 0.3. Steps W0–W6 are done, plus the additions decided after W6 (D33–D39 in [`decisions.md`](decisions.md)); W7, the release, is next (section 13).
+- Status: draft 0.4. Steps W0–W6 are done, plus the additions decided after W6 (D33–D48 in [`decisions.md`](decisions.md)); W7, the release, is next (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
@@ -96,7 +96,8 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 | `/verify <PR>` | Dispatch a fresh subagent that re-runs everything cold and judges PASS or FAIL against a checklist | Verifier | Done |
 | `/report` | Summarize merged work for the Owner; `M<n>` checks a milestone's exit criteria for the Owner's sign-off | Chief | Done |
 | `/handoff` | Write hand-off notes when work stops: goal, done, in progress, next step, where the evidence is (D11) | Any | Done |
-| `/retro` | Turn repeated mistakes into rule-to-enforcer proposals and review what can be retired; the Owner approves (D18, D19) | Chief | Done |
+| `/design` | Level 2: a milestone's scenarios first, then interfaces, data flow, notifications and state owners, two shapes compared; tickets come from the scenarios; an arena for contested designs at Level 4 (D47, D48) | Chief | Done |
+| `/retro` | Turn repeated mistakes into rule-to-enforcer proposals along the correct ladder, keep lessons that hold, and review what can be retired; the Owner approves (D18, D19, D46) | Chief | Done |
 | `/autopilot` | Level 3: run the active milestone in stateless ticks, handing builds and verifications to fresh sessions, merging when Autonomy allows, stopping at Owner gates and a budget (D39) | Chief | Done |
 
 **Model-invoked (disciplines)**
@@ -131,6 +132,7 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 | Sensitive areas | asked by `/setup` | — |
 | Guardrails | the Level 1 parts, plus any recipe added later | — |
 | Autopilot | off; when on: budget per run, parallel builders, how it wakes | D39 |
+| Second model | `claude:<model>`; or `cursor-cli:<model>`, `bugbot`, `grok-action` | D48 |
 | Learning | off | D22 |
 
 ## 7. Ticket format
@@ -144,6 +146,8 @@ Fields grow with the level (D10); a field is needed only once its guardrail is a
 | Serial resources | 2 | the serial-resource recipe |
 | Append-only files | 2 | the append-only recipe |
 | Screenshots required | 2 | the evidence recipe |
+| Scenarios (from the milestone design) | 2 | `/design`, `/report M<n>` |
+| Risk: low or high | 4 | deep verification |
 
 A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its tickets, what it leaves out, and `Status: planned | active | done`. Ticket and milestone files reach `main` only through plan PRs on `plan/<slug>` branches, which may change nothing else and which only the Owner merges (D36, D38). Each active milestone has a branch, `milestone/M<n>`: its tickets branch from it and merge into it, by agents at Level 3, and the Owner merges the milestone into `main` as its sign-off (D44). With one machine account, GitHub's rule that an author can't approve its own pull request keeps `main` with the Owner; more agent accounts need the multi-account recipe.
 
@@ -203,10 +207,13 @@ Each recipe in `plugin/docs/guardrails/<id>.md` has eight sections:
 | 2 | Append-only files | earlier `append-only` check |
 | 2 | Serial resources: one ticket at a time per migration or lockfile | earlier `serial-resource` check |
 | 2 | Evidence: the PR has an evidence section; screenshots when there's a UI | earlier `evidence` check |
-| 3 | Second-model review (D14) | earlier optional review module |
+| 2 | Verify the real app: a project skill that drives the UI, CLI or API (D47) | pstack's verification skills |
+| 2 | Multi-account: CODEOWNERS when more than one agent account exists (D44) | the audit |
+| 4 | Second-model review: a swappable adapter, a different Claude model, Cursor CLI, Bugbot or a Grok action (D14, D48) | earlier optional review module |
+| 4 | Deep verification: risk tags, interrogation, a milestone swarm and log audit, an arena (D48) | pstack |
 | 3 | Progress file, start-up routine and a feature list where agents may only flip "passes" (D11) | Anthropic's long-running harness |
-| 3 | Agent merging, gated by a `verdict` status that only a PASS for the current head commit turns green; required approvals drop to 0 (D3, D37) | new |
-| 3 | Project evals | Anthropic's guidance on agent evals |
+| 3 | Agent merging into milestone branches, gated by a `verdict` status that only a PASS for the current head commit turns green (D3, D44) | new |
+| 4 | Project evals | Anthropic's guidance on agent evals |
 | — | Docs lint (links, structure) | earlier docs-lint module |
 
 The earlier bootstrap gate and branch-to-ticket gate are not carried over (D26). All ticket-based checks share one "Find the ticket" step: it reads `docs/tickets/<id>.md` from the base branch (or the issue in the branch name), skips the Owner's non-ticket PRs, fails machine-account PRs that aren't on a ticket branch, and treats `plan/<slug>` branches as plan PRs (D36).
@@ -291,8 +298,9 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 | W5 | Level 3 recipes; `evals/` with the first task; `CHANGELOG.md` | CI green |
 | W6 | Trial: move the trial repository to Level 1 with `/setup`, add one Level 2 recipe and prove it blocks; run the hooks in a real Claude Code session; try `/plan` and `/handoff`; run `/setup` on this repository itself (D31) | A trial record with evidence |
 | W6+ | After the trial: per-level inventory and component manifest (D33), `retro`/`handoff` at Level 1 (D34), file tickets with an issue mirror (D35), plan PRs (D36), enforced Owner-only merges (D37), milestones (D38), `/autopilot` (D39) | Merged, CI green |
+| W6++ | The audit fixes (D40–D43), milestone branches with one machine account (D44), the Level 0–4 spectrum (D45), and the pstack-derived rigor: sharpen, decision log, blast radius, correct ladder (D46), `/design` and verify-app (D47), Level 4 deep verification (D48) | Merged, CI green |
 | W7 | Release `v0.1.0` | The Owner creates the release |
-| W8 | Trial `/plan --roadmap`, `/plan M1` and `/autopilot` on the trial repository | A trial record with evidence |
+| W8 | Trial on the trial repository: recopy the workflows, `protect-milestones`, `/plan --roadmap`, `/design M1`, `/plan M1`, `/autopilot`; check `pull_request_target`, artifacts and the milestone ruleset live | A trial record with evidence |
 
 ## 14. Open questions
 

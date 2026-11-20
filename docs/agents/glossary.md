@@ -8,7 +8,7 @@ The project's own words, so people, agents and code use the same name for the sa
 | Term | Meaning | Avoid |
 | --- | --- | --- |
 | harness | The skills, files and checks that let agents develop under human review | framework, SOP |
-| level | One of four steps of protection (0 to 3); each includes the one before | tier, stage |
+| level | One of five steps (0 to 4) on a spectrum from close control to the most agent authority; each includes the one before | tier, stage |
 | recipe | A guardrail document in eight sections, with copyable files | guide, playbook |
 | guardrail | A protection added from a recipe, usually a check or a setting | gate (a gate blocks everything; there is none) |
 | harness file | `docs/agents/harness.md` in a user's project, the config every skill reads first | config file, settings |
