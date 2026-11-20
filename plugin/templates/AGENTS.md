@@ -41,4 +41,4 @@ Stop and ask the Owner, with two or three options, their consequences and your r
 - `docs/agents/glossary.md`: the project's words. Use them in code, tests and tickets.
 - `docs/agents/learnings.md`: what earlier work learned the hard way. Read it before planning or building.
 - `docs/decisions.md`: the Owner's decisions, append only.
-- Skills (the `pitaya` plugin): `/pitaya:setup`, `/pitaya:build`, `/pitaya:verify` and the rest.
+- Skills (the `pitaya` plugin): `/pitaya:setup`, `/pitaya:build`, `/pitaya:verify` and the rest; without the `pitaya:` prefix when they're copied into `.claude/skills/` for cloud sessions.

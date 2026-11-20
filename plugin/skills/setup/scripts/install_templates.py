@@ -45,7 +45,10 @@ TEMPLATE_DOC = "README.md"  # documents a templates folder; never copied
 
 def plugin_version() -> str:
     manifest = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
-    return json.loads(manifest.read_text())["version"] if manifest.is_file() else "unknown"
+    if manifest.is_file():
+        return json.loads(manifest.read_text())["version"]
+    vendored = PLUGIN_ROOT / "pitaya.json"  # copied into a project's .claude/ by vendor_plugin.py
+    return json.loads(vendored.read_text())["version"] if vendored.is_file() else "unknown"
 
 
 def header_version(text: str) -> str | None:

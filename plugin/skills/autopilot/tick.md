@@ -14,7 +14,7 @@ Everything comes from places anyone can open, so a fresh session can take over a
 | Fix rounds used | the verdict comments on the PR: one round per FAIL |
 | Owner instructions | the tracking issue `Autopilot: M<n>`, and answers on `needs-owner` issues |
 
-`gh pr list --search "head:ticket/"`, `gh pr checks <n>` and `gh pr view <n> --json headRefOid,comments` cover most of it.
+`gh pr list --search "head:ticket/"`, `gh pr checks <n>` and `gh pr view <n> --json headRefOid,comments` cover most of it; where `gh` can't reach GitHub, as in cloud sessions, use the GitHub tool's list, read and check-run calls instead.
 
 ## Starting sessions
 
@@ -40,4 +40,4 @@ When stopping:
 
 ## Merging
 
-Merge with the method the repository uses (`gh pr merge <n> --squash` or `--merge`), only after re-reading the head commit: if it changed since the verdict, the PASS no longer counts. The `ask_on_merge.py` hook stays quiet only when the Autonomy line lets agents merge; if it asks, the harness doesn't allow it, so leave the PR for the Owner.
+Merge with the method the repository uses (`gh pr merge <n> --squash` or `--merge`, or the GitHub tool's merge call), only after re-reading the head commit: if it changed since the verdict, the PASS no longer counts. The `ask_on_merge.py` hook stays quiet only when the Autonomy line lets agents merge; if it asks, the harness doesn't allow it, so leave the PR for the Owner.
