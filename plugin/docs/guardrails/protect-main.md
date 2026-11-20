@@ -18,15 +18,21 @@ In the repository: **Settings → Rules → Rulesets → New ruleset → New bra
 | --- | --- |
 | Ruleset name | `protect-main` |
 | Enforcement status | **Active** |
-| Bypass list | **Repository admin**, mode **For pull requests only** (the Owner, for emergencies). Agent accounts never go here |
+| Bypass list | **Repository admin**, mode **For pull requests only** (the Owner, for emergencies). Agent accounts never go here. The bypass belongs to whoever is signed in as the Owner, an agent included: see [With no machine account](#with-no-machine-account) |
 | Target branches | **Add target → Include default branch**. An empty target list protects nothing |
 | Restrict deletions | On |
 | Block force pushes | On |
-| Require a pull request before merging | On, with **Required approvals: 1** and **Dismiss stale pull request approvals when new commits are pushed**. Agents open PRs as the one machine account, and GitHub doesn't let an author approve its own PR, so only the Owner's approval can merge them. The Owner's own PRs merge through the bypass. With more than one agent account, add [multi-account](multi-account.md) |
+| Require a pull request before merging | On, with **Required approvals: 1** and **Dismiss stale pull request approvals when new commits are pushed**. Agents open PRs as the one machine account, and GitHub doesn't let an author approve its own PR, so only the Owner's approval can merge them. A PR the Owner's own account opened has nobody to approve it and merges through the bypass: keep those to what the Owner wrote or read. With more than one agent account, add [multi-account](multi-account.md) |
 | Require status checks to pass | On. Add the `tests` check from the Level 1 workflow (it appears in the list after it has run once) |
 | Require branches to be up to date | Off at Level 1. On from Level 2 when agents work in parallel, or use a merge queue: otherwise CI judges the PR's head, not what the merge produces, and two PRs that each passed can break the branch together. It matters most on `milestone/*` (below) |
 
 Then check **Settings → Collaborators**: agent accounts have **Write**, never Admin.
+
+### With no machine account
+
+Everything above holds against an account that isn't the Owner's. A project set up with "Machine account: none" runs its agents as the account the session is signed in with, usually the Owner's, and then the ruleset holds nothing against them: `gh pr merge --admin` merges a PR with no approval and a red `tests` check, every PR is the Owner's own and merges through the bypass, and what stands before a merge is the `ask_on_merge.py` hook's question to the person in the session. That is enough only while a person watches every step. Before agents act unattended, add the [machine account](machine-account.md) ([why](../concepts/autonomy.md#unattended-work-needs-a-machine-account)).
+
+A second person with write access gives the Owner's own PRs another route: each approves the other's, and the bypass goes back to being for emergencies. pitaya doesn't set this up: it needs a second person.
 
 ### Milestone branches
 
@@ -63,7 +69,7 @@ Every change needs a PR and a green `tests` run, which adds a few minutes. Urgen
 
 ## Error message
 
-GitHub rejects the push with a "Repository rule violations found" message that names the rule. The Level 1 `no_push_main` hook usually stops the attempt earlier and says what to do instead: push a branch and open a pull request.
+GitHub rejects the push with a "Repository rule violations found" message that names the rule. The Level 1 `no_push_main` hook usually stops the attempt earlier and says what to do instead: push a branch and open a pull request. GitHub prints nothing when an account on the bypass list merges past the rules, which is why the `ask_on_merge.py` hook asks before `gh pr merge --admin`.
 
 ## Afterwards
 

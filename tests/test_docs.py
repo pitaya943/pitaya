@@ -68,3 +68,18 @@ def test_changelog_has_a_dated_section_for_the_plugin_version():
     text = (REPO_ROOT / "plugin" / "CHANGELOG.md").read_text()
     assert re.search(rf"^## {re.escape(version)} \(\d{{4}}-\d{{2}}-\d{{2}}\)$", text, re.M), version
     assert "Unreleased" not in text
+
+
+def test_the_design_status_line_names_the_plugin_version_and_the_newest_decision():
+    """The verdict on 0.1.9: the design's `Status:` line stayed at 0.1.8 through a release, and no test saw it."""
+    import json
+    import re
+    version = json.loads((REPO_ROOT / "plugin" / ".claude-plugin" / "plugin.json").read_text())["version"]
+    status = next(l for l in (REPO_ROOT / "docs" / "design.md").read_text().splitlines() if l.startswith("- Status:"))
+    assert status.startswith(f"- Status: {version}, "), status
+    major, minor, patch = (int(part) for part in version.split("."))
+    if patch:  # the releases before this one, as a range that ends just below it
+        assert f"to {major}.{minor}.{patch - 1} were released" in status, status
+    rows = re.findall(r"(?m)^\| D(\d+) \|", (REPO_ROOT / "docs" / "decisions.md").read_text())
+    assert rows, "docs/decisions.md has no D-rows"
+    assert f"–D{max(int(n) for n in rows)} in" in status, status

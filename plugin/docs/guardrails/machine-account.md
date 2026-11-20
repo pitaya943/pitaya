@@ -1,18 +1,18 @@
 # Recipe: machine account
 
-Level: 2. No files to copy: an account and a few settings.
+Level: 2. At Level 1 too, before agents act unattended. No files to copy: an account and a few settings.
 
 ## What it guards against
 
-Not knowing who did what. With several agents sharing a person's account, every push, PR and comment looks like that person's, and an agent inherits the person's rights, including merging `main`.
+An agent that is the Owner, and not knowing who did what. With agents on a person's account, every push, PR and comment looks like that person's, and an agent inherits the person's rights: on the Owner's account that includes the bypass of the rulesets, so it can merge `main` with no approval and red checks, and its comments count as the Owner's decisions ([what follows](../concepts/autonomy.md#unattended-work-needs-a-machine-account)).
 
 ## When it's worth adding
 
-When a second agent works in the repository, or when agents act without a person watching each step.
+Before agents act unattended, it is required: when `/autopilot`, a schedule, a GitHub Action or another session starts them, or a session runs with permission prompts off. Also when a second agent works in the repository (Level 2, whose checks tell an agent's PR by its author). Without it, the only setup that holds is one person watching one agent's every step.
 
 ## How to add it
 
-1. Create a GitHub account for the agents (one per role or team of agents, if you want them told apart).
+1. Create a GitHub account for the agents (one per role or team of agents, if you want them told apart). A GitHub App installed on the repository is a separate identity too (`<app>[bot]`), with the permissions of step 3. A token of the Owner's own account is not, however narrow: what it pushes, opens and comments is still the Owner's.
 2. Invite it as a collaborator with **Write**. Never Admin, and never on the ruleset's bypass list.
 3. Give the agent environment a token for that account: a fine-grained token limited to this repository, with Contents, Pull requests and Issues set to read and write, and nothing else. In particular no Workflows (it could change CI), Commit statuses (it could forge a required status), Actions or Administration permission. In the ruleset, pick **GitHub Actions** as the source of each required check, so only statuses that CI sets count.
 4. Set the commit author in the agent's checkout: the account's login as the name, and its GitHub noreply address as the email (`<numeric id>+<login>` at `users.noreply.github.com`). `/build` does this when the harness file names a machine account.
@@ -38,4 +38,4 @@ Record the login under "Machine account" in the harness file. Add the [commit-au
 
 ## When to remove it
 
-When one person works with one agent again, and nobody needs to tell agents apart.
+When one person works with one agent again and watches every step, and nobody needs to tell agents apart. Set "Machine account" in the harness file to "none" then, so the `ask_on_merge.py` hook asks before every merge.

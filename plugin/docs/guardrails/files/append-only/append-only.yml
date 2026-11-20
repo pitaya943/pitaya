@@ -1,4 +1,4 @@
-# pitaya template 0.1.9 · docs/guardrails/files/append-only/append-only.yml
+# pitaya template 0.1.10 · docs/guardrails/files/append-only/append-only.yml
 # Fails a pull request that changes or removes lines in append-only files.
 # Copy to .github/workflows/append-only.yml, and check_append_only.py to .github/guardrails/check_append_only.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then

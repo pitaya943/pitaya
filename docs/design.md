@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: 0.1.8, ready to release (0.1.0 to 0.1.7 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D68 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
+- Status: 0.1.10, ready to release (0.1.0 to 0.1.9 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D71 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
@@ -120,7 +120,7 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 | --- | --- | --- |
 | Level | 1 (0 to 4) | D1, D45 |
 | Templates | the version `/setup` installed | D20 |
-| Owner, machine account | asked by `/setup`; the machine account may be "none" | — |
+| Owner, machine account | asked by `/setup`; the machine account may be "none" only while a person watches every step, and is required before agents act unattended (D63 c, D71) | — |
 | Autonomy | only the Owner merges `main`; may become "agents merge after CI is green and the verdict is PASS" at Level 3 | D3 |
 | Tickets | `docs/tickets/T-<nnn>.md` files mirrored by issues labelled `ticket`; or files only; or issues only | D9, D35 |
 | Milestones | `docs/milestones/M<n>.md`, one active at a time | D38 |

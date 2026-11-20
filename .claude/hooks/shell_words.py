@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.9 · .claude/hooks/shell_words.py
+# pitaya template 0.1.10 · .claude/hooks/shell_words.py
 """Shared by the four pitaya hooks: split a Bash command into the simple commands it runs.
 
 What it is for: every hook has to answer "which programs does this command

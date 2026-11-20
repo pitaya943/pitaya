@@ -68,6 +68,11 @@ ASSUMES = [
     "merges every PR, which is the defence those levels lack.",
     "- **Hooks prevent accidents.** They are not a security boundary: a script, another tool or a differently "
     "spelled command gets past them. The rulesets are the boundary.",
+    "- **Unattended agents need a machine account.** Without one a session acts as the account it is signed in "
+    "with, usually the Owner's: the rulesets' bypass is the agent's, and merge protection is the hooks alone. That "
+    "fits Level 1 while a person watches every step. Before `/autopilot`, a schedule or another session starts "
+    "agents, and from Level 2, add the [machine account](guardrails/machine-account.md) "
+    "([why](concepts/autonomy.md#unattended-work-needs-a-machine-account)).",
     "- **The tripwire is an `undisclosed` row** in a verdict's Attention section: a change or pivot the PR should "
     "have declared and didn't. When one appears, the Owner reviews it and decides whether the assumption still "
     "holds, or whether to add the stricter defences (a separate verifier account, checks that run from the base "

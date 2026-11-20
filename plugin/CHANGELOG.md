@@ -2,6 +2,43 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.10 (2026-11-20)
+
+The sixth and last batch of fixes from the review of 0.1.4: the Level 1 session layer (D63 c, D71). F11, plus two notes from the verdict on 0.1.9.
+
+**If you upgrade:**
+
+- Re-run `/setup` and update `.claude/hooks/ask_on_merge.py` from the stale-copy report. Nothing else in the templates changed.
+- If your harness file says "Machine account: none": that is still fine while a person watches every step. The updated hook then asks before every merge, whatever the "Autonomy" line says. Before you run `/autopilot`, a schedule or any other unattended session, create a machine account ([recipe](docs/guardrails/machine-account.md)) and sign the agents' environment in as it; `/autopilot` now stops when the session isn't signed in as the account the harness file names.
+- Change the release tag where you add the marketplace: `claude plugin marketplace add <owner>/pitaya#v0.1.10`.
+
+### Templates
+
+- **`.claude/hooks/ask_on_merge.py` (F11).** It asks in two more cases, whatever the "Autonomy" line says, because both merge through the Owner's bypass of the rulesets, which no required check or verdict guards:
+  - `gh pr merge --admin`, in every project;
+  - any merge (`gh pr merge`, the merge API, a GitHub tool) while the harness file's "Machine account" line says "none" or is empty. A harness file with no such line is read as before.
+
+  It never asks less than it did.
+
+### Skills
+
+- `setup`: no longer takes "None" for the machine account without a word. It recommends an account in every project and says it is required before agents act unattended and from Level 2; with "none" it writes what that means into the harness file and says in its output that merge protection is the hooks alone; it records neither Level 2 nor "Autopilot: on" without an account. The harness template's "Machine account" line says the same.
+- `autopilot`: stops before its first tick when the harness file names no machine account, or the GitHub login it acts as isn't that account.
+- `build`: with no machine account, stops when it was started unattended (by `/autopilot`, a schedule or another session). With a person in the conversation it works as before.
+- `autopilot` (`tick.md`): when an earlier pull request on a serial resource was reopened after a later one's check went green, the tick re-runs the later one's check.
+
+### Docs
+
+- **`concepts/autonomy.md`, new section "Unattended work needs a machine account".** The one definition of an unattended session (nobody in the conversation approves its steps: `/autopilot`, a schedule, a GitHub Action, another session, or permission prompts off), what an agent signed in as the Owner holds (the rulesets' bypass, an approval nobody else can give, ticket checks that take its pull requests for a person's, comments that count as the Owner's decisions), and what each part of the harness does about it. `levels.md`, `suggestion.md`, `concepts/access.md`, `concepts/escalation.md`, `concepts/roles.md` and the README's "Cloud sessions" link to it.
+- `concepts/autonomy.md`, prerequisite 3, and `agent-merge`: a new session is a separate session whoever started it, the builder's session included, as long as none of the builder's conversation goes into its prompt. A subagent or background agent still isn't. The page said "or anything that session started", which read as covering new sessions.
+- `concepts/roles.md`: a Level 2 builder acts as the machine account; "ideally" is gone, since the Level 2 checks require it.
+
+### Recipes
+
+- `machine-account`: "Level: 2. At Level 1 too, before agents act unattended". A GitHub App is a separate identity too; a token of the Owner's own account isn't. When you go back to "none", say so in the harness file, so the hook asks.
+- `protect-main`: a new part, "With no machine account": the bypass belongs to whoever is signed in as the Owner, an agent included, and a second person with write access is the other route for the Owner's own pull requests.
+- `serial-resources`: says what happens when an earlier pull request is closed, a later one goes green and the earlier one is reopened (both are green until the later check is re-run), and why no guard is built for it.
+
 ## 0.1.9 (2026-11-20)
 
 The fifth batch of fixes from the review of 0.1.4: duplication and maintenance (D69, D70). F26, F27, F28 and F32, plus the gaps the verdict on 0.1.7 found in the Level 4 cut and the report PR.

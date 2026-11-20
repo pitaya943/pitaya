@@ -29,6 +29,7 @@ Open two ticket PRs whose tickets both list `migrations`. The second one's check
 - One API call to list the open PRs, and with issue tickets two more for each PR opened earlier, so it gets slower with many open PRs. If an earlier PR's issue can't be read, the check fails rather than pass over a claim it can't see.
 - A ticket that lists a resource it doesn't touch blocks others for nothing. `/plan` and the verifier should keep the lists honest.
 - The check sees open PRs only. Two branches claiming the same resource before either has a PR aren't caught, so plan around it.
+- The order is by number, and a check runs only when its own PR changes. So when an earlier PR is closed, a later one turns green, and the earlier one is then reopened, both are green at once: the reopened PR sees nothing with a lower number, and the later one's check doesn't run again by itself. After reopening a PR that claims a resource, re-run the check on the later PRs that claim it; they fail and wait, as they should. Until someone does, **Require branches to be up to date** is what stands between the two: whichever merges second must update its branch first, and every check runs again on top of the first.
 
 ## Error message
 
