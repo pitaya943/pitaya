@@ -12,7 +12,7 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 - Owner: example-owner.
 - Machine account: example-bot. Agents push, open PRs and comment as this account. If it's "none", agents use the current session's account.
 - Autonomy: Only the Owner merges `main`.
-  The alternative, Level 3 with the agent-merge recipe only, is the value "Agents merge ticket PRs into milestone branches; only the Owner merges main". The `ask_on_merge.py` hook reads only the value after "Autonomy:".
+  The alternatives: at Level 3 with the agent-merge recipe, "Agents merge ticket PRs into milestone branches; only the Owner merges main"; at Level 4, "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main". The `ask_on_merge.py` hook reads only the value after "Autonomy:".
 
 ## Work
 
@@ -25,6 +25,7 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 ## Review
 
 - Verification: a fresh subagent, started by `/verify`. (Alternative: "a separate session", optionally with a named model.)
+- Second model: claude:<a different model from the builders'>. Used at Level 4 for interrogation and the milestone audit. Other values: `cursor-cli:<model>`, `bugbot`, `grok-action` (the plugin's `docs/guardrails/second-model-review.md`).
 - Fix rounds: 2. Round 1 in the builder's session, the rest in fresh sessions; still failing after the last round means escalating to the Owner.
 - Autopilot: off. When on (Level 3): budget per run (default 5 merged tickets or 8 hours), parallel builders (default 2), and how it wakes (PR events, `/loop`, a schedule or a GitHub Action).
 - Learning: off. When on, `/report` ends by offering the `learning` review.

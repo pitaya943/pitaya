@@ -22,3 +22,7 @@ The same, without step 2 and without the `Issue:` line. Use it when the Owner do
 ## Issues only
 
 The lightest mode: each ticket is an issue labelled `ticket`, with "Blocked by #<n>" lines; the branch is `ticket/<n>-<slug>` and the PR says `Closes #<n>`. The checks read the issue body when they run, and anyone with write access can edit it, so a PR's author could widen its own scope. Prefer files once the scope or read-only checks are on.
+
+## Risk
+
+Every ticket carries `Risk: low` or `Risk: high`. `/plan` sets **high** when the ticket touches a sensitive area from the harness file, changes a public interface or the data model, includes a migration, or has a scope that spans more than one module. The Owner may override the tag in the plan PR, either way. At Level 4, high-risk tickets get the extra verification in the `verify` skill's `interrogate.md`; below Level 4 the tag is information only.

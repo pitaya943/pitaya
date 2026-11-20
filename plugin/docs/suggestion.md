@@ -121,6 +121,7 @@ Added from recipes. The most agent authority pitaya offers, closest to pstack, w
 | --- | --- | --- | --- |
 | **Second-model review** (another vendor or model) | Prose | Another model catches the first one's blind spots on sensitive or risky PRs | It adds cost and time; two models can still be wrong together |
 | **Project evals** (20–50 tasks drawn from real failures) | Tool | Before and after changing a skill, a prompt or a model, run the set and compare numbers instead of impressions | The set takes time to build and maintain; too few tasks give noisy numbers |
+| **Deep verification** (risk tags, interrogation of high-risk PRs, a swarm and a decision-log audit per milestone, an arena for contested designs) | Prose | Agents can cut and merge a whole milestone while the Owner reads only what the Attention section and the scenario table point at; a second model's findings count only when a run reproduces them | Two to four times the verification cost on high-risk tickets; the gain should be measured with project evals |
 
 ---
 

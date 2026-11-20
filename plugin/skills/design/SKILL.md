@@ -21,7 +21,7 @@ Use [design-template.md](design-template.md); save it as `docs/milestones/M<n>-d
 
 1. **Scenarios first.** One scenario per behaviour a user or caller can observe, numbered `S-1`, `S-2`, and so on: Given (the state), When (the action), Then (the observable result). Cover each exit criterion, the error paths and the edges. A scenario nobody could test isn't a scenario.
 2. **Work backwards.** From the scenarios, derive what must exist: the interfaces (signatures, types, endpoints, events), the data flow, the workflow between parts, the notifications, and which part owns each piece of state.
-3. **Compare two shapes.** Trace every system the change touches, sketch two shapes, and pick the one where each piece of state has one owner, each task has one supported way, and callers know least. Record both and why one won. If workarounds keep piling up, redesign instead of patching.
+3. **Compare two shapes.** Trace every system the change touches, sketch two shapes, and pick the one where each piece of state has one owner, each task has one supported way, and callers know least. Record both and why one won. If workarounds keep piling up, redesign instead of patching. At Level 4, when the two shapes come out close or the Owner asks for alternatives, run the arena in [arena.md](arena.md).
 4. **Map scenarios to tests.** Name, for each scenario, the test that will prove it (a test ID or a command). These become the tickets' done-when conditions.
 5. **Open questions.** Choices of preference or product direction go to the Owner, with options. Don't decide them.
 

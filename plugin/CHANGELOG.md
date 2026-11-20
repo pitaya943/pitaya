@@ -6,6 +6,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- Level 4 (D48): tickets carry a Risk tag; `/verify` interrogates high-risk PRs (`verify/interrogate.md`, reproduce or drop); `/report M<n>` adds a scenario swarm and a decision-log audit (`report/milestone-level4.md`); `/design` runs an arena for contested designs (`design/arena.md`); `/autopilot` cuts the next milestone inside its branch.
+
 - New Level 2 skill `design` (D47): scenarios first, then interfaces, data flow, notifications and state owners; tickets are cut from the scenarios, and `/report M<n>` checks each one. `/verify` drives the real app when the project has a verification skill.
 
 - Adapted from pstack (D46): `/plan` sharpens the brief and explores how and why first (`plan/sharpen.md`); PRs carry an append-only decision log, failures included; `/verify` checks blast radius and reads the decision log; `/retro` follows the correct ladder (architecture, types/lint/CI, tests, docs) and keeps only lessons that hold for six months; `/report` draws on decision logs.
@@ -46,6 +48,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes
+
+- `second-model-review` becomes a swappable adapter: a different Claude model, Cursor CLI, Cursor Bugbot or a Grok action. New Level 4 recipe `deep-verification`.
 
 - New Level 2 recipe `verify-app`: a project skill that drives the real app, with templates for the skill and its feature map.
 

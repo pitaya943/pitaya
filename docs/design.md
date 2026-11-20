@@ -58,7 +58,7 @@ One harness, five levels (D1, D45). Each level includes the one before. Every pa
 | 1 (default) | One person with one or a few agents | AGENTS.md map, harness config, memory files, decision log, one test command, CI as a required check, `main` protection with one required approval, permissions, four hooks, a fresh verifier; skills `setup`, `handoff`, `retro`, `learning` (D34, D37) | `/setup` copies `templates/` |
 | 2 | Agents working in parallel | Machine accounts and author checks, scope, read-only paths, no weakened tests (JUnit comparison), done-when, append-only files, serial resources, evidence checks | Recipes |
 | 3 | Milestone autonomy | `/autopilot`, progress file and start-up routine, an agent-merge policy into milestone branches (D39, D44) | Recipes and the `autopilot` skill |
-| 4 | Max | Second-model review, project evals; later the pstack-derived verification (D45) | Recipes |
+| 4 | Max | The Chief cuts milestones inside their branches; second-model review, deep verification (interrogation, milestone swarm and log audit, arena), project evals (D45, D48) | Recipes |
 
 ## 4. Repo layout
 
