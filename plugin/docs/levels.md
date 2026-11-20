@@ -52,6 +52,7 @@ Includes everything in Level 1. Add the recipes you need, one at a time; each is
 | Recipe | [`done-when`](guardrails/done-when.md) | `protect-main`, `machine-account` | `no-weakened-tests`, `skill:plan`, `skill:verify` | Every completion condition has a test that exists and passes |
 | Recipe | [`append-only`](guardrails/append-only.md) | `protect-main`, `machine-account` | `decisions` | Listed files only gain lines |
 | Recipe | [`serial-resources`](guardrails/serial-resources.md) | `protect-main`, `machine-account` | `skill:plan` | Only one ticket at a time changes a migration, lockfile or other shared resource |
+| Recipe | [`multi-account`](guardrails/multi-account.md) | `protect-main`, `machine-account` | - | Only with several agent accounts: CODEOWNERS, so only the Owner's approval counts |
 | Recipe | [`evidence`](guardrails/evidence.md) | `protect-main`, `machine-account` | `skill:build`, `skill:evidence` | A PR without an evidence section, or a UI change without screenshots, can't merge |
 
 ## Level 3: long-running autonomy
@@ -63,7 +64,7 @@ Includes everything in Level 2. `agent-merge` comes last: it requires the main L
 | Skill | [`skill:autopilot`](../skills/autopilot/SKILL.md) | `skill:build`, `skill:verify`, `skill:report`, `protect-main`, `machine-account`, `scope` | `agent-merge`, `read-only-paths`, `no-weakened-tests`, `done-when` | Runs the active milestone: hands tickets to fresh builders and verifiers, merges when allowed, stops at Owner gates |
 | Recipe | [`progress-file`](guardrails/progress-file.md) | `protect-main`, `machine-account` | `skill:handoff` | A start-up routine and a feature list where agents may only mark items as passing |
 | Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | - | Another model reviews sensitive or risky PRs |
-| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge after CI is green and the latest verdict on the current commit is PASS |
+| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge ticket PRs into milestone branches on a PASS for the current commit; the Owner merges main |
 | Recipe | [`project-evals`](guardrails/project-evals.md) | - | - | A task set drawn from real failures, run before and after a harness change |
 
 ## What the project needs

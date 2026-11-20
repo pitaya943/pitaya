@@ -34,7 +34,7 @@ When the agent finds it's signed in as someone else, `/build` stops and says so:
 
 ## Afterwards
 
-Record the login under "Machine account" in the harness file. Add the [commit-author](commit-author.md) check to enforce the identity at merge time, and set the repository variable `MACHINE_ACCOUNT` to the login. Also set `OWNER_ACCOUNTS` to the Owner's login (comma separated if there are several people): the ticket-based checks skip only PRs those accounts open from a non-ticket branch, fail every other author's, and fail closed when the variable is empty.
+Record the login under "Machine account" in the harness file. Add the [commit-author](commit-author.md) check to enforce the identity at merge time, and set the repository variable `MACHINE_ACCOUNT` to the login: the ticket-based checks require its PRs to name an open ticket, and fail closed when the variable is empty. Keep to one machine account for every agent role: then GitHub's rule that an author can't approve its own PR keeps the Owner's approval on `main`. More accounts need [multi-account](multi-account.md).
 
 ## When to remove it
 

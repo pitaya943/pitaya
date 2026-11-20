@@ -41,7 +41,7 @@ The copyable checks use only Python's standard library and git, one standalone f
 | Level | Recipe |
 | --- | --- |
 | 1 | [protect-main](protect-main.md) (the steps `/setup` hands to the Owner) |
-| 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md) |
+| 2 | [machine-account](machine-account.md), [commit-author](commit-author.md), [scope](scope.md), [read-only-paths](read-only-paths.md), [no-weakened-tests](no-weakened-tests.md), [done-when](done-when.md), [append-only](append-only.md), [serial-resources](serial-resources.md), [evidence](evidence.md), [multi-account](multi-account.md) |
 | 3 | [progress-file](progress-file.md), [second-model-review](second-model-review.md), [agent-merge](agent-merge.md), [project-evals](project-evals.md) |
 
 ## Adding a guardrail is rule work
@@ -55,7 +55,7 @@ Ticket-based checks read the ticket in CI. Each workflow's "Find the ticket" ste
 - `docs/tickets/<id>.md` on the **base** branch, when the PR branch is named `ticket/<id>-<slug>`;
 - otherwise, the GitHub issue whose number is in the branch name, `ticket/<number>-<slug>`.
 
-Pull requests an Owner account opens from a branch without a ticket are skipped, with a note. Every other author, the machine account, a verifier account or anyone else, must use a ticket branch, or the check fails, so no agent account can avoid the checks by naming its branch differently. The Owner accounts come from the repository variable `OWNER_ACCOUNTS` (comma separated, any case; Settings → Secrets and variables → Actions → Variables); when it's empty, every non-ticket PR fails.
+Pull requests opened by agent accounts, the logins in the repository variable `MACHINE_ACCOUNT` (comma separated, any case; Settings → Secrets and variables → Actions → Variables), must use a ticket branch, or the check fails, so an agent can't avoid the checks by naming its branch differently. When the variable is empty, the check fails rather than guessing. People's pull requests from a branch without a ticket are skipped, with a note. A milestone PR (`milestone/<id>` into `main`) is skipped too: its tickets passed these checks on their way into the milestone, and the Owner reviews it as a whole.
 
 When `docs/tickets/` exists on the base branch, tickets are files: a branch naming an issue number doesn't fall back to that issue, so an agent can't open its own issue and use it as a wider ticket. A ticket whose `Status:` is `done` (or a closed issue) can't be claimed, and neither can a ticket another open PR already works on.
 

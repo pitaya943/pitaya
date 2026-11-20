@@ -16,7 +16,7 @@ called. It lets the call through when the
 the agent-merge recipe), because then the `verdict` status guards the merge.
 
 Limits: only Claude Code runs hooks, and a determined script can still reach
-the API another way. The ruleset's required approval (from a code owner) is
+the API another way. The ruleset's required approval on `main` is
 the guarantee; this hook stops the usual attempts early and explains why.
 
 When to remove: when the ruleset requires an approval the agents can't give

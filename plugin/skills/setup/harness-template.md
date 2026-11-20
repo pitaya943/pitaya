@@ -12,7 +12,7 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 - Owner: example-owner.
 - Machine account: example-bot. Agents push, open PRs and comment as this account. If it's "none", agents use the current session's account.
 - Autonomy: Only the Owner merges `main`.
-  The alternative, Level 3 with the agent-merge recipe only, is the value "Agents merge after CI is green and the verdict is PASS". The `ask_on_merge.py` hook reads only the value after "Autonomy:".
+  The alternative, Level 3 with the agent-merge recipe only, is the value "Agents merge ticket PRs into milestone branches; only the Owner merges main". The `ask_on_merge.py` hook reads only the value after "Autonomy:".
 
 ## Work
 

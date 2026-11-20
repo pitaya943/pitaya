@@ -1,12 +1,14 @@
-"""CODEOWNERS ties the required approval to the Owner (D41).
+"""CODEOWNERS is optional hardening for repositories with more than one agent account (D44).
 
-Level 1-2: every path needs a code owner's review, so a second agent account's
-approval doesn't count. Level 3 with agent-merge: only rule, plan and sensitive
-paths do, so ticket PRs merge on the verdict while plans and rules still need
-the Owner.
+With one machine account, GitHub's rule that authors can't approve their own
+pull requests already keeps the Owner's approval on `main`. With several agent
+accounts, one could approve another's work, so the multi-account recipe adds
+CODEOWNERS and code-owner review.
 """
 
 from __future__ import annotations
+
+import json
 
 from helpers import FILES, PLUGIN_ROOT
 
@@ -22,21 +24,24 @@ def owned(path) -> dict[str, list[str]]:
     return rules
 
 
-def test_level_1_owns_everything():
-    rules = owned(FILES / "protect-main" / "CODEOWNERS")
-    assert rules == {"*": ["@example-owner"]}
-
-
-def test_agent_merge_owns_rules_plans_and_sensitive_paths():
-    rules = owned(FILES / "agent-merge" / "CODEOWNERS")
+def test_multi_account_recipe_ships_both_codeowners_files():
+    assert owned(FILES / "multi-account" / "CODEOWNERS") == {"*": ["@example-owner"]}
+    narrow = owned(FILES / "multi-account" / "CODEOWNERS-agent-merge")
     for pattern in ("/.github/", "/.claude/", "/AGENTS.md", "/CLAUDE.md", "/docs/agents/",
                     "/docs/tickets/", "/docs/milestones/", "/docs/decisions.md"):
-        assert rules.get(pattern) == ["@example-owner"], pattern
-    assert "*" not in rules
+        assert narrow.get(pattern) == ["@example-owner"], pattern
+    text = (GUARDRAILS / "multi-account.md").read_text()
+    assert "Require review from Code Owners" in text
 
 
-def test_recipes_require_code_owner_review():
-    for recipe in ("protect-main", "agent-merge"):
-        text = (GUARDRAILS / f"{recipe}.md").read_text()
-        assert "Require review from Code Owners" in text, recipe
-        assert f"files/{recipe}/CODEOWNERS" in text, recipe
+def test_protect_main_needs_no_codeowners_with_one_agent_account():
+    text = (GUARDRAILS / "protect-main.md").read_text()
+    assert "Require review from Code Owners" not in text
+    assert "multi-account" in text
+    assert not (FILES / "protect-main").exists()
+
+
+def test_multi_account_is_an_optional_component():
+    comps = {c["id"]: c for c in json.loads((PLUGIN_ROOT / "docs" / "components.json").read_text())["components"]}
+    assert comps["multi-account"]["kind"] == "recipe"
+    assert "machine-account" in comps["multi-account"]["requires"]

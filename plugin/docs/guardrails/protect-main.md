@@ -1,6 +1,6 @@
 # Recipe: protect main
 
-Level: 1. Files: [`CODEOWNERS`](files/protect-main/CODEOWNERS). The rest are repository settings only the Owner can change; `/setup` hands over these steps.
+Level: 1. No files to copy: these are repository settings only the Owner can change. `/setup` hands over these steps.
 
 ## What it guards against
 
@@ -22,11 +22,25 @@ In the repository: **Settings → Rules → Rulesets → New ruleset → New bra
 | Target branches | **Add target → Include default branch**. An empty target list protects nothing |
 | Restrict deletions | On |
 | Block force pushes | On |
-| Require a pull request before merging | On, with **Required approvals: 1**, **Dismiss stale pull request approvals when new commits are pushed**, and **Require review from Code Owners**. Copy `files/protect-main/CODEOWNERS` to `.github/CODEOWNERS` with the Owner's login: then only the Owner's approval counts, not a second agent account's. Agents open PRs as the machine account, so the Owner can approve them; the Owner's own PRs merge through the bypass. At Level 3 with [agent-merge](agent-merge.md), approvals drop to 0 and a narrower CODEOWNERS keeps rules, plans and sensitive areas with the Owner |
+| Require a pull request before merging | On, with **Required approvals: 1** and **Dismiss stale pull request approvals when new commits are pushed**. Agents open PRs as the one machine account, and GitHub doesn't let an author approve its own PR, so only the Owner's approval can merge them. The Owner's own PRs merge through the bypass. With more than one agent account, add [multi-account](multi-account.md) |
 | Require status checks to pass | On. Add the `tests` check from the Level 1 workflow (it appears in the list after it has run once) |
-| Require branches to be up to date | Off at Level 1. On from Level 2 when agents work in parallel, or use a merge queue: otherwise a verdict and CI judge the PR's head, not what the merge produces, and two PRs that each passed can break `main` together |
+| Require branches to be up to date | Off at Level 1. On from Level 2 when agents work in parallel, or use a merge queue: otherwise CI judges the PR's head, not what the merge produces, and two PRs that each passed can break the branch together. It matters most on `milestone/*` (below) |
 
 Then check **Settings → Collaborators**: agent accounts have **Write**, never Admin.
+
+### Milestone branches
+
+When work runs in milestones (`/plan --roadmap`), tickets merge into `milestone/M<n>` and only the milestone merges into `main` (D44). Add a second ruleset, `protect-milestones`:
+
+| Field | Setting |
+| --- | --- |
+| Target branches | **Add target → Include by pattern**: `milestone/*` |
+| Restrict deletions, Block force pushes | On (the Owner deletes a discarded milestone through the bypass) |
+| Require a pull request before merging | On, with **Required approvals: 0**: the agents merge ticket PRs here |
+| Require status checks to pass | On: `tests`, plus the Level 2 checks you added, plus `verdict` with [agent-merge](agent-merge.md) |
+| Require branches to be up to date | On when tickets run in parallel |
+
+The worst an agent can do there is spoil one milestone, which the Owner can throw away: `main` only changes when the Owner merges the milestone's PR.
 
 ## How to prove it works
 

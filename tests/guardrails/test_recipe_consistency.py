@@ -11,7 +11,7 @@ def test_progress_file_check_runs_on_every_pr():
     # A required check with a paths filter never reports on other PRs, so they wait forever.
     text = (FILES / "progress-file" / "progress-file.yml").read_text()
     assert "paths:" not in text
-    assert "OWNER_ACCOUNTS" in text and "vars.MACHINE_ACCOUNT" not in text.split("jobs:")[1].split("steps:")[0]
+    assert "MACHINE_ACCOUNT" in text and "if: github.event.pull_request.user.login" not in text
 
 
 def test_progress_files_live_outside_read_only_paths():

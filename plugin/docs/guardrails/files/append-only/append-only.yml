@@ -1,7 +1,7 @@
 # pitaya template 0.1.0 · docs/guardrails/files/append-only/append-only.yml
 # Fails a pull request that changes or removes lines in append-only files.
 # Copy to .github/workflows/append-only.yml, and check_append_only.py to .github/guardrails/check_append_only.py.
-# Set the repository variables MACHINE_ACCOUNT (the agents' login) and OWNER_ACCOUNTS (the Owner's), then
+# Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
 # make the "append-only" check required on main in the ruleset.
 name: append-only
 
@@ -41,18 +41,18 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          OWNER_ACCOUNTS: ${{ vars.OWNER_ACCOUNTS }}
           MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
         run: |
           set -euo pipefail
           fail() { echo "FAIL: $1"; echo "To fix: $2"; exit 1; }
           lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' '; }
-          # is_owner: the PR's author is listed in OWNER_ACCOUNTS (comma separated, any case).
-          is_owner() {
-            [ -n "${OWNER_ACCOUNTS:-}" ] || return 1
-            case ",$(lower "$OWNER_ACCOUNTS")," in *",$(lower "$PR_AUTHOR"),"*) return 0;; esac
+          # is_agent: the PR's author is listed in MACHINE_ACCOUNT (comma separated, any case).
+          is_agent() {
+            case ",$(lower "$MACHINE_ACCOUNT")," in *",$(lower "$PR_AUTHOR"),"*) return 0;; esac
             return 1
           }
+          [ -n "${MACHINE_ACCOUNT:-}" ] || fail "the repository variable MACHINE_ACCOUNT is not set, so agents' PRs can't be told from people's." \
+            "set MACHINE_ACCOUNT (Settings, Secrets and variables, Actions, Variables) to the agents' login."
           # find_ticket <branch> <output file>. When docs/tickets/ exists on the base branch,
           # tickets are files and only a file there counts; otherwise the open GitHub issue
           # numbered in ticket/<number>-<slug>. A done or closed ticket can't be claimed.
@@ -88,7 +88,12 @@ jobs:
           }
           # A plan PR (plan/<slug>) adds ticket files for the Owner to merge; it may touch
           # only ticket and planning files, and the ticket checks don't apply to it.
-          if [ "${HEAD_REF#plan/}" != "$HEAD_REF" ]; then
+          if [ "${HEAD_REF#milestone/}" != "$HEAD_REF" ]; then
+            # A milestone PR (milestone/M<n> into main) gathers tickets that passed these checks
+            # on their way into the milestone; the Owner reviews it as a whole.
+            echo "This is a milestone PR: the Owner reviews and merges it; ticket checks don't apply."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ "${HEAD_REF#plan/}" != "$HEAD_REF" ]; then
             other=$(git diff --name-only "origin/$BASE_REF...HEAD" \
               | grep -vE '^(docs/(tickets|milestones)/[^/]+\.md|docs/agents/(glossary|architecture)\.md|docs/decisions\.md)$' || true)
             if [ -n "$other" ]; then
@@ -101,14 +106,11 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif find_ticket "$HEAD_REF" "$RUNNER_TEMP/ticket.md"; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif is_owner; then
-            echo "Opened by an Owner account ($PR_AUTHOR) from a branch without a ticket: nothing to check."
+          elif ! is_agent; then
+            echo "Opened by $PR_AUTHOR, not an agent account, from a branch without a ticket: people review it."
             echo "skip=true" >> "$GITHUB_OUTPUT"
-          elif [ -z "${OWNER_ACCOUNTS:-}" ]; then
-            fail "the repository variable OWNER_ACCOUNTS is not set, so an Owner's PR can't be told from an agent's." \
-              "set OWNER_ACCOUNTS (Settings, Secrets and variables, Actions, Variables) to the Owner's login."
           else
-            fail "the branch $HEAD_REF names no open ticket, and $PR_AUTHOR isn't listed in OWNER_ACCOUNTS." \
+            fail "the branch $HEAD_REF names no open ticket." \
               "name the branch ticket/<id>-<slug> after an open ticket: docs/tickets/<id>.md on $BASE_REF, or issue <id>."
           fi
       - name: Check append-only files

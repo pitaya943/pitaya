@@ -6,6 +6,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
+- Milestone branches (D44): `/plan` creates `milestone/M<n>` once a cut is approved; `/build` branches from it and targets it; `/autopilot` merges ticket PRs only into it, opens the milestone PR into `main` and stops for the Owner's sign-off, then starts the next cut. `/verify` posts the verdict as a comment from the machine account.
+
 - `/autopilot` claims a ticket by pushing its branch before starting a builder.
 
 - `/verify` posts the verdict as a review from the verifier account when agent-merge is on.
@@ -41,11 +43,13 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Recipes
 
+- `protect-main` adds a `protect-milestones` ruleset for `milestone/*`. `agent-merge` gates merges into milestone branches; it reads verdict comments from the machine account (edited ones don't count, any FAIL on the head is final) and refuses plan and milestone PRs. New `multi-account` recipe holds CODEOWNERS for repositories with several agent accounts.
+
 - `append-only` accepts lines only after the last existing one. `serial-resources` maps resources to paths and fails undeclared changes. `protect-main` requires up-to-date branches (or a merge queue) from Level 2. `progress-file` runs on every PR, keeps its files in `docs/progress/`, and lets Owner accounts change requirements.
 
 - Every workflow runs the base branch's copy of its check. `no-weakened-tests` and `done-when` run the PR's tests in a separate job; an empty base report fails. `agent-merge` reads the verdict from the verifier account's pull request review on the current head, runs with `pull_request_target`, and refuses plan PRs and a verifier equal to `MACHINE_ACCOUNT`. Token permissions and the required-check source are spelled out.
 
-- The shared "Find the ticket" step: only `OWNER_ACCOUNTS` may skip it (fail closed when unset); file tickets never fall back to issues; done tickets, closed issues and tickets another open PR works on can't be claimed. `commit-author` checks every non-Owner PR. `protect-main` and `agent-merge` ship `CODEOWNERS` files and require code-owner review.
+- The shared "Find the ticket" step: every account in `MACHINE_ACCOUNT` (comma separated, any case) must use an open ticket, and it fails closed when the variable is unset; milestone PRs (`milestone/*`) are left to the Owner; file tickets never fall back to issues; done tickets, closed issues and tickets another open PR works on can't be claimed. New `multi-account` recipe: CODEOWNERS and code-owner review, only for repositories with more than one agent account.
 
 - Workflows pass step outputs to scripts through `env:`, never inline, so a branch or file name can't inject shell code.
 

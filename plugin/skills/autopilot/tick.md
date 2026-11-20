@@ -7,7 +7,7 @@ Everything comes from places anyone can open, so a fresh session can take over a
 | What | Where |
 | --- | --- |
 | The active milestone and its tickets | `docs/milestones/M<n>.md` on `main` ("Status: active", the "Tickets" section) |
-| Whether a ticket is done | its `Status:` line on `main` (file tickets) or whether its issue is closed (issue tickets) |
+| Whether a ticket is done | its `Status:` line on `milestone/M<n>` (file tickets) or whether its issue is closed (issue tickets) |
 | Dependencies | the ticket's "Depends on" lines |
 | Work in progress | open PRs whose branch is `ticket/<id>-<slug>` |
 | CI and the verdict | the PR's check runs, and the verifier's reviews on the PR's current head commit (with agent-merge), or the latest verdict comment that names it |
@@ -18,11 +18,11 @@ Everything comes from places anyone can open, so a fresh session can take over a
 
 ## Starting sessions
 
-Use whatever this tool offers to start a fresh session or background agent, in this order of preference: a new session on the machine account (Level 2's identity rules apply to it), a background agent, a subagent. A verifier must never be the builder's own subagent; with agent-merge on, it acts as the verifier account. Give each session only what its skill needs: the ticket reference, and for a fix round the PR and the verdict.
+Use whatever this tool offers to start a fresh session or background agent, in this order of preference: a new session on the machine account, a background agent, a subagent. A verifier must never be the builder's own subagent or context; every role uses the one machine account. Give each session only what its skill needs: the ticket reference, and for a fix round the PR and the verdict.
 
 Don't start more builders than the harness's "parallel builders" (default 2), and never two whose scopes overlap.
 
-**Claim before you start.** Two ticks can run at once, so claim a ticket before handing it to a builder: push an empty branch `ticket/<id>-<slug>` from `main` (`git push origin main:refs/heads/ticket/<id>-<slug>`), and skip any ticket that already has such a branch or an open PR. The builder works on that branch. If the push fails because the branch exists, another tick claimed it first. The CI checks back this up: a second PR on the same ticket fails.
+**Claim before you start.** Two ticks can run at once, so claim a ticket before handing it to a builder: push an empty branch `ticket/<id>-<slug>` from the milestone branch (`git push origin milestone/M<n>:refs/heads/ticket/<id>-<slug>`), and skip any ticket that already has such a branch or an open PR. The builder works on that branch. If the push fails because the branch exists, another tick claimed it first. The CI checks back this up: a second PR on the same ticket fails.
 
 ## Comments to post
 

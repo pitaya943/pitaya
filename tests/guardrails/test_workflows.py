@@ -51,7 +51,7 @@ def run_find(repo: Repo, tmp_path: Path, head_ref: str, author: str,
     output = tmp_path / "github_output"
     output.write_text("")
     env = dict(os.environ, HEAD_REF=head_ref, BASE_REF="main", PR_AUTHOR=author,
-               MACHINE_ACCOUNT="example-bot", OWNER_ACCOUNTS="example-owner",
+               MACHINE_ACCOUNT="example-bot",
                GITHUB_OUTPUT=str(output), RUNNER_TEMP=str(tmp_path),
                GITHUB_REPOSITORY="example-owner/example", GH_TOKEN="")
     env.update(extra)
@@ -151,24 +151,36 @@ def test_step_and_job_outputs_never_go_inline_into_run_scripts():
                 raise AssertionError(f"{path.name}: {line.strip()}")
 
 
-# --- audit batch C (D41): who may skip, which ticket a PR may claim --------------
+# --- D41/D44: who the checks apply to, which ticket a PR may claim ---------------
+# One machine account (D44): MACHINE_ACCOUNT (comma separated for several agent
+# accounts) names the agents; their PRs must name an open ticket. Anyone else is a
+# person, whose PRs are reviewed by people.
 
-def test_an_owner_account_is_matched_case_insensitively(tickets_repo, tmp_path):
-    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "Example-Owner", OWNER_ACCOUNTS="other, example-owner")
+def test_the_machine_account_is_matched_case_insensitively(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "Example-Bot")
+    assert proc.returncode == 1 and "To fix:" in proc.stdout
+
+
+@pytest.mark.parametrize("agents", ["example-verifier, example-bot", "EXAMPLE-BOT"])
+def test_every_listed_agent_account_must_use_a_ticket(tickets_repo, tmp_path, agents):
+    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "example-bot", MACHINE_ACCOUNT=agents)
+    assert proc.returncode == 1 and "skip=true" not in out
+
+
+def test_a_person_on_a_non_ticket_branch_is_skipped(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "someone-else")
     assert proc.returncode == 0 and "skip=true" in out
 
 
-@pytest.mark.parametrize("author", ["example-verifier", "someone-else"])
-def test_any_other_account_on_a_non_ticket_branch_fails(tickets_repo, tmp_path, author):
-    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", author)
-    assert proc.returncode == 1 and "To fix:" in proc.stdout
+def test_without_machine_account_the_step_fails_closed(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "example-owner", MACHINE_ACCOUNT="")
+    assert proc.returncode == 1 and "MACHINE_ACCOUNT" in proc.stdout
     assert "skip=true" not in out
 
 
-def test_without_owner_accounts_the_step_fails_closed(tickets_repo, tmp_path):
-    proc, out = run_find(tickets_repo, tmp_path, "fix/typo", "example-owner", OWNER_ACCOUNTS="")
-    assert proc.returncode == 1 and "OWNER_ACCOUNTS" in proc.stdout
-    assert "skip=true" not in out
+def test_a_milestone_pr_is_left_to_the_owner(tickets_repo, tmp_path):
+    proc, out = run_find(tickets_repo, tmp_path, "milestone/M2", "example-bot")
+    assert proc.returncode == 0 and "skip=true" in out and "milestone" in proc.stdout.lower()
 
 
 def test_file_tickets_never_fall_back_to_issues(tickets_repo, tmp_path):
@@ -221,10 +233,11 @@ def test_the_only_pr_on_a_ticket_passes_the_claim_check(tickets_repo, tmp_path):
     assert proc.returncode == 0 and "skip=false" in out
 
 
-def test_commit_author_runs_for_every_pr_but_the_owners():
+def test_commit_author_checks_every_agent_pr_and_matches_case_insensitively():
     text = (FILES / "commit-author" / "commit-author.yml").read_text()
-    assert "OWNER_ACCOUNTS" in text
+    assert "OWNER_ACCOUNTS" not in text
     assert "if: github.event.pull_request.user.login == vars.MACHINE_ACCOUNT" not in text
+    assert "tr '[:upper:]' '[:lower:]'" in text
 
 
 def test_issue_tickets_must_be_open(repo, tmp_path):
@@ -258,7 +271,7 @@ def test_checks_are_loaded_from_the_base_branch(path):
     for name, body in jobs(path).items():
         if "python3 .github/guardrails/" in body:
             # allowed only in a job that checks out nothing but the base commit
-            assert "ref: ${{ github.event.pull_request.base.sha }}" in body, f"{name}: run the base branch's copy of the check"
+            assert "ref: ${{ github.event.pull_request.base.sha" in body, f"{name}: run the base branch's copy of the check"
     for name, body in jobs(path).items():
         if '"$RUNNER_TEMP/guardrails/' in body:
             assert "Load the checks from the base branch" in body, name
@@ -288,5 +301,5 @@ def test_pr_tests_never_share_a_job_with_the_comparison(recipe):
 def test_agent_merge_runs_in_the_base_context_on_reviews():
     text = (FILES / "agent-merge" / "agent-merge.yml").read_text()
     assert "pull_request_target:" in text and "pull_request_review:" in text
-    assert "issue_comment" not in text
-    assert "ref: ${{ github.event.pull_request.base.sha }}" in text
+    assert "\n  pull_request:" not in text  # never the PR's own copy of the workflow
+    assert "ref: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}" in text

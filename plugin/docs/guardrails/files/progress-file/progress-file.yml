@@ -1,7 +1,7 @@
 # pitaya template 0.1.0 · docs/guardrails/files/progress-file/progress-file.yml
 # Fails a pull request that changes the feature list beyond the "passes" flags.
 # Copy to .github/workflows/progress-file.yml, and check_feature_list.py to .github/guardrails/check_feature_list.py.
-# Set the repository variable OWNER_ACCOUNTS to the Owner's login, then
+# Set the repository variable MACHINE_ACCOUNT to the agents' login, then
 # make the "progress-file" check required on main in the ruleset.
 name: progress-file
 
@@ -37,15 +37,14 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          OWNER_ACCOUNTS: ${{ vars.OWNER_ACCOUNTS }}
+          MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
         run: |
           set -euo pipefail
           lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' '; }
-          if [ -n "$OWNER_ACCOUNTS" ]; then
-            case ",$(lower "$OWNER_ACCOUNTS")," in
-              *",$(lower "$PR_AUTHOR"),"*) echo "Opened by an Owner account: requirements may change."; exit 0 ;;
-            esac
-          fi
+          case ",$(lower "$MACHINE_ACCOUNT")," in
+            *",$(lower "$PR_AUTHOR"),"*) ;;
+            *) echo "Opened by a person: requirements may change."; exit 0 ;;
+          esac
           if git diff --quiet "origin/$BASE_REF...HEAD" -- docs/progress/features.json; then
             echo "The feature list didn't change."; exit 0
           fi

@@ -42,7 +42,7 @@ def test_it_stops_at_every_owner_gate():
 
 def test_it_never_merges_what_the_owner_must_merge():
     t = text()
-    assert re.search(r"Never merge a plan PR", t)
+    assert re.search(r"Never merge into `main`: not a milestone PR, not a plan PR", t)
     assert re.search(r"Never .*bypass", t)
 
 

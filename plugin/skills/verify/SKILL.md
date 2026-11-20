@@ -35,7 +35,7 @@ Tell it to:
 ## 3. Post the verdict
 
 1. Read the returned verdict. Check that every checklist row has evidence. A row without evidence counts as fail, and you send it back to the same verifier once to fill the gap.
-2. Post the verdict, in the template, as one PR comment acting as the machine account from the harness file when there is one. When the harness lists the agent-merge guardrail, post it instead as a pull request review from the verifier's own account: `gh pr review <n> --approve` for PASS, `--request-changes` for FAIL, with the verdict as the body. Never post a verdict as the account that built the work.
+2. Post the verdict as one PR comment, in the template, acting as the machine account from the harness file when there is one. Never edit a verdict after posting it: an edited verdict doesn't count, so post a new one. (Only when the harness lists the multi-account guardrail with a separate verifier account, post it as a review from that account instead: `gh pr review <n> --approve` or `--request-changes`.)
 3. Tell the user the result in one line, with the PR link.
 
 ## After the verdict
