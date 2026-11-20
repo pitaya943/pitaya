@@ -60,6 +60,7 @@ Includes everything in Level 2. `agent-merge` comes last: it requires the main L
 
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
+| Skill | [`skill:autopilot`](../skills/autopilot/SKILL.md) | `skill:build`, `skill:verify`, `skill:report`, `protect-main`, `machine-account`, `scope` | `agent-merge`, `read-only-paths`, `no-weakened-tests`, `done-when` | Runs the active milestone: hands tickets to fresh builders and verifiers, merges when allowed, stops at Owner gates |
 | Recipe | [`progress-file`](guardrails/progress-file.md) | `protect-main`, `machine-account` | `skill:handoff` | A start-up routine and a feature list where agents may only mark items as passing |
 | Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | - | Another model reviews sensitive or risky PRs |
 | Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge after CI is green and the latest verdict on the current commit is PASS |
@@ -72,7 +73,7 @@ Some components need something from the project itself, not from another compone
 | Need | Meaning | Needed by |
 | --- | --- | --- |
 | `github` | A GitHub repository, so rulesets and required checks exist | `protect-main`, `machine-account` |
-| `tickets` | Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug>: docs/tickets/T-<nnn>.md files (recommended, optionally mirrored by issues) or issues (/plan writes tickets, /build names branches) | `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `append-only`, `serial-resources`, `evidence` |
+| `tickets` | Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug>: docs/tickets/T-<nnn>.md files (recommended, optionally mirrored by issues) or issues (/plan writes tickets, /build names branches) | `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `append-only`, `serial-resources`, `evidence`, `skill:autopilot` |
 | `ticket-scope` | Each ticket lists the paths it may change under "## Scope" | `scope` |
 | `ticket-test-ids` | Each ticket names one test per completion condition under "## Test IDs" | `done-when` |
 | `junit-xml` | The test command can write JUnit XML | `no-weakened-tests`, `done-when` |
