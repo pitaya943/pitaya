@@ -11,7 +11,7 @@ Planning has two levels. A **milestone** is a large outcome the Owner can see wo
    - says what it deliberately leaves out.
 3. Show the Owner the list and change it until they approve.
 4. Write `docs/milestones/M1.md`, `M2.md`, ... from [milestone-template.md](milestone-template.md). The first is `Status: active`, the rest `planned`. Leave "Tickets" empty except in M1, if you go straight on to cut it.
-5. Commit on a `plan/<slug>` branch and open one PR. The Owner's merge approves the roadmap. With an issue mirror, also create one GitHub milestone per file (title `M1: <title>`) and assign each mirror issue to its milestone.
+5. Commit on a `plan/<slug>` branch and open one PR; if the session has an assigned branch (cloud sessions do), ask the user to allow `plan/<slug>` instead of using the assigned branch. The Owner's merge approves the roadmap. With an issue mirror, also create one GitHub milestone per file (title `M1: <title>`) and assign each mirror issue to its milestone. If your tools can't create GitHub milestones, say so in the plan PR and list them for the Owner to create; the files stay the source of truth.
 
 ## `/plan M<n>`
 
@@ -19,7 +19,7 @@ From Level 2, the milestone is designed first: `docs/milestones/M<n>-design.md` 
 
 ## The milestone branch
 
-Once the Owner merges the plan PR that cuts M<n>, create `milestone/M<n>` from `main` and push it. Every ticket of the milestone branches from `milestone/M<n>` and its PR targets `milestone/M<n>`; the checks read the tickets from there. Agents merge ticket PRs into it when the harness's Autonomy allows (Level 3, [agent-merge](../../docs/guardrails/agent-merge.md)); otherwise the Owner does. Before each new ticket, merge `main` into the milestone branch so it doesn't drift.
+Every active milestone has this branch, at every level (D44). Once the Owner merges the plan PR that cuts M<n>, create `milestone/M<n>` from `main` and push it. That merge happens outside any session, so whichever comes first creates the branch if it's missing: this skill's next run, `/build` for the milestone's first ticket, or an `/autopilot` tick. Every ticket of the milestone branches from `milestone/M<n>` and its PR targets `milestone/M<n>`; the checks read the tickets from there. Agents merge ticket PRs into it when the harness's Autonomy allows (Level 3, [agent-merge](../../docs/guardrails/agent-merge.md)); otherwise the Owner does. Before each new ticket, merge `main` into the milestone branch so it doesn't drift.
 
 The milestone branch is the blast radius: whatever goes wrong inside it stays out of `main`, and the Owner can throw the whole branch away.
 

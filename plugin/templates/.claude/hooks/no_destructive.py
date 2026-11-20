@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.1 · .claude/hooks/no_destructive.py
+# pitaya template 0.1.2 · .claude/hooks/no_destructive.py
 """PreToolUse hook: stop the few shell commands that wipe work and can't be undone.
 
 What it guards against: one command destroying the working tree, the home

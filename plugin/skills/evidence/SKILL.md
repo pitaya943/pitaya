@@ -31,6 +31,7 @@ Every hand-off comment and every verdict names the model that did the work.
 - Take it from the session's actual configuration: the model ID stated in your system context, or a session-info tool if you have one. In a Claude Code cloud session, the `get_session` tool reports it.
 - Never write a model name from memory or from what seems likely.
 - If you can't get it, write "unavailable" and the reason, for example "no session-info tool in this environment".
+- If the environment forbids model identifiers in repository text (some cloud sessions do), write "withheld" and that reason, and give the Owner the model in the session instead.
 - Working as a subagent, a session tool describes the parent session. Report that model and say it came from the parent session.
 
 ## Where it goes

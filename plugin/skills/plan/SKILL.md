@@ -30,7 +30,7 @@ Cut the work into **vertical slices**: each one goes through every layer it need
 Write every ticket with [ticket-template.md](ticket-template.md):
 
 - **Goal:** one or two sentences on what becomes possible.
-- **Done when:** numbered conditions, each tied to a test or a re-runnable command. A condition nobody can check isn't a condition.
+- **Done when:** numbered conditions, each tied to a test or a re-runnable command. A condition nobody can check isn't a condition. Before writing a worked example into a condition (an input and its expected output), compute or run it and check that it shows what the condition claims.
 - **Depends on:** the tickets that must merge first.
 - **Scope:** the paths it's expected to change.
 

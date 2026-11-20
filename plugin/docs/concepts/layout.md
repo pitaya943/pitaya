@@ -45,8 +45,8 @@ my-project/
 | Branch | Holds | Merged by |
 | --- | --- | --- |
 | `main` | Everything signed off | The Owner, always |
-| `milestone/M<n>` | The active milestone's merged tickets (Level 3 and up) | The Owner merges it into `main`: the sign-off |
-| `ticket/<id>-<slug>` | One ticket's work | The Owner below Level 3; the Chief into `milestone/M<n>` from Level 3 |
+| `milestone/M<n>` | The active milestone's merged tickets, at every level | The Owner merges it into `main`: the sign-off |
+| `ticket/<id>-<slug>` | One ticket's work | Into `milestone/M<n>`: the Owner below Level 3, the Chief from Level 3 |
 | `plan/<slug>` | A roadmap, a design or a cut: plan files only | The Owner; at Level 4 the Chief merges a cut into the next milestone branch |
 
 ## Where pitaya itself sits

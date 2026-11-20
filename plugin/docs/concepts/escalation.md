@@ -22,6 +22,8 @@ When the verifier says FAIL:
 
 The number of rounds is the `Fix rounds` field in the harness file (default 2).
 
+The Owner may answer an escalation by authorising an extra round. Only the Owner can: the answer on the escalation issue is the authorisation, and the extra round runs in a fresh session like round 2. Its verdict names the round and links the authorisation, so a reader can see why a ticket had more rounds than the harness allows.
+
 ## A good question
 
 - Names the exact source: the spec section, ticket condition, file and line.
