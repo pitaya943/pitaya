@@ -19,7 +19,11 @@ Everything comes from places anyone can open, so a fresh session can take over a
 
 ## Starting sessions
 
-Use whatever this tool offers to start a fresh session or background agent, in this order of preference: a new session on the machine account, a background agent, a subagent. A verifier must never be the builder's own subagent or context: the verdict check refuses a PASS whose `Session:` is a `Builder session:` on the PR. Every role uses the one machine account. Give each session only what its skill needs: the ticket reference, and for a fix round the PR and the verdict.
+Start each builder and each verifier as a new session on the machine account. Every role uses the one machine account.
+
+When agents merge (the agent-merge guardrail), nothing else works: a background agent or a subagent shares the session ID of the session that started it, so a builder you ran that way would record your ID as `Builder session:`, a verdict posted from your session would carry the same ID, and the verdict check refuses a PASS whose `Session:` is a `Builder session:` on the PR, on every tick. If this tool can't start a new session, stop and tell the Owner: autopilot can't merge here. A verifier is never the builder's own subagent or context, and never yours.
+
+Where only the Owner merges, a background agent or a subagent may stand in for a new session when the tool offers nothing better; the verifier still isn't the builder's own subagent. Give each session only what its skill needs: the ticket reference, and for a fix round the PR and the verdict.
 
 Don't start more builders than the harness's "parallel builders" (default 2), and never two whose scopes overlap.
 

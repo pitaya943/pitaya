@@ -55,6 +55,7 @@ Get a PASS verdict on a ticket PR into a milestone branch, then push one more co
 
 - Every push needs a fresh verification before merging, and so does every "Update branch" on a `Risk: high` ticket.
 - A FAIL can't be taken back, not even one posted by mistake: push a new commit and verify that.
+- Builders and verifiers each need a new session. A subagent or a background agent shares the session ID of whatever started it, so one session that starts both a builder and a verifier that way gets every PASS refused. `/autopilot` starts new sessions for both, and stops where it can't.
 - Ticket PRs reach the milestone branch without a person reading them. The Owner reads the milestone as a whole, through `/report M<n>` and its exit criteria, before it reaches `main`. A milestone that went wrong is thrown away, so the worst case costs one milestone.
 
 ## Error message

@@ -335,3 +335,45 @@ def test_the_trial_record_has_a_status_for_every_finding():
     for finding in ("F01", "F03", "F10", "F12", "F23", "F29"):
         assert "deferred (D59)" in rows[finding], finding
     assert "0.1.6" in rows["F24"] and "deferred (D59)" in rows["F24"]
+
+
+# --- fix round 1: the session guard and autopilot's fallbacks (verify round 1 on the 0.1.6 PR) ---
+#
+# A background agent or a subagent shares the session ID of the session that started it. So if
+# autopilot built a ticket through one and then posted the verdict itself, the check refused the
+# PASS on every tick: a deadlock the skill's own order of preference led into.
+
+def test_autopilot_uses_new_sessions_for_builders_and_verifiers_when_agents_merge():
+    text = section(read("skills/autopilot/tick.md"), "## Starting sessions")
+    rule = next(p for p in text.split("\n\n") if "agent-merge" in p)
+    assert "new session" in rule and "share" in rule and "session ID" in rule
+    assert "background agent" in rule and "subagent" in rule
+    assert "stop" in rule.lower() and "Owner" in rule  # where only agents inside this session exist
+    assert "in this order of preference: a new session on the machine account, a background agent, a subagent. A verifier" not in text
+
+
+def test_autopilot_skill_says_the_same_in_its_tick():
+    text = read("skills/autopilot/SKILL.md")
+    assert "new session" in section(text, "## Each tick")
+
+
+def test_autonomy_no_longer_offers_a_different_model_in_place_of_a_separate_session():
+    line = next(l for l in read("docs/concepts/autonomy.md").splitlines() if l.startswith("3. "))
+    assert "or a different model" not in line and "separate session" in line
+
+
+def test_verify_says_which_session_verifies_a_later_round_under_agent_merge():
+    after = section(read("skills/verify/SKILL.md"), "## After the verdict")
+    line = next(l for l in after.splitlines() if "new subagent" in l)
+    assert "agent-merge" in line and "new session" in line
+
+
+@pytest.mark.parametrize("rel", ["skills/build/SKILL.md", "skills/verify/SKILL.md"])
+def test_builders_and_verifiers_write_the_same_form_of_session_id(rel):
+    """A cloud session has two IDs; the check compares text, so both roles must record the same one."""
+    assert "same form" in read(rel)
+
+
+def test_agent_merge_recipe_names_the_deadlock_and_the_way_out():
+    text = section(read("docs/guardrails/agent-merge.md"), "## Cost and false positives")
+    assert "share" in text and "session ID" in text and "new session" in text

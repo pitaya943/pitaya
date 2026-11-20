@@ -14,7 +14,7 @@ Verification is only worth something if it's independent. The verifier judges fr
 1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once, then continue with defaults: the document language is the conversation's, and there are no sensitive areas.
 2. Fetch the PR: its number, base branch, head commit and linked ticket. If there's no ticket, ask the user for the completion conditions. Don't infer them from the diff.
 3. Count earlier verdicts on the PR (with agent-merge, also a commit's `verdict-fail` status whose comment is gone) to get this verify round's number. A verify round checks; a fix round changes code. They alternate: verify 1, fix 1, verify 2, and so on.
-4. Note this session's ID for the verdict: `${CLAUDE_SESSION_ID}`. If that shows a placeholder instead of an ID, use the ID your tool gives the session (a cloud session's ID is in its link); if there is none, the verdict says `unavailable: <reason>`. With the agent-merge guardrail (Level 3) the verdict is posted from a session that built none of the PR: a PASS doesn't count when its session is one a `Builder session:` line on the PR names, or when its session is `unavailable`. So if this session built it, a subagent isn't enough there: stop and hand the PR to a separate session.
+4. Note this session's ID for the verdict: `${CLAUDE_SESSION_ID}`. If that shows a placeholder instead of an ID, use the ID your tool gives the session (a cloud session's ID is in its link); if there is none, the verdict says `unavailable: <reason>`. Write it in the same form the PR's `Builder session:` lines use (a cloud session has a local ID and a `session_...` one; the check compares text). With the agent-merge guardrail (Level 3) the verdict is posted from a session that built none of the PR: a PASS doesn't count when its session is one a `Builder session:` line on the PR names, or when its session is `unavailable`. So if this session built it, a subagent isn't enough there: stop and hand the PR to a separate session.
 
 ## 2. Dispatch a fresh verifier
 
@@ -42,7 +42,7 @@ Tell it to:
 ## After the verdict
 
 - PASS: whoever the harness file's "Autonomy" names merges. By default that's the Owner, so don't merge.
-- FAIL: the builder fixes it (`/build` explains the fix rounds). Each new round is verified by a new subagent.
+- FAIL: the builder fixes it (`/build` explains the fix rounds). Each new round is verified by a new subagent, or with agent-merge by a new session.
 - FAIL in the last round the harness file's "Fix rounds" allows (default 2): recommend escalating to the Owner.
 - Either way, end your reply with the exact next step from the verdict's "Next step" line, so a reader can't mistake one failed verify round for two.
 

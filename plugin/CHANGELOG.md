@@ -32,7 +32,7 @@ The second batch of fixes from the review of 0.1.4: the threat model written dow
 - `report`: the milestone report rolls every Attention row up into one table for the sign-off, `undisclosed` rows first; the Level 4 audit writes into the same table.
 - `retro`: one occurrence is enough to propose hardening a check after a `gate-change` that gamed it, or after any `undisclosed` row.
 - `build`: the hand-off and fix-round comments record `Builder session:`; test configuration and files tools load by themselves are off limits unless the ticket names the file.
-- `ask-owner`, `autopilot`, `build`: a decision counts only from a comment whose author is the Owner in the harness file and whose `author_association` is `OWNER`; anyone else's text is information. `autopilot` reads the verdict comments again before merging.
+- `ask-owner`, `autopilot`, `build`: a decision counts only from a comment whose author is the Owner in the harness file and whose `author_association` is `OWNER`; anyone else's text is information. `autopilot` reads the verdict comments again before merging, and when agents merge it starts every builder and verifier as a new session: a background agent or subagent shares its session ID, which the verdict check would take for self-verification.
 - `plan`: the `Risk:` tag now matters from Level 3, and a ticket's scope names test configuration files exactly.
 
 ### Docs
