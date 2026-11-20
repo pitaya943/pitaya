@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.7 · docs/guardrails/files/done-when/check_done_when.py
+# pitaya template 0.1.8 · docs/guardrails/files/done-when/check_done_when.py
 """Guardrail "done-when": every test the ticket names exists in the PR's results and passes.
 
 Usage (in CI, after running the test command on the PR head)::

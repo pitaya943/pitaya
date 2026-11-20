@@ -11,7 +11,7 @@ Read `docs/agents/harness.md` for who the Owner is, the fix rounds, the sensitiv
 
 - The spec or ticket is unclear, or two parts of it contradict each other.
 - The work needs a change the ticket didn't authorize: a data model, a public interface, a dependency, a file outside its scope.
-- The verifier still says FAIL after the last fix round in `docs/agents/harness.md` (default 2).
+- The verifier says FAIL once more than the fix rounds in `docs/agents/harness.md` allow (default 2, so the third FAIL), or under `/autopilot` the CI stays red past its retries (the plugin's `docs/concepts/states.md`, "Fix rounds").
 - A sensitive area from the harness file would change with no test covering it.
 - The next step can't be undone: deleting data, rewriting shared history, touching a shared or production system.
 

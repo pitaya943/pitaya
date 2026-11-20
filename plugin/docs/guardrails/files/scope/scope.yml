@@ -1,4 +1,4 @@
-# pitaya template 0.1.7 · docs/guardrails/files/scope/scope.yml
+# pitaya template 0.1.8 · docs/guardrails/files/scope/scope.yml
 # Fails a pull request that changes files outside its ticket's "## Scope".
 # Copy to .github/workflows/scope.yml, and check_scope.py to .github/guardrails/check_scope.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then

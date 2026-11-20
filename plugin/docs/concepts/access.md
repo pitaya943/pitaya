@@ -28,7 +28,7 @@ A ticket PR changes only the data plane, only inside its ticket's scope, and tes
 | `docs/tickets/` | W | W through a plan PR | R its own ticket; W its `Status:` line only | R | R | read-only check, with the `Status:` exception |
 | `docs/progress/` | W | R | R; W its log and only `"passes": true` | R | · | progress-file check |
 | `docs/handoff/` | R | R | W | ✗ | ✗ | prose only; fresh context |
-| `docs/evidence/` | R | R | W | W under `verify/` | · | evidence check |
+| `docs/evidence/` | R | R | W | W under `verify/`, on its own `evidence/` branch, never on the PR's branch | · | evidence check; prose only for the Verifier |
 | `docs/reports/`, `docs/learning.md` | R | W | · | · | · | prose only |
 | Product code and tests in the ticket's scope | W | ✗ writes | W | R, in a clean checkout | R, in its own worktree | scope check |
 | PR description and decision log | R | R | W | R, as claims, never as evidence | ✗ | prose only |

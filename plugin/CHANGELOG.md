@@ -2,6 +2,40 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.8 (2026-11-20)
+
+The fourth batch of fixes from the review of 0.1.4: skill logic and autopilot (D62's answer to Q9, D68). Only skills, concept pages and two templates changed; no check, hook or workflow did, so there is nothing to copy again under `.github/`.
+
+**If you upgrade with autopilot running:** start `/pitaya:autopilot M<n>` once by hand, so the tracking issue gets a `Run started` line, and add `wake` to the command a schedule or a GitHub Action uses (`/pitaya:autopilot M<n> wake`). A session started with `wake` continues a run and never starts one. Re-run `/setup` to see the new "Branches" line of `AGENTS.md`: it grants `evidence/<PR>-<short sha>`.
+
+### Skills
+
+- `verify`: the verifier pushes nothing to the pull request's branch. Its screenshots used to go there, which moved the head and voided the PASS it had just posted. They now go to a branch of their own, `evidence/<PR>-<short sha>`, made from the head it judged, with no pull request; the verdict links them.
+- Fix rounds have one definition, the "Fix rounds" table in `concepts/states.md`, and `build`, `verify`, `autopilot`, `ask-owner` and `concepts/escalation.md` point to it:
+  - a pull request's round is the number of FAIL verdicts on it; FAIL number "Fix rounds" + 1 (by default the third) escalates. `verify` used to recommend escalating "in the last round", which read as one fix where the harness promised two;
+  - under `/autopilot` every fix round is a fresh session, and the verdict's "Next step" says so; when a person runs the work, round 1 may stay in the builder's session;
+  - a red CI is not a round. Under `/autopilot` a red CI with no builder at work gets a CI retry, recorded by a comment on the pull request; after 2 in one round the tick escalates. Before, a persistently red CI restarted builders until the budget ran out.
+- `autopilot`:
+  - **start lines.** Before it starts a verifier, a fix round or a CI retry, a tick posts `Autopilot: <what> started for <head>` on the pull request; a claimed branch is listed under `Started:` on the tracking issue. A later tick starts nothing a start line says is at work (`tick.md`, "Sessions at work"). This replaces the rule that skipped a pull request "whose latest comment from autopilot is less than ten minutes old", which matched nothing, because autopilot never commented on pull requests;
+  - **expiry.** A start line expires after 2 hours by default. An expired claim with no pull request is taken over by a fresh session on the same branch, so a builder, report or planning session that died no longer needs the Owner to delete a branch;
+  - **the run.** A run goes from a `Run started` line on the tracking issue to the next `Stopped:`. The budget is counted from GitHub: the hours since that comment was created and the ticket pull requests merged since. Before, every scheduled wake-up was a fresh session and so a new run, and the budget never ran out;
+  - **starting skills.** A new session's prompt is one slash command. A session that needs a second skill (the cut designs, then plans) and a subagent or background agent get the path of the skill's `SKILL.md` to read and follow, because the model can't invoke a user-invoked skill. `skills/README.md` states the rule that way;
+  - it no longer asks for branch names when `AGENTS.md` grants them, and no longer "passes the permission on" to the sessions it starts: each reads the same grant.
+- `build`: continues on a ticket branch that already exists, pushes after each commit, and stops when a push is rejected because another builder took the ticket over.
+- `build`, `plan`: in a session with an assigned branch, use the "Branches" grant in `AGENTS.md` without asking. Only when it is missing, ask the user; when nobody is there, open a `needs-owner` issue and stop instead of waiting.
+- `design`: an unattended session goes on to the cut by reading the plan skill's file.
+- `setup`: commits on `setup/pitaya` (never on `main`), pushes and opens a pull request by default.
+
+### Templates
+
+- `AGENTS.md`: the "Branches" grant lists `evidence/<PR>-<short sha>`.
+- The harness template: the "Fix rounds" line says where a round runs, and the "Autopilot" line names two new settings, CI retries per fix round (default 2) and claim expiry (default 2 hours).
+
+### Docs
+
+- `concepts/states.md`: the "Fix rounds" table; where a session at work, a claim's time and the run are stored.
+- `concepts/layout.md`, `concepts/access.md`, the README's "Cloud sessions": the evidence branch, and what an unattended session does without the grant.
+
 ## 0.1.7 (2026-11-20)
 
 The third batch of fixes from the review of 0.1.4: the branch and merge model (D62's answers to Q4 and Q8, D67). Level 4 could not run as written, and a milestone had two definitions of done.

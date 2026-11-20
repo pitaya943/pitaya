@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.7 · AGENTS.md -->
+<!-- pitaya template 0.1.8 · AGENTS.md -->
 # AGENTS.md
 
 A short map for coding agents. Details live in the files it points to; read them when you need them.
@@ -13,7 +13,7 @@ A short map for coding agents. Details live in the files it points to; read them
 
 The Owner grants this once for every session in this repository, including cloud sessions that were given an assigned branch: use the branch names the pitaya skills ask for, and create and push them without asking again.
 
-- `plan/<slug>` for plan PRs, `ticket/<id>-<slug>` for tickets, `milestone/M<n>` for an active milestone, `sync/<slug>` for bringing `main` into a milestone, `setup/<slug>` for harness setup.
+- `plan/<slug>` for plan PRs, `ticket/<id>-<slug>` for tickets, `milestone/M<n>` for an active milestone, `sync/<slug>` for bringing `main` into a milestone, `setup/<slug>` for harness setup, `evidence/<PR>-<short sha>` for a verifier's screenshots.
 - Never push to `main` or force-push any branch. The rulesets on `main` and `milestone/*` still require a pull request.
 
 ## Commands

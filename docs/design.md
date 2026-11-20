@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: 0.1.7, ready to release (0.1.0 to 0.1.6 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D67 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
+- Status: 0.1.8, ready to release (0.1.0 to 0.1.7 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D68 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents

@@ -6,7 +6,7 @@ Agents stop and ask the Owner instead of guessing. The `ask-owner` skill has the
 
 - The spec or ticket is unclear, or contradicts itself.
 - The work needs a change the ticket didn't authorize: a data model, a public interface, a dependency, a file outside its scope.
-- The fix rounds are used up.
+- The fix rounds are used up: one FAIL more than the harness allows, or under `/autopilot` a CI that stays red past its retries.
 - A sensitive area would change with no test covering it.
 - The next step can't be undone.
 
@@ -16,11 +16,11 @@ Work that doesn't depend on the answer carries on.
 
 When the verifier says FAIL:
 
-1. **Round 1:** the same Builder session fixes each listed problem.
+1. **Round 1:** a Builder fixes each listed problem. When a person runs the work, the Builder's own session may do it; under `/autopilot` it is a fresh session, like every round there.
 2. **Round 2:** a fresh session fixes what's left, reading only the ticket, the diff and the verdicts. A fresh context avoids repeating the first session's blind spots.
-3. **Still FAIL:** escalate to the Owner with the open problems and options.
+3. **One FAIL more than the rounds:** escalate to the Owner with the open problems and options.
 
-The number of rounds is the `Fix rounds` field in the harness file (default 2). Two kinds of round alternate: a **verify round** checks and posts a verdict, a **fix round** changes code. With the default, the sequence is verify 1, fix 1, verify 2, fix 2, verify 3, escalate. A verdict says which verify round it is and the next step.
+The number of rounds is the `Fix rounds` field in the harness file (default 2). Two kinds of round alternate: a **verify round** checks and posts a verdict, a **fix round** changes code. With the default, the sequence is verify 1, fix 1, verify 2, fix 2, verify 3, escalate. A verdict says which verify round it is and the next step. The one definition, with what a red CI counts as, is the "Fix rounds" table in [states.md](states.md#fix-rounds); when a page disagrees with it, the table wins.
 
 The Owner may answer an escalation by authorising an extra round. Only the Owner can: the Owner's own answer on the escalation issue ([who can answer](#who-can-answer)) is the authorisation, and the extra round runs in a fresh session like round 2. Its verdict names the round and links the authorisation, so a reader can see why a ticket had more rounds than the harness allows.
 
