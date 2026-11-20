@@ -2,6 +2,17 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.1 (2026-11-20)
+
+### Skills
+
+- Every `gh` command in the skills names the GitHub tool alternative, for sessions where `gh` can't reach GitHub, such as cloud sessions (D54).
+
+### Docs
+
+- README: a "Cloud sessions" section. Cloud sessions load the plugins their environment's setup script installs, so the install is the same two commands in the setup script (D54).
+- `skills/README.md` no longer links to `docs/design.md`, which isn't shipped.
+
 ## 0.1.0 (2026-11-20)
 
 ### Skills

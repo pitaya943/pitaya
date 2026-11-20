@@ -18,6 +18,7 @@ Read what exists. Don't assume.
 - `docs/tickets/` or issues labelled `ticket`: where does planned work already live?
 - `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, `.github/workflows/`: what the project already has that the install must not overwrite.
 - Who you are on GitHub: `gh api user --jq .login`, or the GitHub tool's "get me" call. Don't guess.
+- Where the agents run. In Claude Code cloud sessions the plugin comes from the environment's setup script, not from `/plugin` (the plugin's `README.md`, "Cloud sessions"); everything this skill installs is committed to the repository, so it works there too.
 - If the skills were copied into `.claude/skills/`, run `git check-ignore -v .claude/skills/*/SKILL.md`. A broad rule such as `build/` hides the `build` skill from git; anchor it (`/build/`) and tell the user.
 
 ## 2. Ask, one question at a time

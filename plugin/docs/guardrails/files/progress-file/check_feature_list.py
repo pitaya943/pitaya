@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.0 · docs/guardrails/files/progress-file/check_feature_list.py
+# pitaya template 0.1.1 · docs/guardrails/files/progress-file/check_feature_list.py
 """Guardrail "progress-file": in the feature list, agents may only change "passes".
 
 Usage (in CI)::

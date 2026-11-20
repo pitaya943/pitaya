@@ -16,7 +16,7 @@ You answer two kinds of question: **where are we** (no argument, or "what's next
 
 ## Where are we
 
-Gather, with read-only commands (`git fetch`, `git branch -r`, `gh pr list`, `gh issue list`, reading files):
+Gather, with read-only commands (`git fetch`, `git branch -r`, `gh pr list`, `gh issue list`, or the GitHub tool's list and read calls where `gh` isn't available, as in cloud sessions):
 
 1. **Milestone:** the one with `Status: active` under `docs/milestones/`, and whether `milestone/M<n>` and its PR exist.
 2. **Tickets:** each ticket of that milestone with its state: open, blocked (a "Depends on" not done), claimed (a `ticket/<id>-*` branch), in review, fixing (FAIL on the head, and how many rounds), escalated (an open `needs-owner` issue), done.

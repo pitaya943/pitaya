@@ -9,6 +9,17 @@ This folder is what the `pitaya` plugin installs. Once installed, the skills app
 1. In your project, run `/pitaya:setup`. It asks a few questions and installs the Level 1 defaults without overwriting anything: an `AGENTS.md` map, the harness config, the memory files, permissions, four hooks and a tests workflow.
 2. Cut the project into milestones with `/pitaya:plan --roadmap`, design a milestone with `/pitaya:design M1` (Level 2 and up), and cut it into tickets with `/pitaya:plan M1`. Build a ticket with `/pitaya:build` and have it checked with `/pitaya:verify`. At Level 3, `/pitaya:autopilot` runs a whole milestone.
 
+## Cloud sessions
+
+Claude Code cloud sessions (claude.ai/code, or the desktop app's cloud sessions) have no `/plugin` command and don't load the plugins installed on your own machine. Install pitaya in the cloud environment instead: in **Settings → Environments**, open the environment the project's sessions use and add these lines to its setup script (replace `<owner>` with the pitaya repository's owner):
+
+```bash
+claude plugin marketplace add <owner>/pitaya
+claude plugin install pitaya@pitaya
+```
+
+The setup script runs each time a session's container is built fresh, so every new session in that environment has the plugin, with the same `/pitaya:<skill>` names as on your machine. Check it in a new session by typing `/pitaya:help`. A resumed session keeps the version it was built with. Project hooks in `.claude/settings.json` run in cloud sessions too. Where `gh` can't reach GitHub, the skills use the session's GitHub tools.
+
 ## Read next
 
 - [What each level includes](docs/levels.md): every skill, file and recipe, by level.

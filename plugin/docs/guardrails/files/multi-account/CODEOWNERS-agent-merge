@@ -1,4 +1,4 @@
-# pitaya template 0.1.0 · docs/guardrails/files/multi-account/CODEOWNERS-agent-merge
+# pitaya template 0.1.1 · docs/guardrails/files/multi-account/CODEOWNERS-agent-merge
 # Replaces the Level 1 CODEOWNERS when agents merge (Level 3). Copy to
 # .github/CODEOWNERS and replace @example-owner with the Owner's login.
 # Ticket PRs that touch none of these paths merge on the verdict; anything that

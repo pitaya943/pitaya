@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: 0.1.0, ready to release. Steps W0–W6 are done, plus the additions decided after W6 (D33–D50 in [`decisions.md`](decisions.md)); W7, the release, is the Owner's tag `v0.1.0` on `main`, and W8, the trial, is next (section 13).
+- Status: 0.1.1, ready to release (0.1.0 was released). Steps W0–W6 are done, plus the additions decided after W6 (D33–D54 in [`decisions.md`](decisions.md)); W7, the release, is the Owner's tag on `main` (`v0.1.0` done, `v0.1.1` next), and W8, the trial, is next (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents

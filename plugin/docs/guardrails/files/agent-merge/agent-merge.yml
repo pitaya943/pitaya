@@ -1,4 +1,4 @@
-# pitaya template 0.1.0 · docs/guardrails/files/agent-merge/agent-merge.yml
+# pitaya template 0.1.1 · docs/guardrails/files/agent-merge/agent-merge.yml
 # Sets a "verdict" commit status on the pull request's head: success only when a
 # verifier gave PASS for that exact commit and none gave FAIL.
 # Copy to .github/workflows/agent-merge.yml, and check_verdict.py to .github/guardrails/check_verdict.py.
