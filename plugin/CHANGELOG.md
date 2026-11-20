@@ -15,7 +15,7 @@ The first batch of fixes from the review of 0.1.4 (D59 to D61): one proof that d
 
 ### Templates
 
-- `.claude/settings.json`: deny rules keep the allowed git commands from `--output` (writes a file), `--no-index` (reads a file outside git), `--upload-pack` and `--ext-diff` (run a program). Re-run `/setup` to merge them into an existing file.
+- `.claude/settings.json`: `git diff` and `git fetch` are no longer allowed without a prompt. `git diff` prints any file once a path is outside the work tree, with or without `--no-index`, and `git fetch --upload-pack` runs a program and can be abbreviated, so denying option names doesn't hold for them. `git status`, `git log` and `git show` stay allowed, with deny rules for `--output` (the one option that makes them write a file) and, in case a project allows more itself, `--no-index`, `--upload-pack` and `--ext-diff`. `/setup` only adds rules: after re-running it, delete `Bash(git diff *)` and `Bash(git fetch *)` from your allow list by hand.
 - `AGENTS.md`: the "Branches" grant lists `sync/<slug>`.
 
 ### Docs

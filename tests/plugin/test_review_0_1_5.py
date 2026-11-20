@@ -88,21 +88,32 @@ def test_protect_main_says_what_creating_a_branch_needs_and_proves_it():
     assert "milestone/" in proof and "create" in proof.lower()
 
 
-# --- F09: the allow rules can't write files, read denied ones or run commands -------
+# --- F09: no allowed git command writes a file, reads one outside git or runs a program ---
+#
+# Verify round 1 showed that deny rules alone don't hold: git accepts any unambiguous prefix of
+# a long option (`git fetch --upload-p=...`) and implies `--no-index` for a path outside the
+# work tree (`git diff /dev/null .env`). So `git diff` and `git fetch` aren't allowed at all,
+# and the payloads below are run against real git, in their abbreviated and implied forms too.
 
-DANGEROUS = [
-    "git diff --output=.claude/hooks/no_push_main.py",
-    "git show HEAD --output=AGENTS.md",
-    "git log -p --output=x",
-    "git diff --no-index /dev/null .env",
-    "git fetch --upload-pack=touch x origin",
-    "git fetch origin --upload-pack 'sh -c id'",
-    "git diff --ext-diff HEAD~1",
+import subprocess  # noqa: E402
+
+SETTINGS = [PLUGIN / "templates/.claude/settings.json", REPO_ROOT / ".claude/settings.json"]
+IDS = ["template", "this repository"]
+
+# (command, what it does when it runs): "reads" prints the secret, "writes" creates OUT, "runs" creates PWNED
+PAYLOADS = [
+    ("git diff --output=OUT", "writes"),
+    ("git show HEAD --output=OUT", "writes"),
+    ("git log -1 -p --output OUT", "writes"),
+    ("git diff --no-index /dev/null .env", "reads"),
+    ("git diff /dev/null .env", "reads"),            # --no-index is implied: a path outside the work tree
+    ("git diff -- /dev/null .env", "reads"),
+    ("git fetch --upload-pack=touch${IFS}PWNED;false .", "runs"),
+    ("git fetch --upload-p=touch${IFS}PWNED;false .", "runs"),  # an abbreviated option
+    ("git fetch --upl=touch${IFS}PWNED;false .", "runs"),   # the shortest prefix git accepts
 ]
-EVERYDAY = [
-    "git status --short", "git diff --stat main...HEAD", "git diff HEAD -- src/app.py", "git log --oneline -20",
-    "git show HEAD:docs/tickets/T-001.md", "git fetch origin milestone/M1", "git fetch origin",
-]
+EVERYDAY = ["git status --short", "git log --oneline -20", "git log -p -3 -- src/app.py",
+            "git show HEAD:docs/tickets/T-001.md", "git show --stat HEAD"]
 
 
 def bash_rules(settings: dict, kind: str) -> list[str]:
@@ -113,15 +124,71 @@ def matches(command: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(command, p) for p in patterns)
 
 
-@pytest.mark.parametrize("path", [PLUGIN / "templates/.claude/settings.json", REPO_ROOT / ".claude/settings.json"],
-                         ids=["template", "this repository"])
-def test_git_allow_rules_have_deny_rules_for_their_dangerous_options(path):
+def unprompted(command: str, settings: dict) -> bool:
+    """True when the rules let this command run with no prompt: allowed, and not denied."""
+    return matches(command, bash_rules(settings, "allow")) and not matches(command, bash_rules(settings, "deny"))
+
+
+@pytest.fixture
+def secret_repo(tmp_path):
+    def git(*args):
+        subprocess.run(["git", "-c", "user.name=example-bot", "-c", "user.email=bot@example.com", *args],
+                       cwd=tmp_path, check=True, capture_output=True)
+    git("init", "-q", "-b", "main")
+    (tmp_path / "app.py").write_text("x = 1\n")
+    git("add", "app.py")
+    git("commit", "-q", "-m", "start")
+    (tmp_path / ".env").write_text("SECRET=demo\n")
+    return tmp_path
+
+
+def run(command: str, cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(["bash", "-c", command], cwd=cwd, capture_output=True, text=True, timeout=30)
+
+
+@pytest.mark.parametrize("command, effect", PAYLOADS)
+def test_each_payload_really_does_damage_with_git(command, effect, secret_repo):
+    """Keeps the list honest: every payload works against real git, so each one has to be kept from running unasked."""
+    proc = run(command, secret_repo)
+    done = {"reads": "SECRET=demo" in proc.stdout, "writes": (secret_repo / "OUT").exists(),
+            "runs": (secret_repo / "PWNED").exists()}[effect]
+    assert done, f"{command!r} did nothing here: {proc.stdout}{proc.stderr}"
+
+
+@pytest.mark.parametrize("path", SETTINGS, ids=IDS)
+@pytest.mark.parametrize("command", [c for c, _ in PAYLOADS])
+def test_no_payload_runs_without_a_prompt(command, path):
+    assert not unprompted(command, json.loads(path.read_text())), command
+
+
+@pytest.mark.parametrize("path", SETTINGS, ids=IDS)
+def test_git_diff_and_fetch_are_not_allowed_by_pattern(path):
+    """Neither can be made safe by denying option names: see the abbreviated and implied payloads."""
+    allow = bash_rules(json.loads(path.read_text()), "allow")
+    assert not [r for r in allow if r.startswith(("git diff", "git fetch"))]
+
+
+@pytest.mark.parametrize("path", SETTINGS, ids=IDS)
+def test_everyday_read_only_git_commands_still_run_without_a_prompt(path):
     settings = json.loads(path.read_text())
-    allow, deny = bash_rules(settings, "allow"), bash_rules(settings, "deny")
-    for command in DANGEROUS:
-        assert matches(command, deny), f"nothing denies: {command}"
     for command in EVERYDAY:
-        assert matches(command, allow) and not matches(command, deny), command
+        assert unprompted(command, settings), command
+
+
+@pytest.mark.parametrize("sub", ["log -1", "show"])
+@pytest.mark.parametrize("option", ["--output", "--ext-diff", "--no-index"])
+def test_git_log_and_show_accept_no_short_form_of_a_denied_option(sub, option, secret_repo):
+    """`git log` and `git show` stay allowed, so the deny rules must cover every spelling git accepts.
+
+    They do: unlike `git fetch`, these commands reject an abbreviated long option, and they
+    have no implied form. Each prefix of each denied option must fail and leave nothing behind.
+    """
+    for end in range(4, len(option)):
+        proc = run(f"git {sub} {option[:end]}=OUT /dev/null .env", secret_repo)
+        assert proc.returncode != 0, f"git {sub} accepted {option[:end]}"
+        assert "SECRET=demo" not in proc.stdout and not (secret_repo / "OUT").exists()
+    proc = run(f"git {sub} /dev/null .env", secret_repo)  # no implied --no-index here
+    assert "SECRET=demo" not in proc.stdout
 
 
 def test_suggestion_says_the_allow_rules_are_narrowed():
@@ -159,3 +226,12 @@ def test_every_description_of_the_permissions_mentions_the_git_deny_rules():
     guards = json.dumps(manifest)
     assert "--output" in guards
     assert "--output" in read("docs/levels.md") and "--output" in read("docs/concepts/access.md")
+
+
+def test_docs_say_git_diff_and_fetch_ask_and_why():
+    """Fix round 1: every description of the permissions matches the rules after diff and fetch left the allow list."""
+    for rel in ("docs/suggestion.md", "docs/concepts/access.md"):
+        text = read(rel)
+        assert "`git diff`" in text and "`git fetch`" in text, rel
+    changelog = read("CHANGELOG.md").split("## 0.1.5", 1)[1].split("\n## ", 1)[0]
+    assert "Bash(git diff *)" in changelog and "by hand" in changelog

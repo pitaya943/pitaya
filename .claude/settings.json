@@ -2,10 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git status *)",
-      "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git show *)",
-      "Bash(git fetch *)",
       "Bash(python3 -m pytest tests -q)"
     ],
     "deny": [
