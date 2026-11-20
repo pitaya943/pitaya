@@ -26,7 +26,14 @@
         "hooks": [
           {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/no_push_main.py\""},
           {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/no_destructive.py\""},
-          {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ask_on_rule_files.py\""}
+          {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ask_on_rule_files.py\""},
+          {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ask_on_merge.py\""}
+        ]
+      },
+      {
+        "matcher": "mcp__.*merge_pull_request",
+        "hooks": [
+          {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ask_on_merge.py\""}
         ]
       },
       {
