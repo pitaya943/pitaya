@@ -93,3 +93,32 @@ def test_find_step_reports_the_ticket_file(tickets_repo, tmp_path):
 def test_ticket_path_is_passed_to_the_check(recipe):
     text = (FILES / recipe / f"{recipe}.yml").read_text()
     assert '--ticket-path "${{ steps.ticket.outputs.ticket_path }}"' in text
+
+
+# --- plan PRs: ticket files reach main through a plan/<slug> branch (D36) --------
+
+def test_plan_branch_with_only_planning_files_is_skipped(tickets_repo, tmp_path):
+    tickets_repo.write("docs/tickets/T-2.md", "# T-2\n\nStatus: open\n")
+    tickets_repo.write("docs/agents/glossary.md", "| term |\n")
+    tickets_repo.commit("plan")
+    proc, out = run_find(tickets_repo, tmp_path, "plan/login", "example-bot")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skip=true" in out
+    assert "plan PR" in proc.stdout
+
+
+def test_plan_branch_that_changes_code_fails(tickets_repo, tmp_path):
+    tickets_repo.write("docs/tickets/T-2.md", "# T-2\n")
+    tickets_repo.write("src/app.py", "x = 1\n")
+    tickets_repo.commit("plan with code")
+    proc, out = run_find(tickets_repo, tmp_path, "plan/login", "example-bot")
+    assert proc.returncode == 1
+    assert "src/app.py" in proc.stdout and "To fix:" in proc.stdout
+    assert "skip=true" not in out
+
+
+def test_plan_branch_may_not_touch_other_docs(tickets_repo, tmp_path):
+    tickets_repo.write("docs/agents/harness.md", "changed\n")
+    tickets_repo.commit("plan touching the harness file")
+    proc, _ = run_find(tickets_repo, tmp_path, "plan/x", "example-bot")
+    assert proc.returncode == 1 and "docs/agents/harness.md" in proc.stdout
