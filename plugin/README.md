@@ -18,7 +18,7 @@ claude plugin marketplace add <owner>/pitaya
 claude plugin install pitaya@pitaya
 ```
 
-The setup script runs each time a session's container is built fresh, so every new session in that environment has the plugin, with the same `/pitaya:<skill>` names as on your machine. Check it in a new session by typing `/pitaya:help`. A cloud session is told to push only to its own assigned branch, while pitaya's checks need `plan/<slug>` and `ticket/<id>-<slug>`: start each session by allowing them, for example "Use the branch names the pitaya skills ask for; you may create and push them." A resumed session keeps the version it was built with. Project hooks in `.claude/settings.json` run in cloud sessions too. Where `gh` can't reach GitHub, the skills use the session's GitHub tools.
+The setup script runs each time a session's container is built fresh, so every new session in that environment has the plugin, with the same `/pitaya:<skill>` names as on your machine. Check it in a new session by typing `/pitaya:help`. A cloud session is told to push only to its own assigned branch, while pitaya's checks need `plan/<slug>`, `ticket/<id>-<slug>`, `milestone/M<n>` and `sync/<slug>`: the "Branches" section `/setup` puts in `AGENTS.md` grants them once, and until it's there start each session by allowing them, for example "Use the branch names the pitaya skills ask for; you may create and push them." A resumed session keeps the version it was built with. Project hooks in `.claude/settings.json` run in cloud sessions too. Where `gh` can't reach GitHub, the skills use the session's GitHub tools.
 
 ## Read next
 

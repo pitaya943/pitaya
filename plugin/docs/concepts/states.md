@@ -8,7 +8,7 @@ pitaya keeps no state of its own. Every state below lives in the repository or o
 stateDiagram-v2
   [*] --> Open: plan PR merged (Status: open)
   Open --> Claimed: branch ticket/<id>-<slug> pushed
-  Claimed --> InReview: PR opened into milestone/M<n> (or main below Level 3)
+  Claimed --> InReview: PR opened into milestone/M<n>
   InReview --> Fixing: CI red or FAIL verdict
   Fixing --> InReview: new commit pushed (the old verdict no longer counts)
   Fixing --> Escalated: fix rounds used up (needs-owner issue)
@@ -17,7 +17,7 @@ stateDiagram-v2
   Merged --> [*]: Status: done, in the same PR
 ```
 
-A ticket is blocked, not claimable, while any ticket in its "Depends on" isn't done.
+A ticket is blocked, not claimable, while any ticket in its "Depends on" isn't done. Its PR targets the milestone's branch at every level; only a ticket that names no milestone targets `main`.
 
 ## Milestone
 
@@ -70,6 +70,7 @@ stateDiagram-v2
 | Fix rounds used | the number of FAIL verdicts on the PR | verifier |
 | Escalated | an open `needs-owner` issue linked from the PR or ticket | any role (`ask-owner`); the Owner closes it |
 | Milestone phase | `Status:` in `docs/milestones/M<n>.md`, plus the `milestone/M<n>` branch and its PR | plan PR; the first `/build` or `/autopilot` tick creates a missing branch; the Owner's merge closes it |
+| Milestone behind `main` | `main` isn't an ancestor of `milestone/M<n>` (a `plan/<slug>` PR merged since); an open PR from `sync/<slug>` brings it in | whoever starts the next ticket, or `/autopilot`, opens the sync PR; it merges like a ticket PR |
 | Autopilot progress, stop requests | the tracking issue `Autopilot: M<n>` | `/autopilot`; the Owner comments "stop" |
 | Decisions | `docs/decisions.md`, `docs/adr/` | Owner, Chief |
 | Handover of stopped work | `docs/handoff/<branch>.md` | `/handoff` |

@@ -37,8 +37,8 @@ When work runs in milestones (`/plan --roadmap`), tickets merge into `milestone/
 | Target branches | **Add target → Include by pattern**: `milestone/*` |
 | Bypass list | **Repository admin**, mode **For pull requests only**, as on `main`. Without it the Owner can't discard a milestone or force a merge in an emergency. Agent accounts never go here |
 | Restrict deletions, Block force pushes | On (the Owner deletes a discarded milestone through the bypass) |
-| Require a pull request before merging | On, with **Required approvals: 0**: the agents merge ticket PRs here |
-| Require status checks to pass | On: `tests`, plus the Level 2 checks you added, plus `verdict` with [agent-merge](agent-merge.md) |
+| Require a pull request before merging | On. **Required approvals: 1** below Level 3, where the Owner merges every ticket and sync PR: without it a machine account could merge its own green PR here. **Required approvals: 0** only from Level 3, changed in the same step that makes `verdict` a required status ([agent-merge](agent-merge.md)), so there is never a time when neither a person nor a verdict gates the merge |
+| Require status checks to pass | On: `tests`, plus the Level 2 checks you added, plus `verdict` with [agent-merge](agent-merge.md). Also turn on **Do not require status checks on creation**: a new `milestone/M<n>` points at a commit of `main`, which has no run of these checks under the new branch's name, so without the option GitHub can refuse to create the branch |
 | Require branches to be up to date | On when tickets run in parallel |
 
 The worst an agent can do there is spoil one milestone, which the Owner can throw away: `main` only changes when the Owner merges the milestone's PR.
@@ -54,6 +54,8 @@ gh api repos/<owner>/<repo>/rules/branches/main --jq '.[].type'
 Expected: `deletion`, `non_fast_forward`, `pull_request` and `required_status_checks`. An empty list means the ruleset targets no branch.
 
 The agent can also try `git push origin HEAD:main` on a throwaway commit: it must be rejected. Do this only once the rules are listed, so a misconfigured ruleset doesn't let the commit through.
+
+With the milestone ruleset, prove both directions on a branch nobody uses. As the machine account, create a test branch from `main` (`git push origin origin/main:refs/heads/milestone/ruleset-test`): it must be accepted, because agents create each milestone's branch and its sync branches. If GitHub rejects it, the message names the rule: turn on "Do not require status checks on creation", or have the Owner create milestone branches. Then push one more commit straight to that branch: it must be rejected. The Owner deletes the test branch afterwards (the ruleset blocks deletion for everyone else).
 
 ## Cost and false positives
 

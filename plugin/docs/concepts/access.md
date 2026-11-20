@@ -31,7 +31,7 @@ A ticket PR changes only the data plane, and only inside its ticket's scope. The
 | Product code and tests in the ticket's scope | W | ✗ writes | W | R, in a clean checkout | R, in its own worktree | scope check |
 | PR description and decision log | R | R | W | R, as claims, never as evidence | ✗ | prose only |
 | The Builder's conversation | R | R | W | ✗ | ✗ | prose only; a fresh session can't see it |
-| `.env`, keys and credentials | R | ✗ | ✗ | ✗ | ✗ | Read tool deny rules in `.claude/settings.json` |
+| `.env`, keys and credentials | R | ✗ | ✗ | ✗ | ✗ | Read tool deny rules in `.claude/settings.json`; of the git commands, only `git status`, `git log` and `git show` run unasked (with `--output` denied), and `git diff` and `git fetch` ask, because either can reach a file outside git |
 
 `tests/plugin/test_architecture_docs.py` fails when a skill names a repository path this matrix doesn't cover, so the matrix grows with the skills.
 

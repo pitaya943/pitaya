@@ -21,9 +21,9 @@ From Level 2, the milestone is designed first: `docs/milestones/M<n>-design.md` 
 
 Every active milestone has this branch, at every level (D44). Once the Owner merges the plan PR that cuts M<n>, create `milestone/M<n>` from `main` and push it. That merge happens outside any session, so whichever comes first creates the branch if it's missing: this skill's next run, `/build` for the milestone's first ticket, or an `/autopilot` tick. Every ticket of the milestone branches from `milestone/M<n>` and its PR targets `milestone/M<n>`; the checks read the tickets from there. Agents merge ticket PRs into it when the harness's Autonomy allows (Level 3, [agent-merge](../../docs/guardrails/agent-merge.md)); otherwise the Owner does. Before each new ticket, bring in what `main` gained (plan PRs land there) through a **sync PR**, never by pushing to the protected milestone branch and never with "Update branch" on a PR from `main` (that merges the milestone into `main`, ahead of the sign-off):
 
-1. Create `sync/M<n>-<short sha of main>` from `milestone/M<n>`, merge `origin/main` into it, and push it.
+1. Create `sync/M<n>-<short sha of main>` from `milestone/M<n>`, merge `origin/main` into it with a plain `git merge` (no strategy option such as `-s ours` or `-X theirs`, no edits in the merge commit), and push it.
 2. Open a PR from it into `milestone/M<n>`. It's up to date by construction.
-3. The ticket checks pass it when its tree is exactly the milestone merged with `main`, and `agent-merge` gives it a `verdict` without a verifier for the same reason. Anything else in it fails both. A conflict fails too: the Owner resolves it.
+3. The ticket checks pass it when its tree is exactly the milestone merged with `main` and every commit it adds is a true merge, and `agent-merge` gives it a `verdict` without a verifier for the same reason. Anything else in it fails both. A conflict fails too: the Owner resolves it.
 4. Merge it like a ticket PR: the Owner below Level 3, agents from Level 3.
 
 A ticket PR that falls behind its milestone branch uses GitHub's "Update branch" as usual. From Level 3 its PASS carries over that merge, and only that merge (the [agent-merge](../../docs/guardrails/agent-merge.md) recipe).

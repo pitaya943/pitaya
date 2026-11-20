@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.4 · docs/agents/architecture.md -->
+<!-- pitaya template 0.1.5 · docs/agents/architecture.md -->
 # Architecture
 
 A map of the codebase, for orientation before changing it: the main modules, where they live and what each is for. Keep it short; the code is the detail.
@@ -8,7 +8,7 @@ A map of the codebase, for orientation before changing it: the main modules, whe
 | Module | Path | Purpose |
 | --- | --- | --- |
 | plugin | `plugin/` | Everything that ships, and nothing else (D32). The marketplace installs this folder alone |
-| skills | `plugin/skills/<name>/` | The thirteen skills; `setup/scripts/install_templates.py` copies the templates |
+| skills | `plugin/skills/<name>/` | The fourteen skills; `setup/scripts/install_templates.py` copies the templates |
 | templates | `plugin/templates/` | The Level 1 files `/setup` copies into a project, each with a version header |
 | recipes | `plugin/docs/guardrails/` | Level 1-3 recipes; standalone checks and workflows under `files/<recipe>/` |
 | components | `plugin/docs/components.json` | Every part of the harness with its level and dependencies (D33); `levels.md` is generated from it by `scripts/render_levels.py` and tests check its dependencies against the recipes |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.4 · docs/guardrails/files/agent-merge/check_verdict.py
+# pitaya template 0.1.5 · docs/guardrails/files/agent-merge/check_verdict.py
 """Guardrail "agent-merge": a PASS verdict exists for the pull request's current head commit.
 
 Usage (in CI)::
@@ -21,14 +21,17 @@ A verdict comes from an allowed verifier account, for the current head commit:
 
 Any new push voids earlier verdicts, with one exception that needs `--git-dir`:
 a PASS carries over to a head that adds only a merge of the base branch (GitHub's
-"Update branch"). The check proves it: the head's tree must equal the tree git
-gets by merging the current base into the PASS head. Anything else on top, even a
-change folded into that merge commit, gives a different tree and needs a new
-verdict. A FAIL on this head, or on the PASS head being carried, is final.
+"Update branch"). The check proves it twice. The head's tree must equal the tree
+git gets by merging the current base into the PASS head, and every commit added
+since must be a true merge: two parents, and the tree git gets by merging them.
+Anything else on top needs a new verdict: a change folded into the merge commit
+gives another tree, and `git merge -s ours` keeps the tree but records a commit as
+merged whose changes never arrived, so a later merge of that commit is dropped. A FAIL on this head, or on the PASS head being carried, is final.
 
 A sync PR (`sync/<slug>` into `milestone/<id>`, with `--git-dir`) needs no
 verdict when its tree equals the base merged with the newest default-branch
-commit it contains: everything in it was already merged into the default branch.
+commit it contains, and every commit it adds is a true merge: everything in it
+was already merged into the default branch.
 
 A FAIL on this head is final until the
 next push. Plan PRs (`plan/<slug>`) and milestone PRs (`milestone/<id>`) never
@@ -76,10 +79,35 @@ def merged_tree(repo: Path, base: str, other: str) -> str | None:
     return out.splitlines()[0] if out else None
 
 
+def true_merges(repo: Path, head: str, *known: str) -> bool:
+    """True when every commit `head` adds to the `known` commits is a true merge.
+
+    A true merge has two parents and the tree git gets by merging them. A commit with one
+    parent is a change; `git merge -s ours` and a merge with an edit folded in have a tree
+    that isn't the merge of their parents. Either would put history on the branch that the
+    tree comparison can't see: a commit recorded as merged whose changes never arrived.
+    """
+    listed = git(repo, "rev-list", "--parents", head, *(f"^{k}" for k in known))
+    if listed is None:
+        return False
+    for line in listed.splitlines():
+        commit, *parents = line.split()
+        if len(parents) != 2:
+            return False
+        if merged_tree(repo, *parents) != git(repo, "rev-parse", f"{commit}^{{tree}}"):
+            return False
+    return True
+
+
 def only_merges(repo: Path, head: str, base: str, other: str) -> bool:
-    """True when `head` holds exactly `other` merged with the base, and nothing else."""
+    """True when `head` holds exactly `other` merged with the base, and nothing else.
+
+    Two proofs, both needed: the head's tree is the base merged with `other`, and every
+    commit the head adds to them is a true merge (see `true_merges`).
+    """
     want = merged_tree(repo, base, other)
-    return want is not None and want == git(repo, "rev-parse", f"{head}^{{tree}}")
+    return (want is not None and want == git(repo, "rev-parse", f"{head}^{{tree}}")
+            and true_merges(repo, head, base, other))
 
 
 def verdicts(comments: list[dict], reviews: list[dict], verifiers: set[str]) -> list[tuple[str, str]]:
@@ -144,9 +172,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"PASS agent-merge: sync PR; head {args.head[:7]} only merges {args.default} "
                       f"({newest[:7]}) into {args.base}.")
                 return 0
-            return fail(f"sync PR head {args.head[:7]} has changes besides merging {args.default}.",
+            return fail(f"sync PR head {args.head[:7]} has changes or commits besides merging {args.default}.",
                         "recreate the sync branch from the milestone branch and merge only the default "
-                        "branch into it, or move the other changes to a ticket.")
+                        "branch into it, with a plain `git merge` (no strategy option, no edits); "
+                        "move other changes to a ticket.")
         # A PASS carries over a merge of the base ("Update branch"), and nothing else.
         for named, result in found:
             if result != "PASS":

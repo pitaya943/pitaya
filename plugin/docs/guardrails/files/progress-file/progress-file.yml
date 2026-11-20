@@ -1,4 +1,4 @@
-# pitaya template 0.1.4 · docs/guardrails/files/progress-file/progress-file.yml
+# pitaya template 0.1.5 · docs/guardrails/files/progress-file/progress-file.yml
 # Fails a pull request that changes the feature list beyond the "passes" flags.
 # Copy to .github/workflows/progress-file.yml, and check_feature_list.py to .github/guardrails/check_feature_list.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login, then
@@ -38,8 +38,14 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           MACHINE_ACCOUNT: ${{ vars.MACHINE_ACCOUNT }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
+          if [ -z "${MACHINE_ACCOUNT:-}" ]; then
+            echo "FAIL: the repository variable MACHINE_ACCOUNT is not set, so agents' PRs can't be told from people's."
+            echo "To fix: set MACHINE_ACCOUNT (Settings, Secrets and variables, Actions, Variables) to the agents' login."
+            exit 1
+          fi
           lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' '; }
           case ",$(lower "$MACHINE_ACCOUNT")," in
             *",$(lower "$PR_AUTHOR"),"*) ;;
@@ -49,4 +55,9 @@ jobs:
             echo "The feature list didn't change."; exit 0
           fi
           git show "origin/$BASE_REF:docs/progress/features.json" > "$RUNNER_TEMP/base.json"
-          python3 "$RUNNER_TEMP/guardrails/check_feature_list.py" --base "$RUNNER_TEMP/base.json" --head docs/progress/features.json
+          # What the default branch says was merged by the Owner; a sync PR brings it into a milestone.
+          owner=()
+          if git show "origin/$DEFAULT_BRANCH:docs/progress/features.json" > "$RUNNER_TEMP/owner.json" 2>/dev/null; then
+            owner=(--owner "$RUNNER_TEMP/owner.json")
+          fi
+          python3 "$RUNNER_TEMP/guardrails/check_feature_list.py" --base "$RUNNER_TEMP/base.json" --head docs/progress/features.json "${owner[@]}"

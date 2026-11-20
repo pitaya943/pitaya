@@ -2,10 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git status *)",
-      "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git show *)",
-      "Bash(git fetch *)",
       "Bash(python3 -m pytest tests -q)"
     ],
     "deny": [
@@ -19,7 +17,11 @@
       "Read(~/.config/gcloud/**)",
       "Read(~/.azure/**)",
       "Read(./**/.env)",
-      "Read(./**/.env.*)"
+      "Read(./**/.env.*)",
+      "Bash(git *--output*)",
+      "Bash(git *--no-index*)",
+      "Bash(git *--ext-diff*)",
+      "Bash(git *--upload-pack*)"
     ]
   },
   "hooks": {

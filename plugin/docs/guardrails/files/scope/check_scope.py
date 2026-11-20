@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.4 · docs/guardrails/files/scope/check_scope.py
+# pitaya template 0.1.5 · docs/guardrails/files/scope/check_scope.py
 """Guardrail "scope": a pull request changes only the paths its ticket lists.
 
 Usage (from the repository root, in CI)::

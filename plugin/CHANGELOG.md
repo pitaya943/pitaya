@@ -2,6 +2,27 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.5 (2026-11-20)
+
+The first batch of fixes from the review of 0.1.4 (D59 to D61): one proof that didn't prove what it claimed, and the logic errors that need no further decision.
+
+### Recipes
+
+- `agent-merge` and the shared "Find the ticket" step: a carried PASS and a sync PR are now proven by history as well as by tree. Every commit added must be a true merge: two parents, and the tree git gets by merging them. Before, `git merge -s ours` passed both proofs, because it keeps the tree while recording a commit as merged; that commit's changes were then dropped when it was merged for real, so a correction the Owner merged into `main` could disappear at the milestone's sign-off. "Update branch" pressed several times still carries a PASS. Copy `check_verdict.py` and all seven workflows again.
+- `commit-author` doesn't check commits the default branch already contains, so a sync PR no longer fails on the commits `main` gained, whoever wrote them. `progress-file` accepts a requirement that matches the default branch's copy of the feature list, so a sync PR can bring a changed requirement into a milestone.
+- `commit-author` and `progress-file` fail on every pull request when `MACHINE_ACCOUNT` is unset, like the ticket-based checks. Before, both passed without checking anything.
+- `protect-main`: the `protect-milestones` ruleset requires 1 approval below Level 3 and 0 only from Level 3, changed in the same step that requires `verdict` (`agent-merge` says so too). It also turns on "Do not require status checks on creation", and "How to prove it works" creates a test milestone branch.
+
+### Templates
+
+- `.claude/settings.json`: `git diff` and `git fetch` are no longer allowed without a prompt. `git diff` prints any file once a path is outside the work tree, with or without `--no-index`, and `git fetch --upload-pack` runs a program and can be abbreviated, so denying option names doesn't hold for them. `git status`, `git log` and `git show` stay allowed, with deny rules for `--output` (the one option that makes them write a file) and, in case a project allows more itself, `--no-index`, `--upload-pack` and `--ext-diff`. `/setup` only adds rules: after re-running it, delete `Bash(git diff *)` and `Bash(git fetch *)` from your allow list by hand.
+- `AGENTS.md`: the "Branches" grant lists `sync/<slug>`.
+
+### Docs
+
+- `sync/<slug>` is in `concepts/layout.md`, `concepts/states.md`, the guardrails README and `/help`.
+- `concepts/states.md` and `concepts/roles.md` no longer contradict the rest: ticket PRs target the milestone branch at every level, and only the Owner merges `main`.
+
 ## 0.1.4 (2026-11-20)
 
 The two W8 part 2 fixes that change the merge gate (D58).

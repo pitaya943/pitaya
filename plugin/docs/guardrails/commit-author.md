@@ -18,7 +18,7 @@ Together with [machine-account](machine-account.md), once more than one agent or
 4. Copy `files/commit-author/commit-author.yml` to `.github/workflows/commit-author.yml`. Put the Owner's login in `--also-allow` if the Owner uses GitHub's "Update branch" button on agent PRs.
 5. After the first run, make `commit-author` a required check.
 
-It compares GitHub's own `author.login` for each commit, not the email written in the commit, so copying an address doesn't pass. It runs on PRs opened by the machine account; PRs the Owner opens are skipped.
+It compares GitHub's own `author.login` for each commit, not the email written in the commit, so copying an address doesn't pass. It runs on PRs opened by the machine account; PRs the Owner opens are skipped. Commits the default branch already contains aren't checked, whoever wrote them: they were merged there under that branch's rules, and a sync PR (`sync/<slug>` into a milestone branch) brings them in. With `MACHINE_ACCOUNT` unset the check fails on every pull request, the Owner's too, like the ticket-based ones: it can't tell whose PR it is. The Owner's own "Update branch" merge on an agent's PR still needs `--also-allow`.
 
 ## How to prove it works
 

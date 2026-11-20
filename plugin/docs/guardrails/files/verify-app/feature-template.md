@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.4 · docs/guardrails/files/verify-app/feature-template.md
+<!-- pitaya template 0.1.5 · docs/guardrails/files/verify-app/feature-template.md
 One file per user-facing feature, in .claude/skills/verify-<app>/features/, listed in features/README.md. Keep exactly these four sections, in this order. -->
 
 # <Feature name>

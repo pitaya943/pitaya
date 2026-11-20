@@ -354,3 +354,57 @@ def test_sync_branch_into_main_is_not_a_sync_pr(milestone_repo, tmp_path):
     proc, out = run_find(milestone_repo, tmp_path, "sync/M1-main", "example-bot",
                          BASE_REF="main", DEFAULT_BRANCH="main")
     assert proc.returncode == 1 and "skip=true" not in out
+
+
+# --- the sync proof covers history, not only the tree (review finding N01, D61) -----
+
+def test_sync_pr_with_an_ours_merge_of_an_unmerged_commit_fails(milestone_repo, tmp_path):
+    """`git merge -s ours` keeps the tree but records the commit as merged; main's later copy would be dropped."""
+    repo = milestone_repo
+    repo.git("checkout", "-q", "-b", "owner/correction", "main")
+    repo.write("docs/tickets/T-2.md", "## Scope\n\n- `src/narrow/**`\n")
+    repo.commit("a correction the Owner hasn't merged yet")
+    repo.git("checkout", "-q", "sync/M1-main")
+    repo.git("merge", "-q", "-s", "ours", "--no-edit", "owner/correction")
+    proc, out = run_find(repo, tmp_path, "sync/M1-main", "example-bot", **SYNC)
+    assert proc.returncode == 1 and "To fix:" in proc.stdout, proc.stdout + proc.stderr
+    assert "skip=true" not in out
+
+
+def test_sync_pr_updated_with_its_milestone_is_still_skipped(milestone_repo, tmp_path):
+    repo = milestone_repo
+    repo.git("checkout", "-q", "milestone/M1")
+    repo.write("src/other.py", "other = True\n")
+    repo.commit("another ticket merged into the milestone")
+    repo.git("update-ref", "refs/remotes/origin/milestone/M1", "milestone/M1")
+    repo.git("checkout", "-q", "sync/M1-main")
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")  # "Update branch"
+    proc, out = run_find(repo, tmp_path, "sync/M1-main", "example-bot", **SYNC)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skip=true" in out
+
+
+# --- an unset MACHINE_ACCOUNT fails every check that needs it (review finding F13, D61) ---
+
+def run_step(recipe: str, name: str, tmp_path: Path, cwd: Path, **env: str) -> subprocess.CompletedProcess:
+    script = next(s["run"] for s in steps(FILES / recipe / f"{recipe}.yml") if s["name"] == name)
+    output = tmp_path / "github_output"
+    output.write_text("")
+    full = dict(os.environ, GITHUB_OUTPUT=str(output), RUNNER_TEMP=str(tmp_path), **env)
+    return subprocess.run(["bash", "-c", script], cwd=cwd, env=full, capture_output=True, text=True)
+
+
+@pytest.mark.parametrize("recipe, step", [("commit-author", "Who opened it"),
+                                          ("progress-file", "Check the feature list")])
+def test_checks_outside_the_find_step_fail_closed_without_machine_account(recipe, step, repo, tmp_path):
+    repo.commit("start")
+    proc = run_step(recipe, step, tmp_path, repo.path, MACHINE_ACCOUNT="", PR_AUTHOR="example-bot", BASE_REF="main")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "MACHINE_ACCOUNT" in proc.stdout and "To fix:" in proc.stdout
+
+
+def test_commit_author_and_progress_file_know_the_default_branch():
+    author = (FILES / "commit-author" / "commit-author.yml").read_text()
+    assert '--default "origin/$DEFAULT_BRANCH"' in author and "--git-dir ." in author
+    progress = (FILES / "progress-file" / "progress-file.yml").read_text()
+    assert "origin/$DEFAULT_BRANCH:docs/progress/features.json" in progress and "--owner" in progress

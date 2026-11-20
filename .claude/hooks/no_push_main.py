@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.4 · .claude/hooks/no_push_main.py
+# pitaya template 0.1.5 · .claude/hooks/no_push_main.py
 """PreToolUse hook: stop pushes to the default branch, force pushes and remote deletes.
 
 What it guards against: an agent pushing straight to `main` (skipping review)

@@ -60,6 +60,10 @@ Pull requests opened by agent accounts, the logins in the repository variable `M
 
 When `docs/tickets/` exists on the base branch, tickets are files: a branch naming an issue number doesn't fall back to that issue, so an agent can't open its own issue and use it as a wider ticket. A ticket whose `Status:` is `done` (or a closed issue) can't be claimed, and neither can a ticket another open PR already works on.
 
+A branch named `milestone/<id>` is a milestone PR, which the Owner reviews as a whole: the step skips the ticket checks for it.
+
+A branch named `sync/<slug>` into `milestone/<id>` is a sync PR: it brings what the default branch gained into a milestone. The step skips the ticket checks for it only after proving two things: its tree is exactly the milestone merged with the newest default-branch commit it contains, and every commit it adds is a true merge (two parents, and the tree git gets by merging them). The second proof matters because `git merge -s ours` keeps the tree and still records a commit as merged, so that commit's changes would be dropped when it reaches the default branch later. Anything else fails; a conflict is the Owner's to resolve.
+
 A branch named `plan/<slug>` is a plan PR: it adds ticket files for the Owner to merge. The step skips the ticket checks for it, but fails it if it changes anything besides `docs/tickets/*.md`, `docs/milestones/*.md`, `docs/agents/glossary.md`, `docs/agents/architecture.md` and `docs/decisions.md`.
 
 When a ticket file is found, the step also outputs its path, `ticket_path`. The scope and read-only checks use it for one exception: the PR may change its own ticket's `Status:` line, to mark it done, and nothing else in any ticket file (`docs/tickets/**` is read-only by default).
