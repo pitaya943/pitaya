@@ -1,4 +1,4 @@
-# pitaya template 0.1.6 · docs/guardrails/files/evidence/evidence.yml
+# pitaya template 0.1.7 · docs/guardrails/files/evidence/evidence.yml
 # Fails a pull request whose description has no evidence, or no screenshots when its ticket requires them.
 # Copy to .github/workflows/evidence.yml, and check_evidence.py to .github/guardrails/check_evidence.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
@@ -126,7 +126,7 @@ jobs:
             # ticket and planning files, and the ticket checks don't apply to it.
             case "$BASE_REF" in
               "$DEFAULT_BRANCH"|milestone/*) ;;
-              *) fail "a plan PR targets $DEFAULT_BRANCH (or a milestone branch, for a cut made inside it), not $BASE_REF." \
+              *) fail "a plan PR targets $DEFAULT_BRANCH (or a milestone branch, for its report or a cut made inside it), not $BASE_REF." \
                    "open the plan PR into $DEFAULT_BRANCH; changes for a ticket go on its ticket/<id>-<slug> branch.";;
             esac
             other=$(git diff --name-only "origin/$BASE_REF...HEAD" \

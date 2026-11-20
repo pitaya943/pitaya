@@ -1,6 +1,6 @@
 {
   "name": "pitaya",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Small, composable skills for developing with agents under human review: set up a level, plan, build red-green, verify cold, report. Guardrails grow by level, not as a gate.",
   "author": {
     "name": "pitaya contributors"

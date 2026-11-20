@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.6 · docs/guardrails/files/no-weakened-tests/compare_junit.py
+# pitaya template 0.1.7 · docs/guardrails/files/no-weakened-tests/compare_junit.py
 """Guardrail "no-weakened-tests": every test that passes on the base still exists and passes on the PR.
 
 Usage (in CI, after running the test command on both commits)::

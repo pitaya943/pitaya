@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.6 · docs/guardrails/files/commit-author/check_commit_author.py
+# pitaya template 0.1.7 · docs/guardrails/files/commit-author/check_commit_author.py
 """Guardrail "commit-author": every commit in a PR is authored by the machine account.
 
 Usage (in CI)::

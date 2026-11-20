@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.6 · docs/guardrails/files/project-evals/task-template.md -->
+<!-- pitaya template 0.1.7 · docs/guardrails/files/project-evals/task-template.md -->
 # Eval task: <short name>
 
 Drawn from: <the real failure or success this comes from, with a link>

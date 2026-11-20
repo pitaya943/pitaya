@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: 0.1.5, ready to release (0.1.0 to 0.1.4 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D63 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
+- Status: 0.1.7, ready to release (0.1.0 to 0.1.6 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D67 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
@@ -162,7 +162,7 @@ A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its 
 | `CLAUDE.md` | One line importing `AGENTS.md` | D2 |
 | `.claude/settings.json` | Deny reading `.env*`, key files and cloud credentials; allow the test command and read-only git; ask for everything else; no sandbox. Merged additively when the project already has one | D8 |
 | `.claude/hooks/no_push_main.py` | Deny pushes to the default branch (read from `origin/HEAD` too), force pushes, remote deletes, `--all` and `--mirror` | D6 |
-| `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x` | D6 |
+| `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x`; and from 0.1.6 the accidental wipes in D64 (f): `.git`, `*`, `./*`, `$PWD`, an unnarrowed `find . -delete`, `git checkout` and `git restore` of `.` | D6, D64 |
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
 | `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge | D37 |
 | `.github/workflows/tests.yml` | One job running the test command; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |

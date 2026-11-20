@@ -6,7 +6,7 @@ Everything comes from places anyone can open, so a fresh session can take over a
 
 | What | Where |
 | --- | --- |
-| The active milestone and its tickets | `docs/milestones/M<n>.md` on `main` ("Status: active", the "Tickets" section) |
+| The active milestone and its tickets | `docs/milestones/M<n>.md` on `milestone/M<n>` when that branch exists, on `main` when it doesn't ("Status: active", the "Tickets" section). `Status: done` on `main` means done whatever the branch says; `Status: done` on the branch alone means closing |
 | Whether a ticket is done | its `Status:` line on `milestone/M<n>` (file tickets) or whether its issue is closed (issue tickets) |
 | Dependencies | the ticket's "Depends on" lines |
 | Work in progress | open PRs whose branch is `ticket/<id>-<slug>` |
@@ -41,8 +41,24 @@ On a PR that is ready but can't be merged by an agent:
 
 When stopping:
 
-> Stopped: <reason>. Open: <tickets and what each waits on>. Next: <the Owner's step, such as merging the plan PR that closes M2>.
+> Stopped: <reason>. Open: <tickets and what each waits on>. Next: <the Owner's step, such as merging the milestone PR for M2>.
+
+## Closing the milestone
+
+Two wake-ups can both find every ticket done, and a fresh session can wake at any point of this, so each step first looks for what an earlier tick left. Take the first line that matches, and nothing after it:
+
+1. `main` says `Status: done` for M<n>, or its milestone PR is merged: it is closed. Go on to the next cut ("Between milestones"). A merged milestone PR with `main` still at `active` means the report PR was skipped: say so on the tracking issue, because only a plan PR the Owner merges into `main` can set the status now (the plan skill's `milestones.md`).
+2. A report PR (`plan/M<n>-report` into `milestone/M<n>`) is open: merge it when its checks are green and the Autonomy line lets agents merge; otherwise comment that it waits for the Owner. It needs no verifier: the `verdict` check passes it because it changes only the milestone's `Status:` line and its report.
+3. The report is current: `milestone/M<n>` says `Status: done`, and nothing but sync PRs merged into it since the report PR. If the milestone PR (`milestone/M<n>` into `main`) is open, stop: the Owner's merge is the sign-off. If it isn't, open it with the report (`docs/reports/M<n>.md`) as its description, and stop.
+4. An open `needs-owner` issue says an exit criterion or a scenario of M<n> isn't met: stop. A report was written and found the milestone short; the Owner decides what to add.
+5. None of these: start a fresh session with `/pitaya:report M<n>`. It writes the report and opens the report PR, or raises that issue.
+
+If the Owner sends the milestone back, the new tickets arrive through a plan PR on `main` and a sync PR. The milestone is active again while any of them is open, even though its branch still says `Status: done`. Once they are done, tickets have merged since the report, so line 3 doesn't match and line 5 writes a new report; its report PR changes only the report file, and the new text replaces the description of the milestone PR that is still open.
 
 ## Merging
 
-Merge with the method the repository uses (`gh pr merge <n> --squash` or `--merge`, or the GitHub tool's merge call), only after re-reading the head commit and the verdict comments: if the head changed since the verdict, the PASS no longer counts (unless only the base was merged in and the ticket isn't `Risk: high`), and a FAIL on that head, or a `verdict-fail` status on it, means no merge whatever the `verdict` status shows at that moment. The `ask_on_merge.py` hook stays quiet only when the Autonomy line lets agents merge; if it asks, the harness doesn't allow it, so leave the PR for the Owner.
+Merge with the method the repository uses (`gh pr merge <n> --squash` or `--merge`, or the GitHub tool's merge call), only after re-reading the head commit and the verdict comments: if the head changed since the verdict, the PASS no longer counts (unless only the base was merged in and the ticket isn't `Risk: high`), and a FAIL on that head, or a `verdict-fail` status on it, means no merge whatever the `verdict` status shows at that moment.
+
+Three kinds of PR merge into a milestone branch with a green `verdict` and no verdict comment, because the check proves what they hold: a sync PR, the milestone's report PR, and at Level 4 a cut (a plan PR that only adds tickets and fills in its own milestone, while the Autonomy line on `main` lets agents merge plan PRs). Any other plan PR stays red there and waits for the Owner; don't work around it.
+
+The `ask_on_merge.py` hook stays quiet only when the Autonomy line lets agents merge; if it asks, the harness doesn't allow it, so leave the PR for the Owner.

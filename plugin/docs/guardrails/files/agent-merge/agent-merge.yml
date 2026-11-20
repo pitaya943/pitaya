@@ -1,6 +1,8 @@
-# pitaya template 0.1.6 · docs/guardrails/files/agent-merge/agent-merge.yml
+# pitaya template 0.1.7 · docs/guardrails/files/agent-merge/agent-merge.yml
 # Sets a "verdict" commit status on the pull request's head: success only when a
-# verifier gave PASS for that exact commit and none gave FAIL.
+# verifier gave PASS for that exact commit and none gave FAIL. Three kinds of pull request
+# into a milestone branch pass without a verdict, on what the check proves from their commits:
+# a sync PR, the milestone's report PR, and at Level 4 a cut (see the recipe).
 # Copy to .github/workflows/agent-merge.yml, and check_verdict.py to .github/guardrails/check_verdict.py.
 # Set the repository variable MACHINE_ACCOUNT (and VERIFIER_ACCOUNTS if the verifier
 # posts as another account), then require the "verdict" status on milestone/* branches.
@@ -60,7 +62,8 @@ jobs:
           branch=$(printf '%s' "$pr" | jq -r .head.ref)
           base=$(printf '%s' "$pr" | jq -r .base.ref)
           # Fetch the PR's commits as data only (nothing from the PR is checked out or run), so the
-          # check can prove a head is a PASS head plus only a merge of the base, or a pure sync PR.
+          # check can prove a head is a PASS head plus only a merge of the base, a pure sync PR, or a
+          # plan PR that is only a milestone's report or a cut.
           git fetch -q origin "+refs/pull/$PR/head:refs/remotes/pr/head" "+refs/heads/$base:refs/remotes/origin/$base"
           api "issues/$PR/comments" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/comments.json"
           api "pulls/$PR/reviews" --paginate --jq '.[]' | jq -s . > "$RUNNER_TEMP/reviews.json"
@@ -89,7 +92,7 @@ jobs:
               --reviews "$RUNNER_TEMP/reviews.json" --head "$head" --verifiers "$VERIFIERS" --branch "$branch" \
               --git-dir . --base "origin/$base" --default "origin/$DEFAULT_BRANCH" \
               --failed "$failed" --record "$RUNNER_TEMP/fails.txt" "${ticket[@]}"; then
-            state=success; text="a verifier passed this commit, its base merge, or a sync"
+            state=success; text="a PASS for this commit or its base merge, or a sync, report or cut that needs none"
           else
             state=failure; text="no PASS verdict for this commit"
           fi
