@@ -71,7 +71,7 @@ it passes without a verdict in two cases, and only with `--git-dir`:
   harness template offers ("Agents merge ticket and plan PRs into milestone
   branches; ..."), not just a sentence that mentions plan PRs. It changes only
   plan files and deletes nothing. It adds plan files and fills in its own
-  milestone, without setting it to `done`, and changes no milestone file but
+  milestone, without setting it to `done` (with or without a rider), and changes no milestone file but
   its own; of the other plan files that exist it may change only the glossary,
   the architecture map and `docs/decisions.md`.
 
@@ -109,6 +109,8 @@ AUTONOMY_RE = re.compile(r"^[ \t]*-[ \t]*Autonomy:[ \t]*(.*)$", re.M)
 # The files a plan PR may change: the same list as the ticket checks' shared step.
 PLAN_FILES_RE = re.compile(r"^(docs/(tickets|milestones|adr|reports)/[^/]+\.md|docs/agents/(glossary|architecture)\.md"
                            r"|docs/decisions\.md)$")
+# Any Status that starts with "done", riders included: what a cut may not write.
+DONE_ISH_RE = re.compile(r"^Status:[ \t]*done", re.I | re.M)
 HARNESS = "docs/agents/harness.md"
 # The Autonomy value `/setup` offers for Level 4, up to its first semicolon. Only this value lets
 # a cut merge: a hand-written sentence that mentions plan PRs may be forbidding them.
@@ -317,8 +319,9 @@ def plan_into_milestone(repo: Path, head: str, base: str, default: str) -> tuple
         return "", ("a cut adds plan files and fills in its own milestone; this changes plan files "
                     "that exist: " + ", ".join(kept))
     # Closing a milestone is the report PR's, which also checks that none of its tickets is open.
-    if milestone_file in paths and DONE_RE.search(git(repo, "show", f"{head}:{milestone_file}") or "") \
-            and not DONE_RE.search(git(repo, "show", f"{start}:{milestone_file}") or ""):
+    # "done" with a rider counts here too: what the report PR may not write, a cut may not either.
+    if milestone_file in paths and DONE_ISH_RE.search(git(repo, "show", f"{head}:{milestone_file}") or "") \
+            and not DONE_ISH_RE.search(git(repo, "show", f"{start}:{milestone_file}") or ""):
         return "", (f"it sets {milestone} to \"Status: done\" together with other changes: only the report PR "
                     f"closes a milestone, with nothing but that line and {report}")
     return "cut; it only adds plan files, and the Owner's Autonomy setting lets agents merge it", ""

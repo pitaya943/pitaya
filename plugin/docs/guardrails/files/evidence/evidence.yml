@@ -105,7 +105,12 @@ jobs:
               || fail "the open pull requests couldn't be listed." "re-run the check."
             while read -r pr ref || [ -n "$pr" ]; do
               if [ "$pr" -ge "$PR_NUMBER" ]; then continue; fi
-              if ticket_of "$ref" "$OTHER_TICKETS/pr-$pr.md" && [ "$TICKET_STATE" = OPEN ]; then continue; fi
+              if ticket_of "$ref" "$OTHER_TICKETS/pr-$pr.md"; then
+                if [ "$TICKET_STATE" = OPEN ]; then continue; fi
+                # Unreadable isn't the same as closed: the claim may be there, so don't pass over it.
+                [ -n "$TICKET_STATE" ] || fail "the ticket of the earlier pull request #$pr ($ref) can't be read, so the check can't tell what it claims." \
+                  "re-run the check if GitHub's API failed; if #$pr names an issue that doesn't exist, close it or rename its branch."
+              fi
               rm -f "$OTHER_TICKETS/pr-$pr.md"
             done < "$RUNNER_TEMP/open-prs.txt"
           }

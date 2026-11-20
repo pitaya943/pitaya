@@ -248,6 +248,11 @@ def test_the_pages_describe_a_cut_as_the_check_does():
         assert "names plan PRs" not in text, rel
     assert "without setting it to `done`" in flat("docs/guardrails/agent-merge.md")
     assert "can't close it" in flat("skills/autopilot/tick.md")
+    skill = flat("skills/autopilot/SKILL.md")
+    assert "lets agents merge plan PRs, and only while it adds tickets" not in skill
+    assert "without closing it" in skill
+    for rel in ("skills/autopilot/SKILL.md", "skills/build/SKILL.md"):
+        assert "`serial-resources`" in flat(rel), rel  # found by the audit: the wait was in two pages of four
 
 
 def test_the_decision_log_and_the_trial_record_cover_the_batch():

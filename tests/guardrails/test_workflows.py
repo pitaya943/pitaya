@@ -905,7 +905,7 @@ def test_issue_tickets_of_earlier_prs_are_collected_when_open(repo, tmp_path):
     repo.commit("no ticket files")
     repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
     body = "## Serial resources\\n\\n- migrations"
-    path = pr_gh(tmp_path, {41: "ticket/11-first", 42: "ticket/12-second", 40: "ticket/10-closed", 39: "ticket/9-gone"},
+    path = pr_gh(tmp_path, {41: "ticket/11-first", 42: "ticket/12-second", 40: "ticket/10-closed"},
                  issues={11: ("OPEN", body), 12: ("OPEN", body), 10: ("CLOSED", body)})
     proc, others = run_serial_find(repo, tmp_path, "ticket/12-second", 42, path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -957,3 +957,13 @@ def test_the_last_open_pr_counts_even_without_a_final_newline(serial_repo, tmp_p
     proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-2-second", 42, path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert [p.name for p in others.glob("*.md")] == ["pr-41.md"]
+
+
+def test_an_earlier_prs_issue_ticket_that_cannot_be_read_fails_closed(repo, tmp_path):
+    """Found by the audit before the 0.1.9 PR: an API error made the earlier PR's claim vanish, and the later PR passed."""
+    repo.commit("no ticket files")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    body = "## Serial resources\\n\\n- migrations"
+    path = pr_gh(tmp_path, {41: "ticket/11-first", 42: "ticket/12-second"}, issues={12: ("OPEN", body)})
+    proc, others = run_serial_find(repo, tmp_path, "ticket/12-second", 42, path)
+    assert proc.returncode == 1 and "#41" in proc.stdout and "To fix:" in proc.stdout, proc.stdout

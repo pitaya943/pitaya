@@ -19,7 +19,8 @@ agents no longer attempt direct or forced pushes over several releases.
 
 Protocol: reads PreToolUse JSON on stdin; prints a hookSpecificOutput
 decision to stdout, or nothing to let the call through. Exits 1 with a
-message on stderr when the input can't be read (fails open, loudly).
+message on stderr when the input can't be read or shell_words.py, the parser
+the hooks share, isn't next to this file (fails open, loudly).
 """
 
 from __future__ import annotations

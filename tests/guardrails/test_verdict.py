@@ -846,3 +846,28 @@ def test_the_level_4_value_is_read_whatever_its_case_or_quoting(tmp_path, planne
     planned.git("branch", "-f", "milestone/M2", "main")
     head = cut(planned)
     assert check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2").returncode == 0
+
+
+@pytest.mark.parametrize("status", ["done, criteria waived", "Done.", "done (all tickets)", "DONE"])
+def test_a_cut_may_not_close_its_milestone_with_a_rider_either(tmp_path, planned, status):
+    """Found by the audit before the 0.1.9 PR: the cut's guard asked for exactly `done`, so a rider slipped by."""
+    level_4(planned)
+    cut(planned)
+    text = (planned.path / "docs/milestones/M2.md").read_text()
+    planned.write("docs/milestones/M2.md", text.replace("Status: active", f"Status: {status}"))
+    head = planned.commit("and M2 closed, with a rider")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "done" in proc.stdout, proc.stdout
+
+
+def test_a_cut_into_a_milestone_already_marked_done_may_add_tickets(tmp_path, planned):
+    """A milestone the Owner sent back: its branch says done, and the new tickets arrive like a cut."""
+    level_4(planned)
+    planned.git("checkout", "-q", "milestone/M2")
+    planned.write("docs/milestones/M2.md", MILESTONE.format(n=2, status="done", tickets="T-2: second"))
+    planned.commit("M2 was closed, then sent back")
+    planned.git("checkout", "-q", "-b", "plan/M2-more")
+    planned.write("docs/milestones/M2.md", MILESTONE.format(n=2, status="done", tickets="T-2: second\nT-5: fifth"))
+    planned.write("docs/tickets/T-5.md", TICKET.format(id="T-5", status="open", milestone="M2"))
+    head = planned.commit("one more ticket")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2-more", base="milestone/M2").returncode == 0

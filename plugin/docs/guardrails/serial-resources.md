@@ -26,7 +26,7 @@ Open two ticket PRs whose tickets both list `migrations`. The second one's check
 
 ## Cost and false positives
 
-- One API call per open PR, so it gets slower with many open PRs.
+- One API call to list the open PRs, and with issue tickets two more for each PR opened earlier, so it gets slower with many open PRs. If an earlier PR's issue can't be read, the check fails rather than pass over a claim it can't see.
 - A ticket that lists a resource it doesn't touch blocks others for nothing. `/plan` and the verifier should keep the lists honest.
 - The check sees open PRs only. Two branches claiming the same resource before either has a PR aren't caught, so plan around it.
 

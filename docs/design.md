@@ -160,12 +160,14 @@ A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its 
 | --- | --- | --- |
 | `AGENTS.md` | A map of at most 100 lines: where to start, the test command, what done means, what never to do, where things are | D2 |
 | `CLAUDE.md` | One line importing `AGENTS.md` | D2 |
-| `.claude/settings.json` | Deny reading `.env*`, key files and cloud credentials; allow the test command and read-only git; ask for everything else; no sandbox. Merged additively when the project already has one | D8 |
+| `.claude/settings.json` | Deny reading `.env*`, key files and cloud credentials; allow the test script and read-only git; ask for everything else; no sandbox. Merged additively when the project already has one | D8 |
 | `.claude/hooks/no_push_main.py` | Deny pushes to the default branch (read from `origin/HEAD` too), force pushes, remote deletes, `--all` and `--mirror` | D6 |
 | `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x`; and from 0.1.6 the accidental wipes in D64 (f): `.git`, `*`, `./*`, `$PWD`, an unnarrowed `find . -delete`, `git checkout` and `git restore` of `.` | D6, D64 |
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
 | `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge | D37 |
-| `.github/workflows/tests.yml` | One job running the test command; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
+| `.claude/hooks/shell_words.py` | Not a hook: the parser the four hooks import, so they split a command the same way (D70) | D70 |
+| `.github/scripts/test.sh` | The project's test command, the one place it is written; the workflow, `AGENTS.md`, the harness file and the allow rule run it (D70) | D70 |
+| `.github/workflows/tests.yml` | One job running the test script; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
 | `docs/decisions.md` | Append-only decision log | D12 |
 | `docs/agents/glossary.md`, `learnings.md`, `architecture.md` | The project's words, what earlier work learned, and the module map; AGENTS.md points to them | D30 |
 
