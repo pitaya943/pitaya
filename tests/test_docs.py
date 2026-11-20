@@ -58,3 +58,13 @@ def test_link_check_catches_bad_targets(tmp_path):
     doc = tmp_path / "doc.md"
     doc.write_text("[a](missing.md) [b](other.md#wrong) [c](other.md#real-heading) [d](https://example.com)\n")
     assert broken_links(doc) == ["missing.md: target does not exist", "other.md#wrong: no heading with anchor #wrong"]
+
+
+def test_changelog_has_a_dated_section_for_the_plugin_version():
+    """A release needs its notes: the CHANGELOG names the shipped version, with a date, not "Unreleased"."""
+    import json
+    import re
+    version = json.loads((REPO_ROOT / "plugin" / ".claude-plugin" / "plugin.json").read_text())["version"]
+    text = (REPO_ROOT / "plugin" / "CHANGELOG.md").read_text()
+    assert re.search(rf"^## {re.escape(version)} \(\d{{4}}-\d{{2}}-\d{{2}}\)$", text, re.M), version
+    assert "Unreleased" not in text
