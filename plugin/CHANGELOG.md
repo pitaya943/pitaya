@@ -9,8 +9,8 @@ The first batch of fixes from the review of 0.1.4 (D59 to D61): one proof that d
 ### Recipes
 
 - `agent-merge` and the shared "Find the ticket" step: a carried PASS and a sync PR are now proven by history as well as by tree. Every commit added must be a true merge: two parents, and the tree git gets by merging them. Before, `git merge -s ours` passed both proofs, because it keeps the tree while recording a commit as merged; that commit's changes were then dropped when it was merged for real, so a correction the Owner merged into `main` could disappear at the milestone's sign-off. "Update branch" pressed several times still carries a PASS. Copy `check_verdict.py` and all seven workflows again.
-- `commit-author` doesn't check commits the default branch already contains, so a sync PR no longer fails on the Owner's merge commits. `progress-file` accepts a requirement that matches the default branch's copy of the feature list, so a sync PR can bring a changed requirement into a milestone.
-- `commit-author` and `progress-file` fail when `MACHINE_ACCOUNT` is unset, like the ticket-based checks. Before, both passed without checking anything.
+- `commit-author` doesn't check commits the default branch already contains, so a sync PR no longer fails on the commits `main` gained, whoever wrote them. `progress-file` accepts a requirement that matches the default branch's copy of the feature list, so a sync PR can bring a changed requirement into a milestone.
+- `commit-author` and `progress-file` fail on every pull request when `MACHINE_ACCOUNT` is unset, like the ticket-based checks. Before, both passed without checking anything.
 - `protect-main`: the `protect-milestones` ruleset requires 1 approval below Level 3 and 0 only from Level 3, changed in the same step that requires `verdict` (`agent-merge` says so too). It also turns on "Do not require status checks on creation", and "How to prove it works" creates a test milestone branch.
 
 ### Templates

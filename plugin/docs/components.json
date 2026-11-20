@@ -46,7 +46,7 @@
     {"id": "session-guards", "kind": "template", "level": 1, "doc": "templates/.claude/settings.json",
      "files": [".claude/settings.json", ".claude/hooks/no_push_main.py", ".claude/hooks/no_destructive.py",
                ".claude/hooks/ask_on_rule_files.py", ".claude/hooks/ask_on_merge.py"],
-     "summary": "Read tool denied on secrets; hooks block pushes to main and wiping commands, ask before rule edits and merges"},
+     "summary": "Read denied on secrets, git denied `--output` and the like; hooks block main pushes and wipes, ask on rule edits, merges"},
     {"id": "tests-workflow", "kind": "template", "level": 1, "doc": "templates/.github/workflows/tests.yml",
      "files": [".github/workflows/tests.yml"],
      "summary": "Runs the test command on every PR"},

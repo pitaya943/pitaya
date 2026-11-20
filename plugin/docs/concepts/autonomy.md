@@ -13,12 +13,12 @@ The milestone branch is the blast radius (D44): a milestone that went wrong is t
 
 Agents merging their own work is safe only when the checks a person would make are mechanical:
 
-1. Level 1 is fully in place: the tests check is required on `main`, and the hooks are installed. The required approval drops to 0 only together with requiring the `verdict` status (D37).
+1. Level 1 is fully in place: the tests check is required on `main`, and the hooks are installed. The required approval on `milestone/*` drops from 1 to 0 only together with requiring the `verdict` status there (D37); `main` keeps its approval at every level.
 2. Level 2's merge checks are on, at least scope, read-only paths, no weakened tests and done-when, so an agent can't widen its task or remove the tests that judge it.
 3. The verifier is a separate session or a different model, not a subagent of the builder.
 4. Sensitive areas still go to the Owner: the agent escalates a ticket that touches one without a covering test, and the Owner sees every change when reviewing the milestone.
 5. Someone reviews merged work afterwards, for example through `/report` and `/retro` on a fixed schedule.
-6. Agents merge ticket PRs only into milestone branches. `main` changes only when the Owner merges a milestone, so the worst case is one milestone thrown away (D44).
+6. Agents merge ticket and sync PRs only into milestone branches. A sync PR (`sync/<slug>`) brings `main` into the milestone and needs no verifier: the `verdict` check proves it holds nothing else. `main` changes only when the Owner merges a milestone, so the worst case is one milestone thrown away (D44).
 7. Agents merge only through `/autopilot` or a builder that follows its merge rules: re-read the head commit, require PASS on it, and leave plan PRs and sensitive areas to the Owner.
 
 If any of these stops holding, go back to the default.

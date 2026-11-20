@@ -126,3 +126,36 @@ def test_git_allow_rules_have_deny_rules_for_their_dangerous_options(path):
 
 def test_suggestion_says_the_allow_rules_are_narrowed():
     assert "--output" in read("docs/suggestion.md")
+
+
+# --- found by the consistency audit before the PR (decision log) --------------------
+
+def test_every_place_that_names_the_branches_to_allow_names_all_of_them():
+    """autopilot asks for them when AGENTS.md has no grant; the README tells cloud users what to allow."""
+    ask = next(line for line in read("skills/autopilot/SKILL.md").splitlines() if "ask the user once to allow" in line)
+    cloud = read("README.md").split("## Cloud sessions", 1)[1].split("\n## ", 1)[0]
+    for name, text in (("autopilot", ask), ("README", cloud)):
+        missing = sorted(p for p in branch_prefixes() if f"`{p}/" not in text)
+        assert not missing, f"{name} doesn't name: {missing}"
+
+
+def test_autonomy_says_which_ruleset_drops_its_approval():
+    line = next(l for l in read("docs/concepts/autonomy.md").splitlines() if "to 0 only together" in l)
+    assert "`milestone/*`" in line
+
+
+def test_agents_merge_sync_prs_where_they_merge_ticket_prs():
+    assert "ticket and sync PRs" in read("docs/concepts/autonomy.md")
+    assert "sync PR" in read("docs/concepts/roles.md")
+
+
+@pytest.mark.parametrize("rel", ["docs/guardrails/commit-author.md", "docs/guardrails/progress-file.md"])
+def test_recipes_say_an_unset_machine_account_fails_every_pr(rel):
+    assert "fails on every pull request" in read(rel)
+
+
+def test_every_description_of_the_permissions_mentions_the_git_deny_rules():
+    manifest = json.loads(read("docs/components.json"))
+    guards = json.dumps(manifest)
+    assert "--output" in guards
+    assert "--output" in read("docs/levels.md") and "--output" in read("docs/concepts/access.md")
