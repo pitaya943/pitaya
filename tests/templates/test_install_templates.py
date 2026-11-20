@@ -33,7 +33,9 @@ LEVEL1 = {
     ".claude/hooks/no_destructive.py",
     ".claude/hooks/ask_on_rule_files.py",
     ".claude/hooks/ask_on_merge.py",
+    ".claude/hooks/shell_words.py",
     ".github/workflows/tests.yml",
+    ".github/scripts/test.sh",
     "docs/agents/glossary.md",
     "docs/agents/learnings.md",
     "docs/agents/architecture.md",
@@ -87,7 +89,7 @@ def test_agents_md_is_a_short_map():
     text = (TEMPLATES / "AGENTS.md").read_text()
     assert len(text.splitlines()) <= 100
     assert "docs/agents/harness.md" in text
-    assert "<TEST_COMMAND>" in text
+    assert "`sh .github/scripts/test.sh`" in text  # 0.1.9 (F32): the command itself is only in that script
 
 
 def test_settings_json_shape():
@@ -105,7 +107,8 @@ def test_settings_json_shape():
 
 def test_workflow_runs_the_test_command():
     text = (TEMPLATES / ".github" / "workflows" / "tests.yml").read_text()
-    assert "run: <TEST_COMMAND>" in text
+    assert "run: sh .github/scripts/test.sh" in text  # 0.1.9 (F32): the script holds the command
+    assert "<TEST_COMMAND>" in (TEMPLATES / ".github" / "scripts" / "test.sh").read_text()
     assert "pull_request" in text
 
 
@@ -117,11 +120,15 @@ def test_fresh_install_creates_every_file(tmp_path):
     for rel in LEVEL1:
         assert (tmp_path / rel).is_file(), rel
         assert f"created  {rel}" in proc.stdout
-    assert "pytest -q" in (tmp_path / "AGENTS.md").read_text()
-    assert "run: pytest -q" in (tmp_path / ".github/workflows/tests.yml").read_text()
-    assert "<TEST_COMMAND>" not in (tmp_path / "AGENTS.md").read_text()
+    # 0.1.9 (F32): the command is written once, in the test script; the rest run the script.
+    script = (tmp_path / ".github/scripts/test.sh").read_text()
+    assert "\npytest -q\n" in script and "<TEST_COMMAND>" not in script
+    assert "`sh .github/scripts/test.sh`" in (tmp_path / "AGENTS.md").read_text()
+    assert "run: sh .github/scripts/test.sh" in (tmp_path / ".github/workflows/tests.yml").read_text()
+    for rel in LEVEL1:
+        assert "<TEST_COMMAND>" not in (tmp_path / rel).read_text(), rel
     allow = json.loads((tmp_path / ".claude/settings.json").read_text())["permissions"]["allow"]
-    assert "Bash(pytest -q)" in allow
+    assert "Bash(sh .github/scripts/test.sh)" in allow
 
 
 def test_hooks_are_executable_after_install(tmp_path):

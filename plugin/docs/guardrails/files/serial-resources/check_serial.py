@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.8 · docs/guardrails/files/serial-resources/check_serial.py
+# pitaya template 0.1.9 · docs/guardrails/files/serial-resources/check_serial.py
 """Guardrail "serial-resources": only one open ticket at a time changes a shared resource.
 
 Usage (in CI)::
@@ -14,8 +14,10 @@ both merge. --resources maps each name to the paths that make it up; with
 --base and --head, a PR that changes those paths must list the resource, so it
 can't skip the check by not declaring it. (--known "a,b" names resources
 without paths, for projects that can't map them.) `other-tickets/` holds the
-tickets of the other open PRs, one file each; a resource claimed by any of
-them fails.
+tickets of the open PRs this one waits for, one file each; a resource claimed
+by any of them fails. The workflow puts there only the PRs with a lower
+number: of two PRs that claim one resource, the one opened first goes first.
+Listing every other open PR would make the two block each other.
 
 When to remove: when the resource can't conflict any more, for example
 migrations are generated with timestamps and merged in order by a merge queue.
@@ -59,6 +61,9 @@ def glob_to_regex(pattern: str) -> re.Pattern:
         elif pattern[i] == "*":
             out.append("[^/]*")
             i += 1
+        elif pattern[i] == "?":
+            out.append("[^/]")
+            i += 1
         else:
             out.append(re.escape(pattern[i]))
             i += 1
@@ -84,7 +89,7 @@ def changed_files(base: str, head: str) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check that no other open ticket claims the same serial resource.")
     parser.add_argument("--ticket", required=True, type=Path)
-    parser.add_argument("--others", required=True, type=Path, help="directory with the other open PRs' tickets")
+    parser.add_argument("--others", required=True, type=Path, help="directory with the tickets of the open PRs this one waits for")
     parser.add_argument("--resources", default="", help='resources and their paths: "name=glob,glob;name=glob"')
     parser.add_argument("--known", default="", help="resource names without paths, comma separated")
     parser.add_argument("--base", help="base commit, to detect resources from the diff")
@@ -115,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             theirs = set(ticket_section(other.read_text(), "Serial resources") or [])
             clashes += [f"{r}: also claimed by {other.stem}" for r in mine if r in theirs]
     if clashes:
-        print("FAIL serial-resources: another open pull request is changing the same resource:")
+        print("FAIL serial-resources: a pull request opened earlier is changing the same resource, and goes first:")
         for line in clashes:
             print(f"  {line}")
         print("To fix: wait until that pull request merges or closes, then update this branch and re-run.")

@@ -16,7 +16,7 @@ Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it 
 
 1. Add a "## Test IDs" section to tickets: one test ID per done-when condition, in order: `classname::name` as JUnit reports it, or a pytest path such as `tests/test_cli.py::test_x`. An ID without parameters covers all of a parametrized test's cases. `/plan` writes it when this guardrail is listed in the harness file.
 2. Copy `files/done-when/check_done_when.py` to `.github/guardrails/check_done_when.py`.
-3. Copy `files/done-when/done-when.yml` to `.github/workflows/done-when.yml`, set `TEST_COMMAND` so it writes JUnit XML, and add your runtime setup steps to the `head-tests` job. The PR's tests run in that job alone; the check runs in another job, with the base branch's copy of the script.
+3. Copy `files/done-when/done-when.yml` to `.github/workflows/done-when.yml`, and add your runtime setup steps to the `head-tests` job. That job runs `sh .github/scripts/test.sh` with `JUNIT` set, the script `/setup` installed as the one place the test command is written: make the command there write JUnit XML to `"$JUNIT"` when it is set (for pytest, `python -m pytest -q ${JUNIT:+--junitxml="$JUNIT"}`). The PR's tests run in that job alone; the check runs in another job, with the base branch's copy of the script.
 4. After the first run, make `done-when` a required check.
 
 ## How to prove it works

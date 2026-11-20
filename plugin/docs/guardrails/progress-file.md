@@ -13,7 +13,7 @@ When one piece of work spans many sessions, or agents work for hours without a p
 ## How to add it
 
 1. Copy `files/progress-file/progress.md` to `docs/progress/progress.md`. Every session follows its start-up routine and adds a log entry before it ends.
-2. Have the Owner write the requirements into `docs/progress/features.json`, shaped like `files/progress-file/features.json` (the JSON template carries no version header; this recipe is version 0.1.8). Every feature starts with `"passes": false`.
+2. Have the Owner write the requirements into `docs/progress/features.json`, shaped like `files/progress-file/features.json` (the JSON template carries no version header; this recipe is version 0.1.9). Every feature starts with `"passes": false`.
 3. Add one line to `AGENTS.md`: "For long-running work, follow the start-up routine in `docs/progress/progress.md`, and work on one feature from `docs/progress/features.json` at a time."
 4. Copy `files/progress-file/check_feature_list.py` to `.github/guardrails/` and `files/progress-file/progress-file.yml` to `.github/workflows/`. Then make `progress-file` a required check.
 

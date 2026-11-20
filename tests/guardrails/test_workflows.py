@@ -12,6 +12,7 @@ import pytest
 from helpers import FILES, Repo
 
 WORKFLOWS = sorted(FILES.glob("*/*.yml"))
+RUN_TESTS = "sh .github/scripts/test.sh"
 
 
 def steps(path: Path) -> list[dict]:
@@ -292,10 +293,14 @@ def test_load_step_prefers_the_base_copy(tickets_repo, tmp_path):
 
 @pytest.mark.parametrize("recipe", ["no-weakened-tests", "done-when"])
 def test_pr_tests_never_share_a_job_with_the_comparison(recipe):
+    ran = []
     for name, body in jobs(FILES / recipe / f"{recipe}.yml").items():
-        runs_pr_tests = '$TEST_COMMAND' in body and "base.sha" not in body.split("$TEST_COMMAND")[0][-400:]
+        # 0.1.9 (F32): the jobs run the test script where they used to run $TEST_COMMAND.
+        runs_pr_tests = RUN_TESTS in body and "base.sha" not in body.split(RUN_TESTS)[0][-400:]
         if runs_pr_tests:
+            ran.append(name)
             assert "guardrails/" not in body, f"job {name} runs the PR's tests and a check"
+    assert "head-tests" in ran, "the test found no job that runs the PR's tests"
 
 
 def test_agent_merge_runs_in_the_base_context_on_reviews():
@@ -785,3 +790,180 @@ def test_a_fail_verdict_on_a_report_pr_is_recorded_and_blocks_it(verdict_run):
     verdict_run.run()
     assert verdict_run.statuses() == ["failure"]
     assert verdict_run.statuses(context="verdict-fail") == ["failure"]
+
+
+# --- 0.1.9, F26: serial-resources gives two PRs an order, with the one ticket lookup ---
+
+SERIAL = FILES / "serial-resources" / "serial-resources.yml"
+SERIAL_TICKET = "# {id}\n\nStatus: {status}\n\n## Scope\n\n- `**`\n\n## Serial resources\n\n- migrations\n"
+
+
+def pr_gh(tmp_path: Path, prs: dict[int, str], issues: dict[int, tuple[str, str]] | None = None) -> str:
+    """A fake gh on PATH. `pr list` prints "<number> <branch>" lines when asked for numbers and branch
+    names otherwise, leaving out the PR in $PR_NUMBER where the real query does; `issue view <n>` prints
+    that issue's state or body, and fails for an issue that doesn't exist."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    pairs = "".join(f"{n} {ref}\\n" for n, ref in sorted(prs.items()))
+    cases = "".join(f"    {n}) case \"$*\" in *state*) echo '{state}' ;; *) printf '%s\\n' '{body}' ;; esac ;;\n"
+                    for n, (state, body) in (issues or {}).items())
+    gh = bin_dir / "gh"
+    gh.write_text(
+        "#!/bin/sh\n"
+        "case \"$1 $2\" in\n"
+        "  'pr list')\n"
+        "    case \"$*\" in\n"
+        f"      *'\\(.number)'*) printf '{pairs}' ;;\n"
+        f"      *) printf '{pairs}' | while read -r n ref; do [ \"$n\" = \"${{PR_NUMBER:-}}\" ] || echo \"$ref\"; done ;;\n"
+        "    esac ;;\n"
+        "  'issue view') case \"$3\" in\n"
+        f"{cases}"
+        "    *) echo 'no such issue' >&2; exit 1 ;;\n"
+        "  esac ;;\n"
+        "esac\n")
+    gh.chmod(0o755)
+    return f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
+
+
+@pytest.fixture
+def serial_repo(repo):
+    """main with three open tickets and one done, all claiming `migrations`."""
+    for name, status in (("T-1", "open"), ("T-2", "open"), ("T-3", "open"), ("T-4", "done")):
+        repo.write(f"docs/tickets/{name}.md", SERIAL_TICKET.format(id=name, status=status))
+    repo.commit("tickets")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    return repo
+
+
+def run_serial_find(repo: Repo, tmp_path: Path, head_ref: str, number: int, path: str):
+    """The serial-resources workflow's own Find step, with the environment its YAML gives it."""
+    others = tmp_path / f"others-{number}"
+    proc, out = run_find(repo, tmp_path, head_ref, "example-bot", PATH=path, PR_NUMBER=str(number),
+                         OTHER_TICKETS=str(others))
+    return proc, others
+
+
+def serial_check(tmp_path: Path, others: Path) -> subprocess.CompletedProcess:
+    from helpers import run_check
+    return run_check("serial-resources", "check_serial.py", "--ticket", str(tmp_path / "ticket.md"),
+                     "--others", str(others), "--known", "migrations")
+
+
+def test_of_two_prs_on_one_resource_the_earlier_passes(serial_repo, tmp_path):
+    """F26: both used to fail, and under autopilot each waited for the other."""
+    path = pr_gh(tmp_path, {41: "ticket/T-1-first", 42: "ticket/T-2-second"})
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-1-first", 41, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert not list(others.glob("*.md"))
+    check = serial_check(tmp_path, others)
+    assert check.returncode == 0, check.stdout
+
+
+def test_of_two_prs_on_one_resource_the_later_waits_for_the_earlier(serial_repo, tmp_path):
+    path = pr_gh(tmp_path, {41: "ticket/T-1-first", 42: "ticket/T-2-second"})
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-2-second", 42, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert [p.name for p in others.glob("*.md")] == ["pr-41.md"]
+    check = serial_check(tmp_path, others)
+    assert check.returncode == 1 and "pr-41" in check.stdout and "earlier" in check.stdout, check.stdout
+
+
+def test_three_prs_on_one_resource_queue_in_order(serial_repo, tmp_path):
+    path = pr_gh(tmp_path, {41: "ticket/T-1-first", 42: "ticket/T-2-second", 43: "ticket/T-3-third"})
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-3-third", 43, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert sorted(p.name for p in others.glob("*.md")) == ["pr-41.md", "pr-42.md"]
+
+
+def test_a_pr_whose_ticket_is_done_holds_no_resource(serial_repo, tmp_path):
+    """The old second lookup didn't look at `Status:`; a finished ticket's leftover PR blocked the next."""
+    path = pr_gh(tmp_path, {40: "ticket/T-4-finished", 42: "ticket/T-2-second"})
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-2-second", 42, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert not list(others.glob("*.md"))
+
+
+def test_other_prs_without_a_ticket_are_left_out(serial_repo, tmp_path):
+    path = pr_gh(tmp_path, {7: "plan/M2", 8: "fix-typo", 9: "ticket/T-9-unknown", 42: "ticket/T-2-second"})
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-2-second", 42, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert not list(others.glob("*.md"))
+
+
+def test_other_prs_tickets_come_from_the_base_branch(serial_repo, tmp_path):
+    """The old second lookup listed `docs/tickets/` in the PR's working tree, where the PR can add a file."""
+    serial_repo.git("checkout", "-q", "-b", "ticket/T-2-second")
+    serial_repo.write("docs/tickets/T-1.md", "# T-1\n\nStatus: open\n\n## Scope\n\n- `**`\n")  # the claim dropped
+    serial_repo.commit("another ticket rewritten in this PR")
+    path = pr_gh(tmp_path, {41: "ticket/T-1-first", 42: "ticket/T-2-second"})
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-2-second", 42, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "migrations" in (others / "pr-41.md").read_text()
+
+
+def test_issue_tickets_of_earlier_prs_are_collected_when_open(repo, tmp_path):
+    repo.commit("no ticket files")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    body = "## Serial resources\\n\\n- migrations"
+    path = pr_gh(tmp_path, {41: "ticket/11-first", 42: "ticket/12-second", 40: "ticket/10-closed"},
+                 issues={11: ("OPEN", body), 12: ("OPEN", body), 10: ("CLOSED", body)})
+    proc, others = run_serial_find(repo, tmp_path, "ticket/12-second", 42, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert [p.name for p in others.glob("*.md")] == ["pr-41.md"]
+    assert "migrations" in (others / "pr-41.md").read_text()
+
+
+def test_an_issue_ticket_that_cannot_be_read_fails_with_a_reason(repo, tmp_path):
+    repo.commit("no ticket files")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    proc, out = run_find(repo, tmp_path, "ticket/99-x", "example-bot", PATH=pr_gh(tmp_path, {}))
+    assert proc.returncode == 1 and "FAIL: issue #99" in proc.stdout and "To fix:" in proc.stdout, proc.stdout
+
+
+def test_without_other_tickets_the_find_step_collects_nothing(serial_repo, tmp_path):
+    """The six other workflows run the same step and don't set OTHER_TICKETS."""
+    path = pr_gh(tmp_path, {41: "ticket/T-1-first", 42: "ticket/T-2-second"})
+    proc, out = run_find(serial_repo, tmp_path, "ticket/T-2-second", "example-bot", PATH=path, PR_NUMBER="42")
+    assert proc.returncode == 0 and "skip=false" in out
+    assert not list(tmp_path.glob("others*"))
+
+
+def test_every_workflow_has_one_ticket_lookup():
+    """F26, F27: serial-resources carried a second, different `find_ticket`."""
+    for path in WORKFLOWS:
+        text = path.read_text()
+        assert text.count("find_ticket() {") <= 1, path.name
+        assert "[ -d docs/tickets ]" not in text and "in docs/tickets/*.md" not in text, path.name
+    text = SERIAL.read_text()
+    assert "Collect the other open pull requests' tickets" not in text
+    assert "OTHER_TICKETS: ${{ runner.temp }}/others" in text
+    assert '--others "$RUNNER_TEMP/others"' in text
+    for path in WORKFLOWS:
+        if path != SERIAL:
+            assert "OTHER_TICKETS: ${{" not in path.read_text(), path.name
+
+
+def test_pr_lists_are_not_cut_off_at_gh_s_default_of_30():
+    for path in WORKFLOWS:
+        for line in path.read_text().splitlines():
+            if "gh pr list" in line:
+                assert "--limit" in line, f"{path.name}: {line.strip()}"
+
+
+def test_the_last_open_pr_counts_even_without_a_final_newline(serial_repo, tmp_path):
+    path = pr_gh(tmp_path, {41: "ticket/T-1-first", 42: "ticket/T-2-second"})
+    gh = tmp_path / "bin" / "gh"
+    gh.write_text(gh.read_text().replace("41 ticket/T-1-first\\n42 ticket/T-2-second\\n", "42 ticket/T-2-second\\n41 ticket/T-1-first"))
+    proc, others = run_serial_find(serial_repo, tmp_path, "ticket/T-2-second", 42, path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert [p.name for p in others.glob("*.md")] == ["pr-41.md"]
+
+
+def test_an_earlier_prs_issue_ticket_that_cannot_be_read_fails_closed(repo, tmp_path):
+    """Found by the audit before the 0.1.9 PR: an API error made the earlier PR's claim vanish, and the later PR passed."""
+    repo.commit("no ticket files")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    body = "## Serial resources\\n\\n- migrations"
+    path = pr_gh(tmp_path, {41: "ticket/11-first", 42: "ticket/12-second"}, issues={12: ("OPEN", body)})
+    proc, others = run_serial_find(repo, tmp_path, "ticket/12-second", 42, path)
+    assert proc.returncode == 1 and "#41" in proc.stdout and "To fix:" in proc.stdout, proc.stdout

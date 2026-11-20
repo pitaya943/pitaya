@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.8 · AGENTS.md -->
+<!-- pitaya template 0.1.9 · AGENTS.md -->
 # AGENTS.md
 
 A short map for coding agents. Details live in the files it points to; read them when you need them.
@@ -18,7 +18,7 @@ The Owner grants this once for every session in this repository, including cloud
 
 ## Commands
 
-- Test: `<TEST_COMMAND>`. Run it after every change and before saying anything is done.
+- Test: `sh .github/scripts/test.sh`. Run it after every change and before saying anything is done. The script holds the project's test command, the one place it is written; CI runs the same script.
 
 ## Done means
 

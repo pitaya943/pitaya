@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git status *)",
       "Bash(git log *)",
-      "Bash(git show *)"
+      "Bash(git show *)",
+      "Bash(sh .github/scripts/test.sh)"
     ],
     "deny": [
       "Read(./.env)",

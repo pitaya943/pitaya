@@ -16,7 +16,7 @@ Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it 
 
 1. Make the test command write JUnit XML. Most tools can: pytest `--junitxml`, Jest `jest-junit`, Go `go-junit-report`, JUnit natively, cargo-nextest `--profile ci`.
 2. Copy `files/no-weakened-tests/compare_junit.py` to `.github/guardrails/compare_junit.py`.
-3. Copy `files/no-weakened-tests/no-weakened-tests.yml` to `.github/workflows/no-weakened-tests.yml`. Set `TEST_COMMAND`, and add your runtime setup steps to both test jobs (`base-tests` and `head-tests`).
+3. Copy `files/no-weakened-tests/no-weakened-tests.yml` to `.github/workflows/no-weakened-tests.yml`. Both test jobs (`base-tests` and `head-tests`) run `sh .github/scripts/test.sh` with `JUNIT` set, the script `/setup` installed as the one place the test command is written: make the command there write JUnit XML to `"$JUNIT"` when it is set (for pytest, `python -m pytest -q ${JUNIT:+--junitxml="$JUNIT"}`), and add your runtime setup steps to both jobs. The base job runs the base branch's copy of the script, so on the pull request that first adds the script the base run reports nothing and the check fails once; the Owner merges that one.
 4. After the first run, make `no-weakened-tests` a required check.
 
 The workflow runs the tests twice, in separate jobs: once on the base commit, with the base's own setup, and once on the PR. A third job, which runs no PR code, compares the results by test ID (`classname::name`) with the base branch's copy of the script. So the PR's code can't rewrite the base results or the comparison; it still produces its own results, which is why the verifier re-runs the tests from a clean checkout. An empty base report fails. It judges results, not code, so it works for any language.

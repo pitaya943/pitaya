@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.8 · .claude/hooks/no_push_main.py
+# pitaya template 0.1.9 · .claude/hooks/no_push_main.py
 """PreToolUse hook: stop pushes to the default branch, force pushes and remote deletes.
 
 What it guards against: an agent pushing straight to `main` (skipping review)
@@ -19,67 +19,28 @@ agents no longer attempt direct or forced pushes over several releases.
 
 Protocol: reads PreToolUse JSON on stdin; prints a hookSpecificOutput
 decision to stdout, or nothing to let the call through. Exits 1 with a
-message on stderr when the input can't be read (fails open, loudly).
+message on stderr when the input can't be read or shell_words.py, the parser
+the hooks share, isn't next to this file (fails open, loudly).
 """
 
 from __future__ import annotations
 
 import json
-import shlex
 import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # importing the shared parser must not leave __pycache__ in .claude/hooks/
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # the shared parser sits next to this file
+try:
+    from shell_words import commands
+except ImportError:  # fail open, but say so
+    print("no_push_main.py could not check this call: .claude/hooks/shell_words.py, which the pitaya hooks share, "
+          "is missing. Re-run /setup, or copy it from the pitaya templates.", file=sys.stderr)
+    sys.exit(1)
+
 PROTECTED = {"main", "master"}
-CONTROL = {"&&", "||", ";", "|", "&", "(", ")"}
-WRAPPERS = {"sudo", "command", "env", "time", "nohup", "exec"}
 GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
-
-
-def segments(command: str) -> list[list[str]]:
-    """Split a shell command into simple commands, each a list of words."""
-    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
-    lexer.whitespace_split = True
-    try:
-        tokens = list(lexer)
-    except ValueError:  # unbalanced quotes: fall back to plain words
-        tokens = command.split()
-    out, current = [], []
-    for tok in tokens:
-        if tok in CONTROL:
-            if current:
-                out.append(current)
-            current = []
-        else:
-            current.append(tok)
-    if current:
-        out.append(current)
-    return [strip_prefix(seg) for seg in out if seg]
-
-
-def strip_prefix(words: list[str]) -> list[str]:
-    """Drop leading VAR=value assignments and wrappers such as sudo."""
-    i = 0
-    while i < len(words) and ("=" in words[i] and not words[i].startswith("-") or words[i] in WRAPPERS):
-        i += 1
-    return words[i:]
-
-
-SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
-
-
-def expand(words: list[str], depth: int = 0) -> list[list[str]]:
-    """The simple commands in `words`, looking inside `sh -c '...'` and `eval '...'`."""
-    name = Path(words[0]).name if words else ""
-    if depth < 4 and name in SHELLS:
-        for i, word in enumerate(words[1:], 1):
-            if word == "-c" or (word.startswith("-") and not word.startswith("--") and "c" in word[1:]):
-                if i + 1 < len(words):
-                    return [c for seg in segments(words[i + 1]) for c in expand(seg, depth + 1)]
-                break
-    if depth < 4 and name == "eval":
-        return [c for seg in segments(" ".join(words[1:])) for c in expand(seg, depth + 1)]
-    return [words]
 
 
 def git_subcommand(words: list[str]) -> tuple[str | None, list[str], str | None]:
@@ -160,7 +121,7 @@ def decide(payload: dict) -> dict | None:
         return None
     command = (payload.get("tool_input") or {}).get("command") or ""
     cwd = Path(payload.get("cwd") or ".")
-    for words in (c for seg in segments(command) for c in expand(seg)):
+    for words in commands(command):
         sub, args, directory = git_subcommand(words)
         if sub != "push":
             continue

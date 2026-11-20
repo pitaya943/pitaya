@@ -2,6 +2,51 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
+## 0.1.9 (2026-11-20)
+
+The fifth batch of fixes from the review of 0.1.4: duplication and maintenance (D69, D70). F26, F27, F28 and F32, plus the gaps the verdict on 0.1.7 found in the Level 4 cut and the report PR.
+
+**If you upgrade:**
+
+- Re-run `/setup`. It creates `.claude/hooks/shell_words.py`, which the four hooks now import, and `.github/scripts/test.sh` with the test command you pass; it reports the hooks, `tests.yml` and `AGENTS.md` as stale or different, as always. Update the four hooks together with the new module: a 0.1.9 hook without `shell_words.py` lets every call through and says so on stderr.
+- Point your own copies at the script: `run: sh .github/scripts/test.sh` in `tests.yml`, and the same in `AGENTS.md` and the harness file's "Test command". The old allow rule `Bash(<your command>)` in `.claude/settings.json` is harmless; remove it if you like.
+- If you copied `done-when.yml` or `no-weakened-tests.yml`: they no longer have `TEST_COMMAND`. Make the command in `.github/scripts/test.sh` write JUnit XML when `JUNIT` is set, for pytest `python -m pytest -q ${JUNIT:+--junitxml="$JUNIT"}`. On the pull request that brings the script in, `no-weakened-tests` fails once, because the base branch has no script to run; the Owner merges that one.
+- Add the release tag where you add the marketplace, on your machine and in a cloud environment's setup script: `claude plugin marketplace add <owner>/pitaya#v0.1.9`. Without it you follow the default branch.
+- Copy each recipe's workflow and check again if you use it: the shared "Find the ticket" step changed in all of them.
+
+### Templates
+
+- **`.claude/hooks/shell_words.py`, new (F27).** The four hooks each carried a copy of the code that splits a Bash command into the programs it runs, and the copies had drifted: `ask_on_rule_files.py` didn't look inside `bash -lc '...'` and didn't see past `sudo`, `env` or a leading `VAR=value`, so `sudo rm AGENTS.md` raised no question. The hooks now import one module. It isn't a hook and `.claude/settings.json` doesn't run it. The hooks write no `__pycache__` next to themselves.
+- **`.github/scripts/test.sh`, new (F32).** The project's test command, in the one place it is written. `tests.yml`, `AGENTS.md` and the allow rule in `.claude/settings.json` now run `sh .github/scripts/test.sh` where each used to hold its own copy of the command. The script is under `.github/`, so the rule-file hook asks before an agent edits it and `read-only-paths` keeps ticket PRs from changing it. `/setup` never overwrites it: to change the command, edit the script.
+- `tests.yml`: its action is pinned by commit, with the release in a comment, and the comment that suggests a setup step shows it pinned (F28).
+
+### Recipes
+
+- **`serial-resources` (F26).** Of two pull requests that claim one resource, the one with the lower number goes first and the later one waits. Before, each listed the other and both failed, so under autopilot two tickets waited on each other. The other pull requests' tickets are now found by the same lookup as the pull request's own, from the base branch: the workflow's second, different `find_ticket` is gone, and a pull request whose ticket is done or closed no longer holds a resource. The check's glob helper now reads `?` as the scope check does. The error message says the earlier pull request goes first. An earlier pull request whose issue ticket can't be read fails the check instead of dropping its claim.
+- **The shared "Find the ticket" step (F27)** has one lookup, `ticket_of`, in all seven workflows; the pull request's own issue ticket, when it can't be read, fails with a reason; and every `gh pr list` asks for up to 1000 pull requests instead of gh's default of 30.
+- **`done-when`, `no-weakened-tests` (F32):** the test jobs run `sh .github/scripts/test.sh` with `JUNIT` set; the `TEST_COMMAND` variable is gone. The base job of `no-weakened-tests` runs the base branch's copy of the script.
+- **All workflows (F28):** actions are pinned by commit, with the release in a comment. `README.md` has a new section, "Pinned actions", on why, how to pin a step you add, and how Dependabot keeps the pins current.
+- **`agent-merge`, the `verdict` check** (D69; the verdict on 0.1.7):
+  - a Level 4 **cut** can't set its milestone to `Status: done`, with or without a rider: only the report PR closes a milestone, and it checks that no ticket is open. A pull request that mixed a report with a new, open ticket used to pass as a cut;
+  - a cut changes no plan file that exists except its own milestone file, the glossary, the architecture map and `docs/decisions.md`. An existing report or ADR used to be open to it; a cut that supersedes an ADR now waits for the Owner;
+  - the **report PR**'s open-ticket test reads the tickets from the merge result, so a report branch made before a ticket was added no longer passes; a report branch that conflicts with its base doesn't pass;
+  - in a report PR only exactly `Status: done` counts as done, for the milestone and for its tickets: `Status: done, criteria waived` waits for the Owner. The ticket checks still read any `Status: done...` as done, so nobody builds on such a ticket;
+  - only the Level 4 Autonomy value the harness template offers lets a cut merge (any case or quoting). A hand-written "Agents merge ticket PRs, never plan PRs, ..." used to count as Level 4.
+- `second-model-review`: a third-party review action goes in a workflow of its own, with read-only permissions, pinned by commit, and no other secret than its own key (F28).
+- `verify-app`: the skill template says that a verifier's screenshots go to `evidence/<PR>-<short sha>`, never on the pull request's branch.
+
+### Skills
+
+- `setup`: passes the test command to the install, which writes it into `.github/scripts/test.sh`; the harness file records `sh .github/scripts/test.sh`. With no test command yet it passes `false`, so the script and the `tests` check fail until someone fills it in. Setup steps added to `tests.yml` are pinned by commit, and the script is run once before the PR.
+- `build`: a push rejected because the branch moved isn't always a takeover. After "Update branch" on the pull request the builder merges the fetched branch in and pushes again; it stops only at another builder's commits.
+- `autopilot`: a pull request whose only red check is `serial-resources` waits for the earlier pull request and gets no CI retry. `tick.md` describes a cut as the check now judges it, and says that only the `build` skill's rule keeps a slow builder and its takeover apart on one branch: no check does.
+
+### Docs
+
+- `README.md`: the install commands name the release tag, `<owner>/pitaya#v0.1.9`, and say how to upgrade (F28).
+- `concepts/states.md`, `concepts/layout.md`, `concepts/access.md`, `guardrails/read-only-paths.md`, `levels.md`: the test script, the shared hook module, and the serial-resources wait.
+- The harness template's Autonomy note says that either agent-merge value also covers sync PRs and the report PR, and that the Level 4 value is read word for word.
+
 ## 0.1.8 (2026-11-20)
 
 The fourth batch of fixes from the review of 0.1.4: skill logic and autopilot (D62's answer to Q9, D68). Only skills, concept pages and two templates changed. No check, hook or workflow changed beyond its version header, so `/setup` reports the copies as stale while their content is the same.

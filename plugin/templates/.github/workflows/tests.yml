@@ -1,4 +1,4 @@
-# pitaya template 0.1.8 · .github/workflows/tests.yml
+# pitaya template 0.1.9 · .github/workflows/tests.yml
 # Runs the project's test command on every pull request and on pushes to main.
 # Make the "tests" check required on main (see the "protect main" recipe), so a
 # pull request with failing tests can't merge.
@@ -19,9 +19,12 @@ jobs:
     name: tests
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
-      # Add the setup steps the test command needs here, for example
-      # actions/setup-python@v7 or actions/setup-node@v5 and installing dependencies.
-      # Use these versions or newer: older ones run on Node 20, which GitHub has deprecated.
-      - name: Run the test command from docs/agents/harness.md
-        run: <TEST_COMMAND>
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
+      # Add the setup steps the test command needs here (a runtime, installing dependencies).
+      # Pin each action by commit with its release in a comment, as above; for Python,
+      # actions/setup-python@v7:
+      #   uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+      # Releases before checkout v6 and setup-python v7 run on Node 20, which GitHub has deprecated.
+      # The command itself is in .github/scripts/test.sh, the one place it is written.
+      - name: Run the project's test command
+        run: sh .github/scripts/test.sh

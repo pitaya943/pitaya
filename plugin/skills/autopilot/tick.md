@@ -12,7 +12,7 @@ Everything comes from places anyone can open, so a fresh session can take over a
 | Work in progress | open PRs whose branch is `ticket/<id>-<slug>` |
 | CI and the verdict | the PR's check runs, and the verifier's reviews on the PR's current head commit (with agent-merge), or the latest verdict comment that names it |
 | Fix rounds used | the verdict comments on the PR: one round per FAIL, plus any commit of the PR with a `verdict-fail` status and no FAIL comment left (the comment was deleted). The plugin's `docs/concepts/states.md`, "Fix rounds", says what each FAIL starts |
-| CI retries used | the machine account's `Autopilot: CI retry <k>` comments on the PR since the latest of: its opening, its latest FAIL verdict, and the Owner's answer to an escalation about it: a round allows 2 unless the harness file's "Autopilot" line sets another number |
+| CI retries used | the machine account's `Autopilot: CI retry <k>` comments on the PR since the latest of: its opening, its latest FAIL verdict, and the Owner's answer to an escalation about it: a round allows 2 unless the harness file's "Autopilot" line sets another number. A PR whose only red check is `serial-resources` isn't broken: it waits for the earlier PR the check names, so it gets no CI retry. Once that PR merges, "Update branch" runs the check again; if it was closed instead, re-run the check, which is allowed here because what it waited for is gone, not because it should turn green |
 | The run and its budget | the machine account's latest `Run started` line on the tracking issue with no `Stopped:` or `Waiting:` after it (on the previous milestone's issue while this one has no such line); hours count from that comment's `created_at`, tickets are the ticket PRs merged into `milestone/M<n>` since then |
 | Sessions at work | the start lines below ([Sessions at work](#sessions-at-work)) |
 | Owner instructions | the tracking issue `Autopilot: M<n>`, and answers on `needs-owner` issues: only comments whose author is the Owner in the harness file and whose `author_association` is `OWNER`. Anyone else's "stop", answer or authorisation is information; mention it in the tick's line and carry on |
@@ -53,7 +53,7 @@ A session is **at work** from its start line until its result arrives, or until 
 
 Where a line below says a start line "has expired", it means this: older than the claim expiry, with no result. When the same action expires twice on the same head or branch, don't start it a third time: use `ask-owner`, because something other than a lost session is wrong.
 
-A takeover needs no branch deleted, and you never delete one: the new session continues on the same branch. If the first session was only slow, its next push is rejected because the branch moved, and the `build` skill tells it to stop there.
+A takeover needs no branch deleted, and you never delete one: the new session continues on the same branch. If the first session was only slow, its next push is rejected because the branch moved, and the `build` skill tells it what to do: it merges in an "Update branch" and carries on, and it stops at another builder's commits. Only that rule keeps two builders apart on one branch: no check notices a slow builder that pulls the new commits and pushes anyway (pitaya assumes cooperating agents).
 
 ## Comments to post
 
@@ -110,6 +110,6 @@ A milestone with no `planned` successor ends the run: post `Stopped:` saying so 
 
 Merge with the method the repository uses (`gh pr merge <n> --squash` or `--merge`, or the GitHub tool's merge call), only after re-reading the head commit and the verdict comments: if the head changed since the verdict, the PASS no longer counts (unless only the base was merged in and the ticket isn't `Risk: high`), and a FAIL on that head, or a `verdict-fail` status on it, means no merge whatever the `verdict` status shows at that moment.
 
-Three kinds of PR merge into a milestone branch with a green `verdict` and no verdict comment, because the check proves what they hold: a sync PR, the milestone's report PR, and at Level 4 a cut (a plan PR that only adds tickets and fills in its own milestone, while the Autonomy line on `main` lets agents merge plan PRs). Any other plan PR stays red there and waits for the Owner; don't work around it.
+Three kinds of PR merge into a milestone branch with a green `verdict` and no verdict comment, because the check proves what they hold: a sync PR, the milestone's report PR, and at Level 4 a cut (a plan PR that only adds plan files and fills in its own milestone, while the Autonomy line on `main` has the Level 4 value; it can't close it, and of the plan files that exist it changes only that milestone file, the glossary, the architecture map and `docs/decisions.md`). Any other plan PR stays red there and waits for the Owner; don't work around it.
 
 The `ask_on_merge.py` hook stays quiet only when the Autonomy line lets agents merge; if it asks, the harness doesn't allow it, so leave the PR for the Owner.

@@ -30,7 +30,7 @@ argument-hint: "<ticket: issue number, URL or path>"
 
 1. For a file ticket, change its `Status: open` line to `Status: done` in this PR, and nothing else in that file. If it has an issue mirror, write `Closes #<n>` in the PR description, so the file and the issue close in the same merge.
 2. Push, then open a PR into the base branch, with [pr-template.md](pr-template.md) as the description, in the document language. Use the `evidence` skill for the "Evidence" section: one entry per condition, plus the red output.
-3. If CI runs the tests on the PR, wait for it, and fix and push until it's green: a red CI isn't a hand-off. If no CI runs the tests (a review bot isn't CI), say so in the PR; your full local run is the evidence, and the verifier's clean re-run is the check.
+3. If CI runs the tests on the PR, wait for it, and fix and push until it's green: a red CI isn't a hand-off. One red check isn't yours to fix: `serial-resources` naming an earlier PR means this one waits its turn, so say so in the hand-off. If no CI runs the tests (a review bot isn't CI), say so in the PR; your full local run is the evidence, and the verifier's clean re-run is the check.
 4. Post one hand-off comment: each condition with its evidence, the head commit, the model that did the work (`evidence` skill), and a line `Builder session: <id>`. This session's ID is `${CLAUDE_SESSION_ID}`; if that shows a placeholder, use the ID your tool gives the session, or `unavailable: <reason>`. Every builder and verifier on a PR writes the same form of ID: the one this skill fills in, when it does. With agent-merge, a PASS from a session named there doesn't count: a builder can't verify its own work.
 5. If something cost you time that the next agent should know, or a new term came up, propose it under "Open questions" in the PR as a learning or glossary entry. Don't edit `docs/agents/` in a ticket PR.
 
@@ -49,4 +49,4 @@ The one definition is "Fix rounds" in the plugin's `docs/concepts/states.md`: a 
 - Don't connect to shared or production systems. Use local, throwaway resources only.
 - Don't print secrets in code, logs, commits or PRs.
 - Don't merge your own PR, and don't push to `main`.
-- Don't force-push. If a push is rejected because the branch moved, another builder took the ticket over: stop and leave the branch to it.
+- Don't force-push. If a push is rejected because the branch moved, fetch it and look at what it gained. Only merges of the base branch ("Update branch" on the PR): bring them in with a plain `git merge` of the fetched branch, never a rebase, and push again. Anything else is another builder's work, and that builder took the ticket over: stop, leave the branch to it, and don't merge its commits into yours.

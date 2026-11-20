@@ -719,3 +719,155 @@ def test_a_plan_pr_that_changes_nothing_does_not_pass(tmp_path, planned):
     planned.git("checkout", "-q", "-b", "plan/empty", "milestone/M1")
     head = planned.commit("nothing")
     assert check_git(tmp_path, planned, [], head, branch="plan/empty").returncode == 1
+
+
+# --- 0.1.9: the gaps the verdict on 0.1.7 found in the two proofs above (D69) ---
+
+def test_a_cut_may_not_set_its_milestone_to_done(tmp_path, planned):
+    """A cut fills its milestone in; closing it is the report PR's, which checks that no ticket is open."""
+    level_4(planned)
+    cut(planned)
+    text = (planned.path / "docs/milestones/M2.md").read_text()
+    planned.write("docs/milestones/M2.md", text.replace("Status: active", "Status: done"))
+    head = planned.commit("and M2 closed in the cut that opens its tickets")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "done" in proc.stdout, proc.stdout
+
+
+def test_a_report_mixed_with_a_new_ticket_is_not_a_cut(tmp_path, planned):
+    """The mix of two allowed shapes: Status: done and the report, plus a ticket that is still open."""
+    level_4(planned)
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.git("merge", "-q", "--no-edit", "main")
+    report_pr(planned)
+    planned.write("docs/tickets/T-9.md", TICKET.format(id="T-9", status="open", milestone="M1"))
+    head = planned.commit("and one more ticket for M1")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 1, proc.stdout
+
+
+@pytest.mark.parametrize("path", ["docs/reports/M1.md", "docs/adr/0001-storage.md", "docs/milestones/M1-design.md"])
+def test_a_cut_may_not_change_a_plan_record_that_exists(tmp_path, planned, path):
+    """A report, an ADR or an earlier design is a record the Owner read; a cut only adds."""
+    level_4(planned)
+    planned.git("checkout", "-q", "milestone/M2")
+    planned.write(path, "# A record\n\nWhat the Owner read.\n")
+    planned.commit("a record that exists")
+    cut(planned)
+    planned.write(path, "# A record\n\nSomething else.\n")
+    head = planned.commit("and a record rewritten")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and path in proc.stdout, proc.stdout
+
+
+@pytest.mark.parametrize("path", ["docs/agents/glossary.md", "docs/agents/architecture.md", "docs/decisions.md"])
+def test_a_cut_may_still_update_the_living_plan_files(tmp_path, planned, path):
+    """`/plan` keeps the glossary, the architecture map and the decision log current in the same change."""
+    level_4(planned)
+    planned.git("checkout", "-q", "milestone/M2")
+    planned.write(path, "# Living\n\nfirst\n")
+    planned.commit("a living file")
+    cut(planned)
+    planned.write(path, "# Living\n\nfirst\nsecond\n")
+    head = planned.commit("and a new term")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_a_cut_may_add_a_report_or_an_adr(tmp_path, planned):
+    level_4(planned)
+    cut(planned)
+    planned.write("docs/adr/0002-queue.md", "# ADR 2\n")
+    head = planned.commit("and a new ADR")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2").returncode == 0
+
+
+def test_a_stale_report_branch_is_judged_on_what_merging_it_gives(tmp_path, planned):
+    """A ticket opened on the milestone branch after the report branch was made is still open after the merge."""
+    head = report_pr(planned)
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/tickets/T-9.md", TICKET.format(id="T-9", status="open", milestone="M1"))
+    planned.commit("a ticket added after the report branch was made")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 1 and "T-9" in proc.stdout, proc.stdout
+
+
+def test_a_report_branch_that_conflicts_with_its_base_does_not_pass(tmp_path, planned):
+    head = report_pr(planned)
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/reports/M1.md", "# Another report\n")
+    planned.commit("another report landed first")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 1, proc.stdout
+
+
+@pytest.mark.parametrize("status", ["done, criteria waived", "done (two tickets dropped)", "done-ish"])
+def test_a_report_pr_sets_exactly_done(tmp_path, planned, status):
+    """`Status: done` with a rider is a different claim; the Owner reads it."""
+    planned.git("checkout", "-q", "-b", "plan/M1-report", "milestone/M1")
+    text = (planned.path / "docs/milestones/M1.md").read_text()
+    planned.write("docs/milestones/M1.md", text.replace("Status: active", f"Status: {status}"))
+    planned.write("docs/reports/M1.md", "# Report: M1\n")
+    head = planned.commit("the report for M1")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M1-report").returncode == 1
+
+
+def test_a_ticket_done_with_a_rider_is_not_done(tmp_path, planned):
+    planned.git("checkout", "-q", "milestone/M1")
+    planned.write("docs/tickets/T-1.md", TICKET.format(id="T-1", status="done, criteria waived", milestone="M1"))
+    planned.commit("T-1 half done")
+    head = report_pr(planned)
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M1-report")
+    assert proc.returncode == 1 and "T-1" in proc.stdout, proc.stdout
+
+
+@pytest.mark.parametrize("autonomy", [
+    "Agents merge ticket PRs, never plan PRs, into milestone branches; only the Owner merges main",
+    "Agents merge ticket PRs into milestone branches (plan PRs wait for the Owner); only the Owner merges main",
+    "Agents merge ticket and plan PRs into main",
+])
+def test_a_hand_written_autonomy_value_is_not_level_4(tmp_path, planned, autonomy):
+    """Only the value `/setup` offers for Level 4 lets a cut merge; a sentence that mentions plan PRs doesn't."""
+    planned.git("checkout", "-q", "main")
+    planned.write("docs/agents/harness.md", harness(autonomy))
+    planned.commit("a hand-written Autonomy value")
+    planned.git("branch", "-f", "milestone/M2", "main")
+    head = cut(planned)
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "Autonomy" in proc.stdout, proc.stdout
+
+
+@pytest.mark.parametrize("autonomy", [LEVEL_4, f"`{LEVEL_4}`", LEVEL_4.upper(), LEVEL_4.replace("; only", ";  Only"),
+                                      LEVEL_4.split(";")[0], f'"{LEVEL_4.split(";")[0]}".'])
+def test_the_level_4_value_is_read_whatever_its_case_or_quoting(tmp_path, planned, autonomy):
+    planned.git("checkout", "-q", "main")
+    planned.write("docs/agents/harness.md", harness(autonomy))
+    planned.commit("Level 4")
+    planned.git("branch", "-f", "milestone/M2", "main")
+    head = cut(planned)
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2").returncode == 0
+
+
+@pytest.mark.parametrize("status", ["done, criteria waived", "Done.", "done (all tickets)", "DONE"])
+def test_a_cut_may_not_close_its_milestone_with_a_rider_either(tmp_path, planned, status):
+    """Found by the audit before the 0.1.9 PR: the cut's guard asked for exactly `done`, so a rider slipped by."""
+    level_4(planned)
+    cut(planned)
+    text = (planned.path / "docs/milestones/M2.md").read_text()
+    planned.write("docs/milestones/M2.md", text.replace("Status: active", f"Status: {status}"))
+    head = planned.commit("and M2 closed, with a rider")
+    proc = check_git(tmp_path, planned, [], head, branch="plan/M2", base="milestone/M2")
+    assert proc.returncode == 1 and "done" in proc.stdout, proc.stdout
+
+
+def test_a_cut_into_a_milestone_already_marked_done_may_add_tickets(tmp_path, planned):
+    """A milestone the Owner sent back: its branch says done, and the new tickets arrive like a cut."""
+    level_4(planned)
+    planned.git("checkout", "-q", "milestone/M2")
+    planned.write("docs/milestones/M2.md", MILESTONE.format(n=2, status="done", tickets="T-2: second"))
+    planned.commit("M2 was closed, then sent back")
+    planned.git("checkout", "-q", "-b", "plan/M2-more")
+    planned.write("docs/milestones/M2.md", MILESTONE.format(n=2, status="done", tickets="T-2: second\nT-5: fifth"))
+    planned.write("docs/tickets/T-5.md", TICKET.format(id="T-5", status="open", milestone="M2"))
+    head = planned.commit("one more ticket")
+    assert check_git(tmp_path, planned, [], head, branch="plan/M2-more", base="milestone/M2").returncode == 0

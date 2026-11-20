@@ -160,12 +160,14 @@ A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its 
 | --- | --- | --- |
 | `AGENTS.md` | A map of at most 100 lines: where to start, the test command, what done means, what never to do, where things are | D2 |
 | `CLAUDE.md` | One line importing `AGENTS.md` | D2 |
-| `.claude/settings.json` | Deny reading `.env*`, key files and cloud credentials; allow the test command and read-only git; ask for everything else; no sandbox. Merged additively when the project already has one | D8 |
+| `.claude/settings.json` | Deny reading `.env*`, key files and cloud credentials; allow the test script and read-only git; ask for everything else; no sandbox. Merged additively when the project already has one | D8 |
 | `.claude/hooks/no_push_main.py` | Deny pushes to the default branch (read from `origin/HEAD` too), force pushes, remote deletes, `--all` and `--mirror` | D6 |
 | `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x`; and from 0.1.6 the accidental wipes in D64 (f): `.git`, `*`, `./*`, `$PWD`, an unnarrowed `find . -delete`, `git checkout` and `git restore` of `.` | D6, D64 |
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
 | `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge | D37 |
-| `.github/workflows/tests.yml` | One job running the test command; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
+| `.claude/hooks/shell_words.py` | Not a hook: the parser the four hooks import, so they split a command the same way (D70) | D70 |
+| `.github/scripts/test.sh` | The project's test command, the one place it is written; the workflow, `AGENTS.md`, the harness file and the allow rule run it (D70) | D70 |
+| `.github/workflows/tests.yml` | One job running the test script; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
 | `docs/decisions.md` | Append-only decision log | D12 |
 | `docs/agents/glossary.md`, `learnings.md`, `architecture.md` | The project's words, what earlier work learned, and the module map; AGENTS.md points to them | D30 |
 
@@ -227,7 +229,7 @@ Standard library and git only; one standalone file per check; configuration in h
 
 | Part | How users get it | How it updates |
 | --- | --- | --- |
-| Skills | The `pitaya` plugin: `/plugin marketplace add <owner>/pitaya`, then `/plugin install pitaya@pitaya`; in cloud sessions, the same two commands (`claude plugin ...`) in the environment's setup script (D54); or copy `skills/<name>/` | Automatically when the plugin version changes; in the cloud, each time a container is built fresh |
+| Skills | The `pitaya` plugin: `/plugin marketplace add <owner>/pitaya#v<version>`, then `/plugin install pitaya@pitaya`; in cloud sessions, the same two commands (`claude plugin ...`) in the environment's setup script (D54); or copy `skills/<name>/`. The `#v<version>` pins a release tag (D70) | By adding the marketplace again with a newer tag; in the cloud, by changing the tag in the setup script, which runs each time a container is built fresh |
 | Level 1 files | `/setup` copies `templates/` | Re-run `/setup`: it lists stale copies and diffs, and the user decides |
 | Recipe files | The user copies them | `CHANGELOG.md` flags recipe fixes; headers carry the version |
 
