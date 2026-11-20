@@ -6,15 +6,12 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Skills
 
-- Cloud sessions (D51): they load no plugins, so `setup/scripts/vendor_plugin.py` copies the plugin's `skills/`, `docs/` and `templates/` into a project's `.claude/`, recording each file's hash in `.claude/pitaya.json`; it never overwrites a file it didn't write, and `--upgrade` replaces only its own unmodified copies. `install_templates.py` reads the version from that record. Every `gh` command in the skills names the GitHub tool alternative, and a copied skill is named `pitaya-<name>` (D52), so `/pitaya:help` becomes `/pitaya-help` and can't collide with the built-in `/help` or a project's own skills.
-
-### Templates
-
-- `AGENTS.md`: copied skills are typed `/pitaya-<name>`.
+- Every `gh` command in the skills names the GitHub tool alternative, for sessions where `gh` can't reach GitHub, such as cloud sessions (D54).
 
 ### Docs
 
-- README: a "Cloud sessions" section. `skills/README.md` no longer links to `docs/design.md`, which isn't shipped.
+- README: a "Cloud sessions" section. Cloud sessions load the plugins their environment's setup script installs, so the install is the same two commands in the setup script (D54).
+- `skills/README.md` no longer links to `docs/design.md`, which isn't shipped.
 
 ## 0.1.0 (2026-11-20)
 

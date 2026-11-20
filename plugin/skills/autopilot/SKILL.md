@@ -9,8 +9,6 @@ argument-hint: "[M<n>] [budget, such as 5 tickets or 4 hours]"
 
 You coordinate; you don't build, verify or plan. Each piece of work goes to a fresh session or agent, so nothing piles up in your context. You are **stateless**: every time you wake, rebuild the picture from the repository and GitHub, never from memory, so a lost session costs nothing.
 
-Skill names below carry the plugin's `pitaya:` prefix; when the skills were copied into `.claude/skills/` (cloud sessions), replace the `pitaya:` prefix with `pitaya-`.
-
 ## Before the first tick
 
 1. Read `docs/agents/harness.md`: Level, Autonomy, Fix rounds, Sensitive areas, Guardrails and the "Autopilot" line (budget, parallel builders, wake). If it's missing, suggest `/setup` and stop. If the level is below 3, say what's missing (the plugin's `docs/levels.md`) and stop.

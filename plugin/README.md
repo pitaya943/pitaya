@@ -11,15 +11,14 @@ This folder is what the `pitaya` plugin installs. Once installed, the skills app
 
 ## Cloud sessions
 
-Claude Code cloud sessions (claude.ai/code, or the desktop app's cloud sessions) don't load plugins: they use only what the repository commits, such as `.claude/skills/`. Project hooks in `.claude/settings.json` still run. To use pitaya there, commit a copy of the plugin into `.claude/` once, from any session that can reach GitHub (replace `<owner>` with the pitaya repository's owner). The script ships from 0.1.1; to upgrade later, clone the newer release tag.
+Claude Code cloud sessions (claude.ai/code, or the desktop app's cloud sessions) have no `/plugin` command and don't load the plugins installed on your own machine. Install pitaya in the cloud environment instead: in **Settings → Environments**, open the environment the project's sessions use and add these lines to its setup script (replace `<owner>` with the pitaya repository's owner):
 
 ```bash
-git clone --depth 1 --branch v0.1.1 https://github.com/<owner>/pitaya /tmp/pitaya
-python3 /tmp/pitaya/plugin/skills/setup/scripts/vendor_plugin.py --target . --check
-python3 /tmp/pitaya/plugin/skills/setup/scripts/vendor_plugin.py --target .
+claude plugin marketplace add <owner>/pitaya
+claude plugin install pitaya@pitaya
 ```
 
-It copies `skills/`, `docs/` and `templates/` into `.claude/` and records each file's hash in `.claude/pitaya.json`. Each skill is copied as `pitaya-<name>`, so it can't collide with Claude Code's built-in commands or your own skills: a `build` skill of your own stays as it is. The script never overwrites a file it didn't write; one in its way is reported as `differs` and left alone. An older copy of pitaya made by hand (unprefixed folders such as `.claude/skills/build/`) isn't touched either: if you haven't changed it, delete it so the two copies don't confuse anyone. Commit the copy through a pull request; start a new session if the skills don't appear. Type the skills with a hyphen instead of the colon: `/pitaya-setup`, `/pitaya-plan`, `/pitaya-help`. Where `gh` can't reach GitHub, the skills use the session's GitHub tools. To upgrade, run the script from the newer version with `--upgrade`: it replaces only copies it recorded and nobody edited.
+The setup script runs each time a session's container is built fresh, so every new session in that environment has the plugin, with the same `/pitaya:<skill>` names as on your machine. Check it in a new session by typing `/pitaya:help`. A resumed session keeps the version it was built with. Project hooks in `.claude/settings.json` run in cloud sessions too. Where `gh` can't reach GitHub, the skills use the session's GitHub tools.
 
 ## Read next
 
