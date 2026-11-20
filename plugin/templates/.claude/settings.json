@@ -18,7 +18,11 @@
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.config/gcloud/**)",
-      "Read(~/.azure/**)"
+      "Read(~/.azure/**)",
+      "Bash(git *--output*)",
+      "Bash(git *--no-index*)",
+      "Bash(git *--ext-diff*)",
+      "Bash(git *--upload-pack*)"
     ]
   },
   "hooks": {

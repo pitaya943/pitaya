@@ -19,7 +19,11 @@
       "Read(~/.config/gcloud/**)",
       "Read(~/.azure/**)",
       "Read(./**/.env)",
-      "Read(./**/.env.*)"
+      "Read(./**/.env.*)",
+      "Bash(git *--output*)",
+      "Bash(git *--no-index*)",
+      "Bash(git *--ext-diff*)",
+      "Bash(git *--upload-pack*)"
     ]
   },
   "hooks": {

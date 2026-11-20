@@ -202,3 +202,57 @@ def test_a_sync_pr_with_its_own_change_needs_a_verdict(tmp_path, sync_branch):
 def test_a_sync_branch_into_main_is_not_a_sync_pr(tmp_path, sync_branch):
     head = sync_branch.git("rev-parse", "HEAD")
     assert check_git(tmp_path, sync_branch, [], head, branch="sync/M1-main", base="main").returncode == 1
+
+
+# --- the proof covers history, not only the tree (review finding N01, D61) ----------
+
+def test_a_pass_carries_over_update_branch_pressed_twice(tmp_path, branches):
+    repo, passed, _ = branches
+    repo.git("checkout", "-q", "milestone/M1")
+    repo.write("c.py", "c = 1\n")
+    repo.commit("ticket T-3 merged into the milestone")
+    repo.git("checkout", "-q", "ticket/T-1-a")
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")  # "Update branch" again
+    head = repo.git("rev-parse", "HEAD")
+    proc = check_git(tmp_path, repo, [comment("PASS", sha=passed)], head)
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_a_pass_does_not_carry_over_an_ours_merge_of_another_branch(tmp_path, branches):
+    """`git merge -s ours` keeps the tree and records the other branch as merged."""
+    repo, passed, _ = branches
+    repo.git("checkout", "-q", "-b", "ticket/T-9-unverified", "milestone/M1")
+    repo.write("z.py", "z = 'nobody verified this'\n")
+    repo.commit("unverified work")
+    repo.git("checkout", "-q", "ticket/T-1-a")
+    repo.git("merge", "-q", "-s", "ours", "--no-edit", "ticket/T-9-unverified")
+    head = repo.git("rev-parse", "HEAD")
+    proc = check_git(tmp_path, repo, [comment("PASS", sha=passed)], head)
+    assert proc.returncode == 1, proc.stdout
+
+
+def test_a_sync_pr_with_an_ours_merge_needs_a_verdict(tmp_path, sync_branch):
+    """The ours-merge marks an unmerged commit as merged, so main's later copy of it would be dropped."""
+    repo = sync_branch
+    repo.git("checkout", "-q", "-b", "owner/correction", "main")
+    repo.write("docs.md", "plan, corrected\n")
+    repo.commit("a correction the Owner hasn't merged yet")
+    repo.git("checkout", "-q", "sync/M1-main")
+    repo.git("merge", "-q", "-s", "ours", "--no-edit", "owner/correction")
+    head = repo.git("rev-parse", "HEAD")
+    proc = check_git(tmp_path, repo, [], head, branch="sync/M1-main")
+    assert proc.returncode == 1, proc.stdout
+    assert "To fix:" in proc.stdout
+
+
+def test_a_sync_pr_updated_with_its_milestone_still_needs_no_verdict(tmp_path, sync_branch):
+    repo = sync_branch
+    repo.git("checkout", "-q", "milestone/M1")
+    repo.write("b.py", "b = 1\n")
+    repo.commit("another ticket merged into the milestone")
+    repo.git("checkout", "-q", "sync/M1-main")
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")  # "Update branch"
+    head = repo.git("rev-parse", "HEAD")
+    proc = check_git(tmp_path, repo, [], head, branch="sync/M1-main")
+    assert proc.returncode == 0, proc.stdout
+

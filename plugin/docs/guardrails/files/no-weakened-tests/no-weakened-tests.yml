@@ -1,4 +1,4 @@
-# pitaya template 0.1.4 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
+# pitaya template 0.1.5 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
 # Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
 # Copy to .github/workflows/no-weakened-tests.yml, and compare_junit.py to .github/guardrails/compare_junit.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
@@ -103,6 +103,15 @@ jobs:
             [ "$want" = "$(git rev-parse 'HEAD^{tree}')" ] \
               || fail "this sync PR changes more than merging $DEFAULT_BRANCH into $BASE_REF." \
                  "recreate it from $BASE_REF with only origin/$DEFAULT_BRANCH merged in; move other changes to a ticket."
+            # The tree isn't enough: `git merge -s ours` keeps it and still records a commit as merged,
+            # so that commit's changes would be dropped when it reaches $DEFAULT_BRANCH later. Every commit
+            # the PR adds must be a true merge: two parents, and the tree git gets by merging them.
+            git rev-list --parents HEAD "^origin/$BASE_REF" "^origin/$DEFAULT_BRANCH" | while read -r c p1 p2 more; do
+              if [ -z "${p2:-}" ] || [ -n "${more:-}" ]; then exit 1; fi
+              t=$(git merge-tree --write-tree "$p1" "$p2" | head -n 1) || exit 1
+              [ "$t" = "$(git rev-parse "$c^{tree}")" ] || exit 1
+            done || fail "this sync PR has a commit that isn't a plain merge (a change, or a merge whose tree isn't the merge of its parents)." \
+                 "recreate it from $BASE_REF with a plain git merge of origin/$DEFAULT_BRANCH: no strategy option, no edits."
             echo "This is a sync PR: it only merges $DEFAULT_BRANCH ($(git rev-parse --short "$newest")) into $BASE_REF, so ticket checks don't apply."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           elif [ "${HEAD_REF#plan/}" != "$HEAD_REF" ]; then
