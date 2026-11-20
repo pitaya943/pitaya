@@ -6,4 +6,4 @@ Short explanations for people using pitaya. The skills hold the procedures; thes
 - [Autonomy](autonomy.md): who may merge, and what has to be true before agents can.
 - [Escalation](escalation.md): when agents stop and ask, fix rounds, and what a good question looks like.
 
-For which components each level should have, see [`../suggestion.md`](../suggestion.md).
+For everything each level includes, see [`../levels.md`](../levels.md); for what each part achieves, [`../suggestion.md`](../suggestion.md).

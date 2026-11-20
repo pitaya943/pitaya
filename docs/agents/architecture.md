@@ -13,7 +13,7 @@ A map of the codebase, for orientation before changing it: the main modules, whe
 | recipes | `plugin/docs/guardrails/` | Level 1-3 recipes; standalone checks and workflows under `files/<recipe>/` |
 | components | `plugin/docs/components.json` | Every part of the harness with its level and dependencies (D33); `levels.md` is generated from it by `scripts/render_levels.py`, and `setup/scripts/select_components.py` resolves custom selections |
 | user docs | `plugin/docs/levels.md`, `plugin/docs/suggestion.md`, `plugin/docs/concepts/` | What each level includes; what each part achieves; roles, autonomy, escalation |
-| design | `docs/design.md` | The design, decisions D1-D32 and the W-step plan |
+| design | `docs/design.md` | The design, decisions D1-D32 and the W-step plan; later decisions in `docs/decisions.md` |
 | memory | `docs/agents/`, `docs/decisions.md` | This repository's own harness config and memory (D31) |
 | checker | `scripts/check_skills.py` | Follows the marketplace source to the plugin; checks manifests and every `SKILL.md` |
 | tests | `tests/` | One folder per area: plugin, templates (hooks, install), guardrails; plus docs, layout, English, personal data |

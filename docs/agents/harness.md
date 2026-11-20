@@ -6,7 +6,7 @@ This repository develops pitaya with pitaya (decision D31).
 
 ## Level
 
-- Level: 1, plus the machine-account commit identity from Level 2. What each level includes: `plugin/docs/suggestion.md`.
+- Level: 1, plus the machine-account commit identity from Level 2. What each level includes: `plugin/docs/levels.md`; what each part achieves: `plugin/docs/suggestion.md`.
 - Templates: pitaya 0.1.0. The version `/setup` installed; re-run `/setup` to find stale copies.
 
 ## People and accounts
@@ -19,6 +19,7 @@ This repository develops pitaya with pitaya (decision D31).
 
 - Issue tracker: GitHub Issues in this repo.
 - Tickets: GitHub Issues labelled `ticket`. Until now, work was planned as the W-steps in `docs/design.md`, section 13.
+- Milestones: none yet; the W-steps play that role.
 - Test command: `python3 -m pytest tests -q`. Needs pytest; no network access.
 - Document language: en. Every file in this repository is English (`tests/test_english.py`).
 
@@ -26,6 +27,7 @@ This repository develops pitaya with pitaya (decision D31).
 
 - Verification: a fresh subagent, started by `/verify`.
 - Fix rounds: 2. Round 1 in the builder's session, the rest in fresh sessions; still failing after the last round means escalating to the Owner.
+- Autopilot: off.
 - Learning: off.
 
 ## Records
@@ -46,5 +48,5 @@ Areas where a change needs a covering test before it starts, otherwise escalate 
 
 - Level 1 hooks and permissions: `.claude/settings.json` and `.claude/hooks/`.
 - CI: `.github/workflows/ci.yml` (tests on Python 3.11 and 3.13, the skill check, the personal-data scan), with the `ci` check required on `main`. The template's `tests.yml` is left out because `ci.yml` covers it.
-- protect-main: ruleset on `main` (PR required, no force push, no deletion, `ci` required).
+- protect-main: ruleset on `main` (PR required, no force push, no deletion, `ci` required). D37 adds one required approval, dismissed on new pushes; the Owner sets it.
 - Commit author: the personal-data scan accepts only the machine account's noreply identity and the Claude default (D29).

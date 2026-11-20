@@ -21,12 +21,14 @@ Rule of thumb: enforce rules that have no exceptions with the cheapest mechanism
 | [Level 0](#level-0-skills-only) | Trying it out without touching the repo | Agents get good working habits, but nothing stops them |
 | [Level 1](#level-1-the-default) | One person with one or a few agents (**the recommended minimum for every project**) | Agents can't break `main` directly, tests always run, secrets stay unreadable, and "done" is verified independently |
 | [Level 2](#level-2-parallel-agents) | Several agents working at once | Each PR stays in its scope, tests can't be quietly removed, and every action traces back to an agent |
-| [Level 3](#level-3-long-running-autonomy) | Agents working for long stretches or unattended | Work continues across sessions, quality is measurable, and agents may merge when the policy allows |
+| [Level 3](#level-3-long-running-autonomy) | Agents working for long stretches or unattended | `/autopilot` runs a milestone to its end, work continues across sessions, quality is measurable, and agents may merge when the policy allows |
 
 When to move up:
 
 - **To Level 2:** a second agent works in the same repo, or an agent once changed files outside its scope, or a deleted test left CI green.
 - **To Level 3:** one piece of work spans several sessions, or agents should keep working while nobody watches (overnight, for example).
+
+You don't have to take a level whole: start from one and add or remove single components with `select_components.py` ([`levels.md`](levels.md#choosing-your-own-set)).
 
 ---
 

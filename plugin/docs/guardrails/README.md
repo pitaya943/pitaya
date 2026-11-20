@@ -21,7 +21,7 @@ The copyable checks use only Python's standard library and git, one standalone f
 
 | You saw this | Add |
 | --- | --- |
-| An agent pushed to `main`, or a change merged without review | [protect-main](protect-main.md) |
+| An agent pushed to `main`, merged its own PR, or a change merged without review | [protect-main](protect-main.md) (with one required approval) |
 | You can't tell which agent did what | [machine-account](machine-account.md) |
 | An agent changed files its ticket didn't mention, or two agents overwrote each other | [scope](scope.md) |
 | An agent edited the rules, the spec or CI to get its work through | [read-only-paths](read-only-paths.md) |
