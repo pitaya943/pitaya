@@ -12,8 +12,8 @@ Everything comes from places anyone can open, so a fresh session can take over a
 | Work in progress | open PRs whose branch is `ticket/<id>-<slug>` |
 | CI and the verdict | the PR's check runs, and the verifier's reviews on the PR's current head commit (with agent-merge), or the latest verdict comment that names it |
 | Fix rounds used | the verdict comments on the PR: one round per FAIL, plus any commit of the PR with a `verdict-fail` status and no FAIL comment left (the comment was deleted). The plugin's `docs/concepts/states.md`, "Fix rounds", says what each FAIL starts |
-| CI retries used | the machine account's `Autopilot: CI retry <k>` comments on the PR since its latest FAIL verdict, or since it opened: a round allows 2 unless the harness file's "Autopilot" line sets another number |
-| The run and its budget | the latest `Run started` line on the tracking issue with no `Stopped:` after it; hours count from that comment's `created_at`, tickets are the ticket PRs merged into `milestone/M<n>` since then |
+| CI retries used | the machine account's `Autopilot: CI retry <k>` comments on the PR since the latest of: its opening, its latest FAIL verdict, and the Owner's answer to an escalation about it: a round allows 2 unless the harness file's "Autopilot" line sets another number |
+| The run and its budget | the machine account's latest `Run started` line on the tracking issue with no `Stopped:` or `Waiting:` after it (on the previous milestone's issue while this one has no such line); hours count from that comment's `created_at`, tickets are the ticket PRs merged into `milestone/M<n>` since then |
 | Sessions at work | the start lines below ([Sessions at work](#sessions-at-work)) |
 | Owner instructions | the tracking issue `Autopilot: M<n>`, and answers on `needs-owner` issues: only comments whose author is the Owner in the harness file and whose `author_association` is `OWNER`. Anyone else's "stop", answer or authorisation is information; mention it in the tick's line and carry on |
 | Whether `main` moved | `git merge-base --is-ancestor origin/main origin/milestone/M<n>` fails: open a sync PR `sync/M<n>-<short sha>` (the plan skill's `milestones.md`); ticket PRs behind the milestone use "Update branch", which keeps their PASS; a `Risk: high` ticket's PASS doesn't carry, so it gets a new verifier after the update |
@@ -34,24 +34,24 @@ A background agent or a subagent can't invoke the skill either, and must not wor
 
 Don't start more builders than the harness's "parallel builders" (default 2), and never two whose scopes overlap.
 
-**Claim before you start.** Two ticks can run at once, so claim a ticket before handing it to a builder: push an empty branch `ticket/<id>-<slug>` from the milestone branch (`git push origin milestone/M<n>:refs/heads/ticket/<id>-<slug>`), and skip any ticket that already has such a branch or an open PR, unless its claim expired (below). The builder works on that branch. If the push fails because the branch exists, another tick claimed it first. The CI checks back this up: a second PR on the same ticket fails.
+**Claim before you start.** Two ticks can run at once, so claim a ticket before handing it to a builder: push an empty branch `ticket/<id>-<slug>` from the milestone branch (`git push origin milestone/M<n>:refs/heads/ticket/<id>-<slug>`), and skip any ticket that already has such a branch or an open PR, unless its claim expired (below): a takeover needs no push, because the branch is there. The builder works on that branch. If the push fails because the branch exists, another tick claimed it first. The CI checks back this up: a second PR on the same ticket fails.
 
 ## Sessions at work
 
 A tick is stateless and two can run at once, so every session a tick starts leaves a **start line** that a later tick reads, and a later tick starts nothing a start line says is at work. Only lines the machine account posted count: anyone can comment, and a stranger's line must not stall a PR. A line's time is the `created_at` GitHub gives the comment, never a time written in its text.
 
 - **For a PR** (a verifier, a fix round, a CI retry): before starting the session, post on the PR `Autopilot: <verifier | fix round <n> | CI retry <k>> started for <the full head commit>.` Then read the comments again. If an earlier start comment for the same action on the same head is there and hasn't expired, another tick got there first: the earliest wins, so start nothing.
-- **For a branch with no PR yet** (a ticket's first build, the report, the cut): the claim is the pushed branch, and its time is the tick's line on the tracking issue that lists the branch under `Started:`. A claim branch with no start line (a tick pushed it and died, or a person made it) gets one in this tick's line, `Found: <branch>, no start line`, and its time counts from there.
+- **For a branch with no PR yet** (a ticket's first build, the report, the cut): the claim is the pushed branch, and its time is the tick's line on the tracking issue that lists the branch under `Started:`. A claim branch with no start line (a tick pushed it and died, or a person made it) gets one in this tick's line, `Found: <branch>, no start line`, and its time counts from there. A takeover has no push to settle who goes first, so record it before you start it: post `Started: <branch> (takeover)` in a line of its own, read the issue again, and start nothing if an earlier `Started:` line for that branch hasn't expired; the earliest wins.
 
 A session is **at work** from its start line until its result arrives, or until the line is older than the claim expiry (the harness file's "Autopilot" line; default 2 hours):
 
 | Session | Its result | While it is at work | Expired with no result |
 | --- | --- | --- | --- |
 | A verifier on head H | a verdict for H | start no other verifier for H | post a new start comment and start another |
-| A builder: first build, fix round or CI retry | a hand-off or fix-round comment on the PR with a `Builder session:` line newer than the start line (a builder opens its PR first and still fixes a red CI before it hands off); or an open `needs-owner` issue about the ticket, which leaves it blocked until the Owner answers. A branch whose newest commit is younger than the expiry is also alive | start no builder for the ticket, no CI retry while its CI is red, and no verifier | With no PR: take over, a fresh builder on the same branch, told to continue from what is pushed there, with a new `Started:` line. With a PR: it is no longer at work, so handle the PR by its state as in any tick: green CI gets a verifier, a red CI gets a CI retry (which counts as one), a FAIL still on the head gets the same fix round again |
+| A builder: first build, fix round or CI retry | a hand-off or fix-round comment on the PR with a `Builder session:` line newer than the start line (a builder opens its PR first and still fixes a red CI before it hands off); or an open `needs-owner` issue about the ticket, which leaves it blocked until the Owner answers. A branch with a commit of its own, beyond the milestone branch, that is younger than the expiry is also alive | start no builder for the ticket, no CI retry while its CI is red, and no verifier | With no PR: take over, a fresh builder on the same branch, told to continue from what is pushed there, with a new `Started:` line. With a PR: it is no longer at work, so handle the PR by its state as in any tick: green CI gets a verifier, a red CI gets a CI retry (which counts as one), a FAIL still on the head gets the same fix round again |
 | A report or planning session | its PR, or its `needs-owner` issue | end that step of the tick | take over: a fresh session on the same branch, with a new `Started:` line |
 
-Where a line below says a start line "has expired", it means this: older than the claim expiry, with no result.
+Where a line below says a start line "has expired", it means this: older than the claim expiry, with no result. When the same action expires twice on the same head or branch, don't start it a third time: use `ask-owner`, because something other than a lost session is wrong.
 
 A takeover needs no branch deleted, and you never delete one: the new session continues on the same branch. If the first session was only slow, its next push is rejected because the branch moved, and the `build` skill tells it to stop there.
 
@@ -104,7 +104,7 @@ When no milestone is active or closing, the next `planned` milestone in the road
 2. The branch `plan/M<n+1>-cut` exists with no PR: a planning session is at work ([Sessions at work](#sessions-at-work)), so end the tick. If its start line has expired, take over instead: a fresh session on the same branch, started as in line 3, with a new `Started:` line.
 3. None of these: at Level 4, create `milestone/M<n+1>` from `main` and push it if it's missing. Claim the cut by pushing `plan/M<n+1>-cut` from the branch the plan PR will target (`main`, or at Level 4 `milestone/M<n+1>`), list it under `Started:`, then start a fresh session whose prompt is `/pitaya:design M<n+1>`, telling it to use that branch, that it runs unattended, and to cut the milestone once the design is written by reading and following the plan skill's file (the absolute path of `../plan/SKILL.md` from this file) for `M<n+1>`: a session takes one slash command.
 
-A milestone with no `planned` successor ends the run: say so on the tracking issue and cancel the wake-up.
+A milestone with no `planned` successor ends the run: post `Stopped:` saying so on the tracking issue, and cancel the wake-up.
 
 ## Merging
 

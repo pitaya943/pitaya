@@ -72,8 +72,8 @@ This is the one definition; every skill points here. A pull request's **round** 
 stateDiagram-v2
   [*] --> Tick: a person starts the run (Run started); later woken by a PR event, /loop, a schedule or an Action
   Tick --> Tick: rebuild the state, act, post one line
-  Tick --> Waiting: the milestone PR, or below Level 4 the next cut's plan PR, waits for the Owner's merge (the wake-up stays)
-  Waiting --> Tick: Owner merges
+  Tick --> Waiting: the milestone PR, or below Level 4 the next cut's plan PR, waits for the Owner's merge (Waiting line, the wake-up stays)
+  Waiting --> Tick: Owner merges (Run started again)
   Tick --> Stopped: budget spent, Owner said stop, nothing can move, a repeated failure, or no milestone left (the wake-up is cancelled)
   Stopped --> [*]
 ```
@@ -92,7 +92,7 @@ stateDiagram-v2
 | Escalated | an open `needs-owner` issue linked from the PR or ticket | any role (`ask-owner`); the Owner closes it |
 | Milestone phase | `Status:` in `docs/milestones/M<n>.md`, read on `milestone/M<n>` when that branch exists and on `main` when it doesn't ([Milestone](#milestone)), plus the branch's PR | a plan PR (active: into `main`, or at Level 4 into the branch); the first `/build` or `/autopilot` tick creates a missing branch; the report PR (done, on the branch); the Owner's merge of the milestone PR (done, on `main`) |
 | Milestone behind `main` | `main` isn't an ancestor of `milestone/M<n>` (a `plan/<slug>` PR merged since); an open PR from `sync/<slug>` brings it in | whoever starts the next ticket, or `/autopilot`, opens the sync PR; it merges like a ticket PR |
-| Autopilot progress, stop requests, the run and its budget | the tracking issue `Autopilot: M<n>`: one line per tick, and a run from a `Run started` line to the next `Stopped:`. The budget counts from the open run's `Run started` (hours since, ticket PRs merged since) | `/autopilot`; a person starts a run, a wake-up only continues one; the Owner comments "stop" (only the Owner's own comment counts: [escalation](escalation.md#who-can-answer)) |
+| Autopilot progress, stop requests, the run and its budget | the tracking issue `Autopilot: M<n>`: one line per tick, and a run from a `Run started` line to the next `Stopped:` or `Waiting:` (the machine account's lines only). The budget counts from the open run's `Run started` (hours since, ticket PRs merged since), so a wait for the Owner's merge spends none of it | `/autopilot`; a person starts a run, and a wake-up continues one or starts the next after the Owner merged the PR a `Waiting:` line names; the Owner comments "stop" (only the Owner's own comment counts: [escalation](escalation.md#who-can-answer)) |
 | Decisions | `docs/decisions.md`, `docs/adr/` | Owner, Chief |
 | Handover of stopped work | `docs/handoff/<branch>.md` | `/handoff` |
 

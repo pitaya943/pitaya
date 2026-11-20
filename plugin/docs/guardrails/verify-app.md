@@ -31,7 +31,7 @@ Break a user-facing feature in a way its unit tests don't cover (a wrong route, 
 
 ## Error message
 
-The verifier's FAIL names the feature, the step that failed and the evidence: "FAIL: <feature>, step <n>: expected <x>, saw <y> (docs/evidence/<ticket>/<file>)".
+The verifier's FAIL names the feature, the step that failed and the evidence: "FAIL: <feature>, step <n>: expected <x>, saw <y> (docs/evidence/<ticket>/<file>)". The verifier's own screenshots are not on the pull request's branch: the verdict links them on its `evidence/<PR>-<short sha>` branch (the `verify` skill).
 
 ## Afterwards
 

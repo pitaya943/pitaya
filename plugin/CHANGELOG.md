@@ -4,9 +4,9 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ## 0.1.8 (2026-11-20)
 
-The fourth batch of fixes from the review of 0.1.4: skill logic and autopilot (D62's answer to Q9, D68). Only skills, concept pages and two templates changed; no check, hook or workflow did, so there is nothing to copy again under `.github/`.
+The fourth batch of fixes from the review of 0.1.4: skill logic and autopilot (D62's answer to Q9, D68). Only skills, concept pages and two templates changed. No check, hook or workflow changed beyond its version header, so `/setup` reports the copies as stale while their content is the same.
 
-**If you upgrade with autopilot running:** start `/pitaya:autopilot M<n>` once by hand, so the tracking issue gets a `Run started` line, and add `wake` to the command a schedule or a GitHub Action uses (`/pitaya:autopilot M<n> wake`). A session started with `wake` continues a run and never starts one. Re-run `/setup` to see the new "Branches" line of `AGENTS.md`: it grants `evidence/<PR>-<short sha>`.
+**If you upgrade with autopilot running:** start `/pitaya:autopilot M<n>` once by hand, so the tracking issue gets a `Run started` line, and add `wake` to the command a schedule or a GitHub Action uses (`/pitaya:autopilot M<n> wake`). A session started with `wake` continues a run, and starts one only after the Owner merged the pull request the run was waiting for. Re-run `/setup` to see the new "Branches" line of `AGENTS.md`: it grants `evidence/<PR>-<short sha>`.
 
 ### Skills
 
@@ -18,13 +18,15 @@ The fourth batch of fixes from the review of 0.1.4: skill logic and autopilot (D
 - `autopilot`:
   - **start lines.** Before it starts a verifier, a fix round or a CI retry, a tick posts `Autopilot: <what> started for <head>` on the pull request; a claimed branch is listed under `Started:` on the tracking issue. A later tick starts nothing a start line says is at work (`tick.md`, "Sessions at work"). This replaces the rule that skipped a pull request "whose latest comment from autopilot is less than ten minutes old", which matched nothing, because autopilot never commented on pull requests;
   - **expiry.** A start line expires after 2 hours by default. An expired claim with no pull request is taken over by a fresh session on the same branch, so a builder, report or planning session that died no longer needs the Owner to delete a branch;
-  - **the run.** A run goes from a `Run started` line on the tracking issue to the next `Stopped:`. The budget is counted from GitHub: the hours since that comment was created and the ticket pull requests merged since. Before, every scheduled wake-up was a fresh session and so a new run, and the budget never ran out;
+  - **the run.** A run goes from a `Run started` line on the tracking issue to the next `Stopped:` or `Waiting:`. The budget is counted from GitHub: the hours since that comment was created and the ticket pull requests merged since. A wait for the Owner's merge ends the run with `Waiting:`, and the tick that finds the merge starts the next, so the budget now covers one stretch of work between two of the Owner's merges. Before, every scheduled wake-up was a fresh session and so a new run, and the budget never ran out;
+  - a ticket with an open `needs-owner` issue is left alone until the Owner answers, where before nothing stopped a tick from escalating it again; the same session that expires twice is escalated instead of started a third time;
   - **starting skills.** A new session's prompt is one slash command. A session that needs a second skill (the cut designs, then plans) and a subagent or background agent get the path of the skill's `SKILL.md` to read and follow, because the model can't invoke a user-invoked skill. `skills/README.md` states the rule that way;
   - it no longer asks for branch names when `AGENTS.md` grants them, and no longer "passes the permission on" to the sessions it starts: each reads the same grant.
 - `build`: continues on a ticket branch that already exists, pushes after each commit, and stops when a push is rejected because another builder took the ticket over.
 - `build`, `plan`: in a session with an assigned branch, use the "Branches" grant in `AGENTS.md` without asking. Only when it is missing, ask the user; when nobody is there, open a `needs-owner` issue and stop instead of waiting.
 - `design`: an unattended session goes on to the cut by reading the plan skill's file.
-- `setup`: commits on `setup/pitaya` (never on `main`), pushes and opens a pull request by default.
+- `setup`: commits on `setup/pitaya` (never on `main`), pushes and opens a pull request unless the user says not to.
+- `report`, `verify`: say that the `AGENTS.md` grant covers the branches they push.
 
 ### Templates
 

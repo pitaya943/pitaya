@@ -416,3 +416,91 @@ def test_setup_asks_before_using_its_branch_in_a_session_with_an_assigned_branch
     until that PR merges, so it can't authorise its own branch."""
     last = line_with(read("skills/setup/SKILL.md"), "`setup/pitaya`")
     assert "assigned branch" in last and "ask the user" in last
+
+
+# --- found by the consistency audit before the PR (decision log) -------------------------------
+
+def test_a_takeover_does_not_push_the_claim_again():
+    """Audit 1: "claim each by pushing its branch" fails on a branch that exists, and a failed push
+    meant "another tick claimed it first", so an expired claim was skipped for ever."""
+    start = line_with(section(autopilot(), "## Each tick"), "**Start new work.**")
+    assert "a takeover pushes nothing" in start
+    claim = line_with(tick(), "**Claim before you start.**")
+    assert "takeover" in claim and "no push" in claim
+
+
+def test_a_takeover_is_recorded_before_it_starts_and_the_earliest_wins():
+    """Audit 6: post-and-read-again covered PR start comments only; two ticks could both take over
+    one expired branch."""
+    branch = line_with(at_work(), "**For a branch with no PR yet**")
+    assert "takeover" in branch and "before" in branch and "read" in branch and "earliest" in branch
+
+
+def test_the_same_dead_session_is_not_restarted_without_limit():
+    """Audit 9."""
+    text = at_work()
+    assert "expires twice" in text and "ask-owner" in text
+
+
+def test_the_run_survives_the_owners_gates_and_the_wait_does_not_spend_the_budget():
+    """Audit 2 and 3: the tracking issue is per milestone, so the next milestone's issue had no
+    `Run started` and a `wake` session ended at once; and the hours ran out while the Owner was
+    deciding, though that wait "ends the tick, not the run"."""
+    run = line_with(autopilot(), "**The run.**")
+    assert "`Waiting:`" in run and "merged" in run, "the Owner's merge is what starts the next run"
+    assert "previous milestone" in run, "where the run's lines are when the new issue has none"
+    stop = section(autopilot(), "## Stop")
+    waiting = line_with(stop, "Waiting for the Owner to merge")
+    assert "`Waiting:`" in waiting and re.search(r"keep[^.]*wake", waiting)
+    assert "clock" in waiting, "the budget's hours stop while the Owner decides"
+    assert "`Waiting:`" in row(read("docs/concepts/states.md"), "Autopilot progress")
+
+
+def test_run_lines_count_only_from_the_machine_account_and_an_old_stop_is_spent():
+    """Audit 5."""
+    run = line_with(autopilot(), "**The run.**")
+    assert "machine account" in run
+    assert "newer than" in line_with(autopilot(), 'a comment saying "stop"')
+
+
+def test_a_loop_that_re_runs_the_command_is_a_wake_up():
+    """Audit 4."""
+    assert "loop" in line_with(autopilot(), "**The run.**")
+    assert "`wake`" in row(read("skills/autopilot/wake.md"), "**In-session loop**")
+
+
+def test_a_run_that_ends_for_lack_of_a_milestone_posts_stopped():
+    """Audit 17."""
+    assert "`Stopped:`" in line_with(section(tick(), "## The next cut"), "no `planned` successor")
+
+
+def test_an_escalated_ticket_is_left_alone_until_the_owner_answers():
+    """Audit 7: nothing told the next tick that a ticket was already escalated, so it escalated
+    again every tick; and no step started the extra round the Owner may authorise."""
+    escalated = line_with(section(autopilot(), "## Each tick"), "Escalated")
+    assert "`needs-owner`" in escalated and "Owner's own answer" in escalated
+    assert "extra" in escalated and "start comment" in escalated
+    assert "Owner's" in row(tick(), "CI retries used"), "the retries count again from the Owner's answer"
+
+
+@pytest.mark.parametrize("rel, needle", [("skills/verify/SKILL.md", EVIDENCE_BRANCH),
+                                         ("skills/report/SKILL.md", "branch `plan/M<n>-report`")])
+def test_every_skill_that_pushes_a_branch_says_what_allows_it(rel, needle):
+    """Audit 8."""
+    assert GRANT in line_with(read(rel), needle), rel
+
+
+def test_layout_lists_the_setup_branch():
+    """Audit 11."""
+    assert row(read("docs/concepts/layout.md"), "`setup/<slug>`")
+
+
+def test_only_a_commit_of_its_own_shows_a_claimed_branch_alive():
+    """Audit 19: an empty claim branch carries the milestone's newest commit."""
+    assert "beyond the milestone branch" in row(at_work(), "A builder")
+
+
+def test_this_repositorys_harness_file_has_the_fix_rounds_line_of_the_template():
+    """Audit 10."""
+    ours = line_with((REPO_ROOT / "docs/agents/harness.md").read_text(), "- Fix rounds:")
+    assert ours == line_with(read("skills/setup/harness-template.md"), "- Fix rounds:")

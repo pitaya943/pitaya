@@ -26,7 +26,7 @@ This repository develops pitaya with pitaya (decision D31).
 ## Review
 
 - Verification: a fresh subagent, started by `/verify`.
-- Fix rounds: 2. Round 1 in the builder's session, the rest in fresh sessions; still failing after the last round means escalating to the Owner.
+- Fix rounds: 2. Under `/autopilot` every round is a fresh session; otherwise round 1 may stay in the builder's session. One more FAIL after the last round means escalating to the Owner.
 - Autopilot: off.
 - Learning: off.
 

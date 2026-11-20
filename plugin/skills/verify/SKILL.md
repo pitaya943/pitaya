@@ -31,7 +31,7 @@ Tell it to:
 
 - work in a clean checkout of the head commit (a new worktree or a fresh clone), never in this session's working tree;
 - follow the checklist, and return the filled-in verdict;
-- not modify product code or tests, and push nothing to the PR's branch: a push moves the head, and the verdict counts for one head only, so it would void itself. Its own screenshots go under `docs/evidence/<ticket>/verify/` on a branch of their own, `evidence/<PR>-<short sha>`, made from the head it judged and pushed with no pull request; the verdict links them there.
+- not modify product code or tests, and push nothing to the PR's branch: a push moves the head, and the verdict counts for one head only, so it would void itself. Its own screenshots go under `docs/evidence/<ticket>/verify/` on a branch of their own, `evidence/<PR>-<short sha>`, made from the head it judged and pushed with no pull request; the verdict links them there. In a session with an assigned branch, the "Branches" section of `AGENTS.md` grants that name; without the grant, leave the screenshots out and say so in the verdict.
 
 ## 3. Post the verdict
 

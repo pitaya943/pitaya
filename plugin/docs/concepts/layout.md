@@ -49,6 +49,7 @@ my-project/
 | `ticket/<id>-<slug>` | One ticket's work | Into `milestone/M<n>`: the Owner below Level 3, the Chief from Level 3 |
 | `plan/<slug>` | A roadmap, a design, a cut or a milestone's report: plan files only | The Owner, into `main`. Into a milestone branch: the report PR (`plan/M<n>-report`) merges like a sync PR, with no verifier, and at Level 4 the Chief merges a cut into the next milestone branch |
 | `sync/<slug>` | `milestone/M<n>` with `main` merged in, and nothing else: how a milestone gets what `main` gained | Into `milestone/M<n>`, like a ticket PR: the Owner below Level 3, the Chief from Level 3 |
+| `setup/<slug>` | What `/setup` installed or updated: rule files, hooks, the harness file | The Owner, into `main` |
 | `evidence/<PR>-<short sha>` | A verifier's screenshots for one head of one pull request, under `docs/evidence/<ticket>/verify/` | Nobody: it has no pull request. The verdict links its files, and the Owner may delete it once the milestone is signed off |
 
 ## Where pitaya itself sits

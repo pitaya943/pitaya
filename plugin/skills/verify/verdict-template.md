@@ -4,7 +4,7 @@
 
 - Model: <name and version from the session's configuration, or "unavailable: <reason>">
 - Verify round: <n> of at most <the harness's "Fix rounds" + 1> (for a round beyond that, link the Owner's authorisation)
-- Next step: <for PASS, "the Owner merges" or "agents merge"; for FAIL, "fix round <n> in a fresh session" (every round under `/autopilot`, which is when the harness's "Autopilot" line is on; elsewhere every round after the first), "fix round 1 in the builder's session" (only when a person runs the work), or "escalate to the Owner" (FAIL number "Fix rounds" + 1)>
+- Next step: <for PASS, "the Owner merges" or "agents merge"; for FAIL, "fix round <n> in a fresh session" (every round under `/autopilot`: the PR has `Autopilot:` start comments, or the harness's "Autopilot" line is on and nobody is in the conversation; elsewhere every round after the first), "fix round 1 in the builder's session" (only when a person runs the work), or "escalate to the Owner" (FAIL number "Fix rounds" + 1)>
 - Head commit: <the full 40-character sha>
 - Session: <this session's ID, or "unavailable: <reason>" (with agent-merge, a PASS without a real ID doesn't count)>
 - Ticket: <link or path>

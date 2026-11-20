@@ -65,7 +65,7 @@ def test_fix_rounds_refresh_the_pr_description():
     assert "How to verify" in text and "Scope" in text
 
 
-def test_autopilot_asks_for_the_branch_names_and_passes_the_permission_on():
+def test_autopilot_asks_for_the_branch_names_and_tells_every_session_it_starts():
     text = read("skills/autopilot/SKILL.md")
     assert "assigned branch" in text and "every session you start" in text
 
