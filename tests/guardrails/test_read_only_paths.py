@@ -84,3 +84,11 @@ def test_own_ticket_other_change_is_refused(repo, tmp_path):
     head = repo.commit()
     proc = check(repo, base, head, ticket(tmp_path, Scope=["src/**"]), "--ticket-path", TICKET_FILE)
     assert proc.returncode == 1 and TICKET_FILE in proc.stdout
+
+
+def test_milestone_files_are_read_only(repo, tmp_path):
+    base = repo.commit("base")
+    repo.write("docs/milestones/M1.md", "# M1\n\nStatus: done\n")
+    head = repo.commit()
+    proc = check(repo, base, head, ticket(tmp_path, Scope=["**"]))
+    assert proc.returncode == 1 and "docs/milestones/M1.md" in proc.stdout

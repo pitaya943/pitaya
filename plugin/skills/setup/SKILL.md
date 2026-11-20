@@ -50,7 +50,7 @@ The machine account can't change repo settings, so list these steps for the Owne
 - A ruleset on `main`: require a pull request with 1 approval (dismissed on new pushes), block force pushes and deletions, require the `tests` check, and let only the Owner bypass. The approval is what keeps an agent from merging its own PR.
 - If there's a machine account: it's a collaborator with Write, not Admin.
 
-Then name the next step up, from the plugin's `docs/suggestion.md`: usually nothing until a second agent works in the repo (Level 2).
+Then name the next steps: `/plan --roadmap` to cut the project into milestones (or `/plan` for a single small piece of work), and the next level up from the plugin's `docs/suggestion.md`, usually nothing until a second agent works in the repo (Level 2).
 
 ## Don't
 

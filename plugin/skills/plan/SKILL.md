@@ -2,10 +2,12 @@
 name: plan
 description: Turn a request, spec or conversation into tickets an agent can build and verify on their own, each a thin vertical slice with completion conditions, dependencies and scope. The Owner approves the list before anything is written to the tracker.
 disable-model-invocation: true
-argument-hint: "<what to build: a description, a spec path or an issue>"
+argument-hint: "<what to build, or --roadmap for milestones, or M<n> to cut a milestone into tickets>"
 ---
 
 # Plan
+
+Planning has two levels: `/plan --roadmap` cuts the whole project into milestones, and `/plan M<n>` cuts the active milestone into tickets when it starts. See [milestones.md](milestones.md) for the roadmap and for closing a milestone; the rest of this file is about tickets. A small request with no roadmap can still go straight to tickets.
 
 ## Before you start
 

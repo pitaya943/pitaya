@@ -15,7 +15,7 @@
     {"id": "skill:evidence", "kind": "skill", "level": 0, "doc": "skills/evidence/SKILL.md",
      "summary": "\"Done\" comes with commands, real output and the model's name"},
     {"id": "skill:plan", "kind": "skill", "level": 0, "doc": "skills/plan/SKILL.md",
-     "summary": "Requests become tickets with completion conditions, dependencies and scope, approved by the Owner"},
+     "summary": "A roadmap of milestones, then each milestone cut into tickets with conditions and scope, approved by the Owner"},
     {"id": "skill:build", "kind": "skill", "level": 0, "doc": "skills/build/SKILL.md",
      "recommends": ["skill:tdd", "skill:evidence"],
      "summary": "One ticket, one branch, one PR, red then green"},

@@ -14,7 +14,7 @@ Install the plugin. Nothing in the repository changes. Without a harness file, t
 | --- | --- | --- | --- | --- |
 | Skill | [`skill:tdd`](../skills/tdd/SKILL.md) | - | - | A failing test before the code, one behaviour at a time |
 | Skill | [`skill:evidence`](../skills/evidence/SKILL.md) | - | - | "Done" comes with commands, real output and the model's name |
-| Skill | [`skill:plan`](../skills/plan/SKILL.md) | - | - | Requests become tickets with completion conditions, dependencies and scope, approved by the Owner |
+| Skill | [`skill:plan`](../skills/plan/SKILL.md) | - | - | A roadmap of milestones, then each milestone cut into tickets with conditions and scope, approved by the Owner |
 | Skill | [`skill:build`](../skills/build/SKILL.md) | - | `skill:tdd`, `skill:evidence` | One ticket, one branch, one PR, red then green |
 | Skill | [`skill:verify`](../skills/verify/SKILL.md) | - | `skill:evidence` | A fresh subagent re-runs the work and posts PASS or FAIL |
 | Skill | [`skill:report`](../skills/report/SKILL.md) | - | - | A summary of merged work for the Owner, every claim linked to evidence |

@@ -122,3 +122,11 @@ def test_plan_branch_may_not_touch_other_docs(tickets_repo, tmp_path):
     tickets_repo.commit("plan touching the harness file")
     proc, _ = run_find(tickets_repo, tmp_path, "plan/x", "example-bot")
     assert proc.returncode == 1 and "docs/agents/harness.md" in proc.stdout
+
+
+def test_plan_branch_may_add_milestone_files(tickets_repo, tmp_path):
+    tickets_repo.write("docs/milestones/M1.md", "# M1\n\nStatus: active\n")
+    tickets_repo.commit("roadmap")
+    proc, out = run_find(tickets_repo, tmp_path, "plan/roadmap", "example-bot")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skip=true" in out
