@@ -18,6 +18,8 @@ The plugin is named `pitaya`; once installed, skills appear as `/pitaya:setup`, 
 /plugin install pitaya@pitaya
 ```
 
+**In cloud sessions** (claude.ai/code, or the desktop app's cloud sessions), which have no `/plugin`: add `claude plugin marketplace add <owner>/pitaya` and `claude plugin install pitaya@pitaya` to the environment's setup script, under Settings → Environments. Every new session there has the plugin; check with `/pitaya:help`. Details: [`plugin/README.md`](plugin/README.md#cloud-sessions).
+
 **By copying (yours to edit).** Copy the `plugin/` folder somewhere on your machine and point Claude Code at it, or copy single `plugin/skills/<name>/` directories into your project's `.claude/skills/`. You pick up later changes yourself. `/setup` needs `plugin/templates/` next to its skill.
 
 Then run `/pitaya:setup` in your project.
