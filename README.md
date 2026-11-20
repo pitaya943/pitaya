@@ -2,7 +2,7 @@
 
 Small, composable skills for developing with coding agents under human review: plan a roadmap of milestones and cut each into tickets, build red-then-green, verify cold in a fresh session, and report. Protection grows by **level** instead of a gate: `/setup` installs a cheap Level 1 default (an AGENTS.md map, permissions, four hooks and a tests workflow), and higher levels come from guardrail recipes when a project needs them. The levels form a spectrum, from close control like Matt Pocock's skills (Level 0) to the most agent authority like pstack (Level 4).
 
-> **Status: in development (0.1.0, unreleased).** Twelve skills and fourteen guardrail recipes ([`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md)). Progress: [design, section 13](docs/design.md#13-implementation-plan). Everything each level includes: [`plugin/docs/levels.md`](plugin/docs/levels.md); what each part achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
+> **Status: in development (0.1.0, unreleased).** Thirteen skills and seventeen guardrail recipes ([`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md)). Progress: [design, section 13](docs/design.md#13-implementation-plan). Everything each level includes: [`plugin/docs/levels.md`](plugin/docs/levels.md); what each part achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
 
 ## Install
 
@@ -28,16 +28,17 @@ Then run `/pitaya:setup` in your project.
 | --- | --- | --- |
 | 0 | Trying it out | The skills only |
 | 1 (default) | One person with one or a few agents | An AGENTS.md map, the harness config, memory files, permissions that deny secrets, hooks that block pushes to `main` and destructive commands and ask before rule edits and merges, a tests workflow, and a ruleset where only the Owner merges |
-| 2 | Agents working in parallel | Recipes: machine account, commit author, scope, read-only paths, no weakened tests, done-when, append-only files, serial resources, evidence |
+| 2 | Agents working in parallel | `/design` (scenarios, interfaces, data flow). Recipes: machine account, commit author, scope, read-only paths, no weakened tests, done-when, append-only files, serial resources, evidence, verify the real app, multi-account |
 | 3 | Milestone autonomy | `/autopilot`; agents merge into the milestone branch and the Owner signs off each milestone. Recipes: progress file, agent merging |
-| 4 | Max | The most agent authority. Recipes: second-model review, project evals |
+| 4 | Max | The most agent authority: the Chief also cuts each milestone. Recipes: second-model review (Claude, Cursor CLI, Bugbot or Grok), deep verification, project evals |
 
 ## Skills
 
 | Skill | Invoked by | What it does |
 | --- | --- | --- |
 | `/setup` | you | Ask a few questions, install the level's files without overwriting anything, write the harness config |
-| `/plan` | you | `--roadmap` cuts the project into milestones; `M<n>` cuts the active milestone into vertical-slice tickets. The Owner approves through a plan PR |
+| `/plan` | you | `--roadmap` sharpens the brief and cuts the project into milestones; `M<n>` cuts the active milestone into vertical-slice tickets. The Owner approves through a plan PR |
+| `/design` | you | Level 2: a milestone's Given/When/Then scenarios, then its interfaces, data flow, notifications and state owners; tickets come from the scenarios |
 | `/build` | you | Build one ticket red-then-green and open a PR with evidence |
 | `/verify` | you | A fresh subagent re-runs everything cold and judges PASS or FAIL |
 | `/report` | you | Summarize merged work for the Owner from sources anyone can open |
