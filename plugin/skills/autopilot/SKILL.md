@@ -25,7 +25,7 @@ Rebuild the state, then act in this order. [tick.md](tick.md) has the details an
    - CI red, or a FAIL verdict: start a fresh session with `/pitaya:build <ticket>` as a fix round, giving it the verdict. Past the harness's fix rounds, use `ask-owner` and mark the ticket blocked.
    - CI green and no verdict on the current head: start a fresh verifier with `/pitaya:verify <PR>`, on the verifier's own account when agent-merge is on.
    - PASS on the current head and every required check green: merge it if the Autonomy line lets agents merge and the PR touches no sensitive area. Otherwise comment that it's ready for the Owner, and move on.
-3. **Start new work.** Pick tickets that are open, unblocked (every "Blocked by" is done) and whose scope doesn't overlap a ticket in progress. Start each in a fresh session with `/pitaya:build <ticket>`, up to the parallel-builder limit.
+3. **Start new work.** Pick tickets that are open, unblocked (every "Blocked by" is done), unclaimed (no `ticket/<id>-*` branch or PR yet) and whose scope doesn't overlap a ticket in progress. Claim each by pushing its branch, then start it in a fresh session with `/pitaya:build <ticket>`, up to the parallel-builder limit.
 4. **Record** one line on the tracking issue: what merged, what started, what waits on whom.
 
 ## Stop

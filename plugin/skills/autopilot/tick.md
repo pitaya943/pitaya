@@ -22,6 +22,8 @@ Use whatever this tool offers to start a fresh session or background agent, in t
 
 Don't start more builders than the harness's "parallel builders" (default 2), and never two whose scopes overlap.
 
+**Claim before you start.** Two ticks can run at once, so claim a ticket before handing it to a builder: push an empty branch `ticket/<id>-<slug>` from `main` (`git push origin main:refs/heads/ticket/<id>-<slug>`), and skip any ticket that already has such a branch or an open PR. The builder works on that branch. If the push fails because the branch exists, another tick claimed it first. The CI checks back this up: a second PR on the same ticket fails.
+
 ## Comments to post
 
 Keep them short and in the document language. On the tracking issue, one line per tick:

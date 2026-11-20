@@ -9,7 +9,7 @@ def other(directory, name, resources):
     (directory / f"{name}.md").write_text(body)
 
 
-def check(tmp_path, mine, others_dir, known="migrations,lockfile"):
+def check(tmp_path, mine, others_dir, known="migrations,lockfile"):  # names only, no paths
     t = ticket(tmp_path, Serial_resources=mine) if mine is not None else ticket(tmp_path)
     return run_check("serial-resources", "check_serial.py", "--ticket", str(t),
                      "--others", str(others_dir), "--known", known)
@@ -42,3 +42,30 @@ def test_ticket_without_serial_resources_passes(tmp_path):
 
 def test_missing_others_directory_means_no_other_tickets(tmp_path):
     assert check(tmp_path, ["migrations"], tmp_path / "missing").returncode == 0
+
+
+# --- D43: resources are detected from the diff, not only declared -----------------
+
+def diff_check(repo, tmp_path, mine, resources="migrations=migrations/**;lockfile=poetry.lock"):
+    base = repo.commit("base")
+    repo.write("migrations/0002_add.sql", "ALTER TABLE x;\n")
+    head = repo.commit()
+    t = ticket(tmp_path, Serial_resources=mine) if mine else ticket(tmp_path)
+    return run_check("serial-resources", "check_serial.py", "--ticket", str(t),
+                     "--others", str(tmp_path / "none"), "--resources", resources,
+                     "--base", base, "--head", head, cwd=repo.path)
+
+
+def test_touching_an_undeclared_resource_fails(repo, tmp_path):
+    proc = diff_check(repo, tmp_path, None)
+    assert proc.returncode == 1 and "migrations" in proc.stdout and "To fix:" in proc.stdout
+
+
+def test_touching_a_declared_resource_passes(repo, tmp_path):
+    proc = diff_check(repo, tmp_path, ["migrations"])
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_resource_names_come_from_the_mapping(repo, tmp_path):
+    proc = diff_check(repo, tmp_path, ["schema"])
+    assert proc.returncode == 1 and "unknown" in proc.stdout

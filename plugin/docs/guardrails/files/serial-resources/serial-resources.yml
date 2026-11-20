@@ -14,8 +14,9 @@ permissions:
   pull-requests: read
 
 env:
-  # The project's serial resources, comma separated.
-  SERIAL_RESOURCES: migrations,lockfile
+  # The project's serial resources and the paths that make each one up:
+  # "name=glob,glob;name=glob". A PR that changes those paths must list the resource.
+  SERIAL_RESOURCES: migrations=migrations/**;lockfile=poetry.lock,package-lock.json
 
 jobs:
   serial-resources:
@@ -150,4 +151,6 @@ jobs:
           python3 "$RUNNER_TEMP/guardrails/check_serial.py"
           --ticket "$RUNNER_TEMP/ticket.md"
           --others "$RUNNER_TEMP/others"
-          --known "$SERIAL_RESOURCES"
+          --resources "$SERIAL_RESOURCES"
+          --base "${{ github.event.pull_request.base.sha }}"
+          --head "${{ github.event.pull_request.head.sha }}"

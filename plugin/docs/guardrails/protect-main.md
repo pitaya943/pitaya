@@ -24,7 +24,7 @@ In the repository: **Settings → Rules → Rulesets → New ruleset → New bra
 | Block force pushes | On |
 | Require a pull request before merging | On, with **Required approvals: 1**, **Dismiss stale pull request approvals when new commits are pushed**, and **Require review from Code Owners**. Copy `files/protect-main/CODEOWNERS` to `.github/CODEOWNERS` with the Owner's login: then only the Owner's approval counts, not a second agent account's. Agents open PRs as the machine account, so the Owner can approve them; the Owner's own PRs merge through the bypass. At Level 3 with [agent-merge](agent-merge.md), approvals drop to 0 and a narrower CODEOWNERS keeps rules, plans and sensitive areas with the Owner |
 | Require status checks to pass | On. Add the `tests` check from the Level 1 workflow (it appears in the list after it has run once) |
-| Require branches to be up to date | Off at Level 1; on if merges often break `main` |
+| Require branches to be up to date | Off at Level 1. On from Level 2 when agents work in parallel, or use a merge queue: otherwise a verdict and CI judge the PR's head, not what the merge produces, and two PRs that each passed can break `main` together |
 
 Then check **Settings → Collaborators**: agent accounts have **Write**, never Admin.
 

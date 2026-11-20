@@ -4,8 +4,8 @@
 
 Usage (in CI)::
 
-    git show origin/main:docs/agents/features.json > base.json
-    python3 check_feature_list.py --base base.json --head docs/agents/features.json
+    git show origin/main:docs/progress/features.json > base.json
+    python3 check_feature_list.py --base base.json --head docs/progress/features.json
 
 The feature list holds the work's requirements, each with an id, a
 description, steps to check it and a "passes" flag. During long autonomous
