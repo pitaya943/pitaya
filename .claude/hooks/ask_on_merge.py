@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.5 · .claude/hooks/ask_on_merge.py
+# pitaya template 0.1.6 · .claude/hooks/ask_on_merge.py
 """PreToolUse hook: ask a person before an agent merges a pull request.
 
 What it guards against: an agent merging its own PR while the project's

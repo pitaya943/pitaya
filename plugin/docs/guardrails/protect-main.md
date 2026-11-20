@@ -39,7 +39,7 @@ When work runs in milestones (`/plan --roadmap`), tickets merge into `milestone/
 | Restrict deletions, Block force pushes | On (the Owner deletes a discarded milestone through the bypass) |
 | Require a pull request before merging | On. **Required approvals: 1** below Level 3, where the Owner merges every ticket and sync PR: without it a machine account could merge its own green PR here. **Required approvals: 0** only from Level 3, changed in the same step that makes `verdict` a required status ([agent-merge](agent-merge.md)), so there is never a time when neither a person nor a verdict gates the merge |
 | Require status checks to pass | On: `tests`, plus the Level 2 checks you added, plus `verdict` with [agent-merge](agent-merge.md). Also turn on **Do not require status checks on creation**: a new `milestone/M<n>` points at a commit of `main`, which has no run of these checks under the new branch's name, so without the option GitHub can refuse to create the branch |
-| Require branches to be up to date | On when tickets run in parallel |
+| Require branches to be up to date | On when tickets run in parallel, and always from Level 3: [agent-merge](agent-merge.md) needs it, because a PASS that carries over "Update branch" relies on the checks having run on the updated branch |
 
 The worst an agent can do there is spoil one milestone, which the Owner can throw away: `main` only changes when the Owner merges the milestone's PR.
 

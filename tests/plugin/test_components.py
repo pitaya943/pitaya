@@ -163,8 +163,6 @@ def derived(name: str) -> tuple[set[str], set[str]]:
         requires.add("machine-account")  # its recipe sets both variables
     if "find_ticket" in yml:
         needs.add("tickets")
-    if "vars.VERIFIER_ACCOUNTS" in yml:
-        needs.add("verifier-account")
     if re.search(r"junit", text, re.IGNORECASE):
         needs.add("junit-xml")
     # A ticket section read without an "or" fallback is mandatory for every ticket.

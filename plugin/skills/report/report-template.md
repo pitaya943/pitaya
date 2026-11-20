@@ -17,6 +17,14 @@
 1. `<command>`, expected: <output>
 2. <manual check>, expected: <result>
 
+## Attention
+
+<every Attention row from the verdicts in range, `undisclosed` rows first; "None" if no verdict has one>
+
+| Kind | PR | Where | Disclosed | Evidence |
+| --- | --- | --- | --- | --- |
+| <kind> | <PR link> | <file:line, commit or comment> | yes / no | <verdict comment link> |
+
 ## Decisions the agents made
 
 <choices no spec or ticket stated, each with where it happened; "None" if none>

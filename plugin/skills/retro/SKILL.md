@@ -11,7 +11,7 @@ argument-hint: "<optional: the period or PRs to look at>"
 
 1. Read `docs/agents/harness.md`: the level, the "Guardrails" list and the document language. If it's missing, suggest `/setup` once and continue.
 2. Collect from the period (default: since the last retro, or the last 20 merged PRs):
-   - verdicts, especially FAIL reasons and which fix round passed;
+   - verdicts, especially FAIL reasons, which fix round passed, and their Attention rows;
    - escalations to the Owner and how they were answered;
    - PR review comments and CI failures;
    - learning proposals from verdicts and hand-off notes, and `docs/agents/learnings.md`;
@@ -21,6 +21,8 @@ argument-hint: "<optional: the period or PRs to look at>"
 ## 2. Find what repeats
 
 Group the findings by cause, not by symptom. Keep only causes seen at least twice; a one-off is noise. For each, note the occurrences with links.
+
+Two kinds of Attention row are the exception, and one occurrence is enough to propose hardening the check involved: a `gate-change` that turned out to game its check (the loosened test or check let a real fault through), and any `undisclosed` row. Fix the gate in its own change rather than working round it.
 
 ## 3. Propose a rule and an enforcer
 
@@ -48,4 +50,4 @@ Apply only accepted proposals, each through a normal pull request. Add accepted 
 ## Don't
 
 - Don't change skills, rules, hooks or CI without the Owner's acceptance.
-- Don't propose a rule for something that happened once.
+- Don't propose a rule for something that happened once, except the two Attention kinds in step 2.

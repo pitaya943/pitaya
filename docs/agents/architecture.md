@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.5 · docs/agents/architecture.md -->
+<!-- pitaya template 0.1.6 · docs/agents/architecture.md -->
 # Architecture
 
 A map of the codebase, for orientation before changing it: the main modules, where they live and what each is for. Keep it short; the code is the detail.
@@ -17,6 +17,7 @@ A map of the codebase, for orientation before changing it: the main modules, whe
 | memory | `docs/agents/`, `docs/decisions.md` | This repository's own harness config and memory (D31) |
 | checker | `scripts/check_skills.py` | Follows the marketplace source to the plugin; checks manifests and every `SKILL.md` |
 | tests | `tests/` | One folder per area: plugin, templates (hooks, install), guardrails; plus docs, layout, English, personal data |
+| reviews | `docs/reviews/` | An outside review's findings in full, as written; `docs/trials/w8.md` tracks each one's status |
 | evals | `evals/` | Tasks that measure the harness itself, run by hand before and after a change |
 
 ## How the parts connect

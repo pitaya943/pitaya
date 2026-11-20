@@ -4,7 +4,7 @@ Level: 2. Files: [`check_read_only.py`](files/read-only-paths/check_read_only.py
 
 ## What it guards against
 
-An agent changing the rules it works under to get its work through: editing AGENTS.md or the harness config, loosening CI, rewriting the spec to match the code, or rewriting past decisions.
+An agent changing the rules it works under to get its work through: editing AGENTS.md or the harness config, loosening CI, rewriting the spec to match the code, or rewriting past decisions. Also two quieter routes: a file a tool loads by itself, such as an `.mcp.json` that makes later sessions offer to start a server the PR chose; and test configuration, where one pytest hook in `conftest.py` can report failures as passes without changing a single test.
 
 ## When it's worth adding
 
@@ -18,7 +18,13 @@ Set the repository variable `MACHINE_ACCOUNT` to the agents' login first, if it 
 2. Copy `files/read-only-paths/read-only-paths.yml` to `.github/workflows/read-only-paths.yml`, and add your spec paths to `--also` (for example `docs/spec/**`).
 3. After the first run, make `read-only-paths` a required check.
 
-Read-only by default: every `AGENTS.md` and `CLAUDE.md`, `docs/agents/**`, `.claude/**`, `.github/**`, `docs/decisions.md`, `docs/adr/**`, `docs/tickets/**` and `docs/milestones/**`. A ticket PR may change one line of its own ticket file, `Status:`, to mark it done; the workflow passes the ticket's path so the check knows which file that is.
+Read-only by default, in three groups:
+
+- the harness: every `AGENTS.md` and `CLAUDE.md`, `docs/agents/**`, `.claude/**`, `.github/**`, `docs/decisions.md`, `docs/adr/**`, `docs/tickets/**` and `docs/milestones/**`;
+- files another tool, git or a dev container loads or runs by itself: `.mcp.json`, `.gitattributes`, `.gitmodules`, `.githooks/**`, `.devcontainer/**`, `.cursor/**`, `.codex/**` and every `GEMINI.md`;
+- test configuration, at any depth: `conftest.py`, `pytest.ini`, `tox.ini`, `setup.cfg`, `pyproject.toml`, `package.json`, `jest.config.*`, `vitest.config.*` and `Makefile`. Add your project's other test and build configuration to `--also`.
+
+A ticket PR may change one line of its own ticket file, `Status:`, to mark it done; the workflow passes the ticket's path so the check knows which file that is.
 
 The one exception: a ticket's "## Scope" lists the file **exactly**, with no wildcard, because the Owner approved that change. A glob such as `.github/**` in the scope never unlocks a read-only path.
 
@@ -30,6 +36,7 @@ In a ticket PR, change `AGENTS.md`. The check fails and names the file. Then lis
 
 - Seconds per PR.
 - Rule and spec changes now need either the Owner's own PR or an exact scope entry. That's the intent, but it adds a step to normal maintenance.
+- A ticket that adds a dependency or a test fixture changes `package.json`, `pyproject.toml` or a `conftest.py`, so its scope has to list that file exactly. `/plan` does this when it cuts the ticket; a ticket that turns out to need one goes back to the Owner for the scope entry.
 - It only covers ticket PRs. The Owner's own changes aren't affected.
 
 ## Error message

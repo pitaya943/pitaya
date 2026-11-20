@@ -51,7 +51,7 @@ def run_find(repo: Repo, tmp_path: Path, head_ref: str, author: str,
     output = tmp_path / "github_output"
     output.write_text("")
     env = dict(os.environ, HEAD_REF=head_ref, BASE_REF="main", PR_AUTHOR=author,
-               MACHINE_ACCOUNT="example-bot",
+               MACHINE_ACCOUNT="example-bot", DEFAULT_BRANCH="main",
                GITHUB_OUTPUT=str(output), RUNNER_TEMP=str(tmp_path),
                GITHUB_REPOSITORY="example-owner/example", GH_TOKEN="")
     env.update(extra)
@@ -408,3 +408,298 @@ def test_commit_author_and_progress_file_know_the_default_branch():
     assert '--default "origin/$DEFAULT_BRANCH"' in author and "--git-dir ." in author
     progress = (FILES / "progress-file" / "progress-file.yml").read_text()
     assert "origin/$DEFAULT_BRANCH:docs/progress/features.json" in progress and "--owner" in progress
+
+
+# --- agent-merge: the workflow records each FAIL and reads it back (F02, F20; D63) ---------
+#
+# The step runs against a fake `gh` that serves the pull request, its comments and the commit
+# statuses from files, and appends every status the step writes. Git is real.
+
+import json  # noqa: E402
+import shutil  # noqa: E402
+import sys  # noqa: E402
+
+FAKE_GH = r'''#!/usr/bin/env python3
+import json, os, subprocess, sys
+state = os.environ["FAKE_GH_STATE"]
+args = sys.argv[1:]
+if args[:2] == ["issue", "view"]:
+    print(open(os.path.join(state, "issue.md")).read(), end="")
+    sys.exit(0)
+assert args[0] == "api", args
+path = args[1].split("/", 3)[3]  # after repos/<owner>/<repo>/
+fields = dict(a.split("=", 1) for i, a in enumerate(args) if i and args[i - 1] == "-f")
+jq = args[args.index("--jq") + 1] if "--jq" in args else None
+statuses_file = os.path.join(state, "statuses.json")
+statuses = json.load(open(statuses_file))
+if path.startswith("statuses/"):
+    statuses.setdefault(path.split("/")[1], []).insert(0, dict(fields, id=sum(map(len, statuses.values())) + 1))
+    json.dump(statuses, open(statuses_file, "w"))
+    sys.exit(0)
+if path.startswith("commits/") and path.endswith("/statuses"):
+    if os.environ.get("FAKE_GH_BREAK_STATUSES"):
+        sys.exit(1)
+    data = statuses.get(path.split("/")[1], [])
+else:
+    data = json.load(open(os.path.join(state, path.replace("/", "_") + ".json")))
+out = json.dumps(data)
+if jq:
+    out = subprocess.run(["jq", "-c", jq], input=out, capture_output=True, text=True, check=True).stdout
+print(out, end="" if out.endswith("\n") else "\n")
+'''
+
+
+class VerdictRun:
+    """A clone with the base checked out, as the workflow has it, and the fake GitHub's state."""
+
+    def __init__(self, tmp_path: Path, ticket: str = ""):
+        (tmp_path / "origin").mkdir()
+        origin = Repo(tmp_path / "origin")
+        origin.write("app.py", "x = 1\n")
+        if ticket:
+            origin.write("docs/tickets/T-1.md", ticket)
+        origin.commit("start")
+        origin.git("checkout", "-q", "-b", "milestone/M1")
+        origin.git("checkout", "-q", "-b", "ticket/T-1-a")
+        origin.write("a.py", "a = 1\n")
+        self.head = origin.commit("the ticket")
+        origin.git("update-ref", "refs/pull/7/head", self.head)
+        origin.git("checkout", "-q", "main")
+        self.origin = origin
+        self.work = tmp_path / "work"
+        subprocess.run(["git", "clone", "-q", str(origin.path), str(self.work)], check=True, capture_output=True)
+        guard = self.work / ".github" / "guardrails"
+        guard.mkdir(parents=True)
+        shutil.copy(FILES / "agent-merge" / "check_verdict.py", guard)
+        self.state = tmp_path / "state"
+        self.state.mkdir()
+        self.tmp = tmp_path
+        (self.state / "statuses.json").write_text("{}")
+        self.put("pulls_7", {"head": {"sha": self.head, "ref": "ticket/T-1-a"}, "base": {"ref": "milestone/M1"}})
+        self.put("issues_7_comments", [])
+        self.put("pulls_7_reviews", [])
+        bin_dir = tmp_path / "fakebin"
+        bin_dir.mkdir()
+        (bin_dir / "gh").write_text(FAKE_GH.replace("#!/usr/bin/env python3", f"#!{sys.executable}"))
+        (bin_dir / "gh").chmod(0o755)
+        self.path = f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
+
+    def put(self, name: str, data) -> None:
+        (self.state / f"{name}.json").write_text(json.dumps(data))
+
+    def comments(self, *comments: dict) -> None:
+        self.put("issues_7_comments", list(comments))
+
+    def verdict(self, result: str, sha: str | None = None, session: str = "verifier-1") -> dict:
+        stamp = "2026-11-20T10:00:00Z"
+        return {"user": {"login": "example-bot"}, "created_at": stamp, "updated_at": stamp,
+                "body": f"## Verification: {result}\n\n- Session: {session}\n- Head commit: {sha or self.head}\n"}
+
+    def run(self, **env: str) -> subprocess.CompletedProcess:
+        return run_step("agent-merge", "Check the verdict and set the status on the head commit", self.tmp, self.work,
+                        PATH=self.path, FAKE_GH_STATE=str(self.state), GH_TOKEN="", PR="7", VERIFIERS="example-bot",
+                        DEFAULT_BRANCH="main", GITHUB_REPOSITORY="example-owner/example", **env)
+
+    def statuses(self, sha: str | None = None, context: str = "verdict") -> list[str]:
+        """The states written for a context on a commit, newest first."""
+        data = json.loads((self.state / "statuses.json").read_text())
+        return [s["state"] for s in data.get(sha or self.head, []) if s["context"] == context]
+
+
+@pytest.fixture
+def verdict_run(tmp_path):
+    return VerdictRun(tmp_path)
+
+
+def test_agent_merge_sets_success_on_a_pass(verdict_run):
+    verdict_run.comments(verdict_run.verdict("PASS"))
+    proc = verdict_run.run()
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert verdict_run.statuses() == ["success"]
+    assert verdict_run.statuses(context="verdict-fail") == []
+
+
+def test_agent_merge_records_a_fail_on_its_commit(verdict_run):
+    verdict_run.comments(verdict_run.verdict("FAIL"))
+    verdict_run.run()
+    assert verdict_run.statuses() == ["failure"]
+    assert verdict_run.statuses(context="verdict-fail") == ["failure"]
+
+
+def test_a_deleted_fail_still_blocks_the_head(verdict_run):
+    """F02: the verifier's account deletes the FAIL comment and posts a PASS on the same head."""
+    verdict_run.comments(verdict_run.verdict("FAIL"))
+    verdict_run.run()
+    verdict_run.comments(verdict_run.verdict("PASS"))  # the FAIL comment is gone
+    proc = verdict_run.run()
+    assert verdict_run.statuses()[0] == "failure", proc.stdout + proc.stderr
+    assert "recorded" in proc.stdout
+
+
+def test_a_fail_is_recorded_once(verdict_run):
+    verdict_run.comments(verdict_run.verdict("FAIL"))
+    verdict_run.run()
+    verdict_run.run()
+    assert verdict_run.statuses(context="verdict-fail") == ["failure"]
+
+
+def test_a_deleted_fail_on_a_passed_head_stops_the_carry(verdict_run):
+    """PASS and FAIL on the same head, the FAIL deleted, then "Update branch": the PASS must not carry."""
+    run = verdict_run
+    passed = run.head
+    run.comments(run.verdict("PASS"), run.verdict("FAIL"))
+    run.run()
+    origin = run.origin
+    origin.git("checkout", "-q", "milestone/M1")
+    origin.write("b.py", "b = 1\n")
+    origin.commit("another ticket merged")
+    origin.git("checkout", "-q", "ticket/T-1-a")
+    origin.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")
+    run.head = origin.git("rev-parse", "HEAD")
+    origin.git("update-ref", "refs/pull/7/head", run.head)
+    origin.git("checkout", "-q", "main")
+    run.put("pulls_7", {"head": {"sha": run.head, "ref": "ticket/T-1-a"}, "base": {"ref": "milestone/M1"}})
+    run.comments(run.verdict("PASS", sha=passed))  # the FAIL comment is gone
+    proc = run.run()
+    assert run.statuses() == ["failure"], proc.stdout + proc.stderr
+
+
+def test_the_same_carry_passes_without_the_fail(verdict_run):
+    """The control for the test above: without the recorded FAIL the PASS carries."""
+    run = verdict_run
+    passed = run.head
+    origin = run.origin
+    origin.git("checkout", "-q", "milestone/M1")
+    origin.write("b.py", "b = 1\n")
+    origin.commit("another ticket merged")
+    origin.git("checkout", "-q", "ticket/T-1-a")
+    origin.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")
+    run.head = origin.git("rev-parse", "HEAD")
+    origin.git("update-ref", "refs/pull/7/head", run.head)
+    origin.git("checkout", "-q", "main")
+    run.put("pulls_7", {"head": {"sha": run.head, "ref": "ticket/T-1-a"}, "base": {"ref": "milestone/M1"}})
+    run.comments(run.verdict("PASS", sha=passed))
+    proc = run.run()
+    assert run.statuses() == ["success"], proc.stdout + proc.stderr
+
+
+def test_agent_merge_fails_closed_when_the_record_cannot_be_read(verdict_run):
+    verdict_run.comments(verdict_run.verdict("PASS"))
+    proc = verdict_run.run(FAKE_GH_BREAK_STATUSES="1")
+    assert verdict_run.statuses() == ["failure"], proc.stdout + proc.stderr
+
+
+def test_agent_merge_reads_an_issue_tickets_risk(tmp_path):
+    """With issue tickets the Risk line is in the issue body; the step hands it to the check."""
+    run = VerdictRun(tmp_path)
+    (run.state / "issue.md").write_text("Risk: high\n")
+    origin = run.origin
+    origin.git("checkout", "-q", "-b", "ticket/12-a", "ticket/T-1-a")
+    passed = origin.git("rev-parse", "HEAD")
+    origin.git("checkout", "-q", "milestone/M1")
+    origin.write("b.py", "b = 1\n")
+    origin.commit("another ticket merged")
+    origin.git("checkout", "-q", "ticket/12-a")
+    origin.git("merge", "-q", "--no-ff", "--no-edit", "milestone/M1")
+    run.head = origin.git("rev-parse", "HEAD")
+    origin.git("update-ref", "refs/pull/7/head", run.head)
+    origin.git("checkout", "-q", "main")
+    run.put("pulls_7", {"head": {"sha": run.head, "ref": "ticket/12-a"}, "base": {"ref": "milestone/M1"}})
+    run.comments(run.verdict("PASS", sha=passed))
+    proc = run.run()
+    assert run.statuses() == ["failure"] and "Risk: high" in proc.stdout, proc.stdout + proc.stderr
+
+
+def test_agent_merge_runs_one_at_a_time_per_pull_request():
+    """F20: two runs that overlap each wrote the status from their own snapshot; the older could win."""
+    text = (FILES / "agent-merge" / "agent-merge.yml").read_text()
+    block = text.split("\nconcurrency:\n", 1)[1].split("\n\n", 1)[0]
+    assert "group: verdict-${{ github.event.pull_request.number || github.event.issue.number }}" in block
+    assert "cancel-in-progress: false" in block
+
+
+# --- F07: a branch name skips the ticket checks only on the base it belongs to --------------
+
+INTO_MILESTONE = dict(BASE_REF="milestone/M1", DEFAULT_BRANCH="main")
+
+
+def test_a_milestone_branch_into_another_branch_is_not_a_milestone_pr(milestone_repo, tmp_path):
+    """An agent that names its branch milestone/x and targets the milestone used to skip every ticket check."""
+    milestone_repo.git("checkout", "-q", "-b", "milestone/x", "milestone/M1")
+    milestone_repo.write("src/anything.py", "unchecked = True\n")
+    milestone_repo.commit("work on a branch named like a milestone")
+    proc, out = run_find(milestone_repo, tmp_path, "milestone/x", "example-bot", **INTO_MILESTONE)
+    assert proc.returncode == 1 and "To fix:" in proc.stdout, proc.stdout + proc.stderr
+    assert "skip=true" not in out
+
+
+def test_a_persons_milestone_named_branch_is_still_left_to_people(milestone_repo, tmp_path):
+    proc, out = run_find(milestone_repo, tmp_path, "milestone/x", "example-owner", **INTO_MILESTONE)
+    assert proc.returncode == 0 and "skip=true" in out
+    assert "milestone PR" not in proc.stdout  # skipped as a person's PR, not as a milestone PR
+
+
+def test_a_plan_pr_into_a_milestone_branch_is_still_a_plan_pr(milestone_repo, tmp_path):
+    """The Level 4 cut: the plan PR for the next milestone targets its branch."""
+    milestone_repo.git("checkout", "-q", "-b", "plan/next", "milestone/M1")
+    milestone_repo.write("docs/tickets/T-7.md", "# T-7\n\nStatus: open\n")
+    milestone_repo.commit("cut")
+    proc, out = run_find(milestone_repo, tmp_path, "plan/next", "example-bot", **INTO_MILESTONE)
+    assert proc.returncode == 0 and "skip=true" in out, proc.stdout + proc.stderr
+
+
+def test_a_plan_branch_into_any_other_branch_is_not_a_plan_pr(milestone_repo, tmp_path):
+    repo = milestone_repo
+    repo.git("checkout", "-q", "-b", "ticket/T-1-a", "milestone/M1")
+    repo.git("update-ref", "refs/remotes/origin/ticket/T-1-a", "HEAD")
+    repo.git("checkout", "-q", "-b", "plan/x")
+    repo.write("docs/tickets/T-1.md", "## Scope\n\n- `**`\n")
+    repo.commit("widen a ticket from inside its own branch")
+    proc, out = run_find(repo, tmp_path, "plan/x", "example-bot", BASE_REF="ticket/T-1-a", DEFAULT_BRANCH="main")
+    assert proc.returncode == 1 and "To fix:" in proc.stdout, proc.stdout + proc.stderr
+    assert "skip=true" not in out
+
+
+def test_a_plan_pr_may_change_an_open_ticket(tickets_repo, tmp_path):
+    tickets_repo.write("docs/tickets/T-1.md", "## Scope\n\n- `src/**`\n- `docs/guide.md`\n")
+    tickets_repo.commit("re-plan an open ticket")
+    proc, out = run_find(tickets_repo, tmp_path, "plan/replan", "example-bot")
+    assert proc.returncode == 0 and "skip=true" in out, proc.stdout + proc.stderr
+
+
+def test_a_plan_pr_may_not_change_a_done_ticket(repo, tmp_path):
+    repo.write("docs/tickets/T-2.md", "# T-2\n\nStatus: done\n\n## Scope\n\n- `src/**`\n")
+    repo.commit("tickets")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    repo.write("docs/tickets/T-2.md", "# T-2\n\nStatus: open\n\n## Scope\n\n- `**`\n")
+    repo.commit("reopen and widen a finished ticket")
+    proc, out = run_find(repo, tmp_path, "plan/again", "example-bot")
+    assert proc.returncode == 1 and "T-2" in proc.stdout and "To fix:" in proc.stdout
+    assert "skip=true" not in out
+
+
+def test_a_plan_pr_may_not_delete_a_done_ticket(repo, tmp_path):
+    repo.write("docs/tickets/T-2.md", "# T-2\n\nStatus: done\n")
+    repo.commit("tickets")
+    repo.git("update-ref", "refs/remotes/origin/main", "HEAD")
+    repo.remove("docs/tickets/T-2.md")
+    repo.commit("drop the record")
+    proc, out = run_find(repo, tmp_path, "plan/tidy", "example-bot")
+    assert proc.returncode == 1 and "skip=true" not in out
+
+
+def test_a_plan_pr_may_not_change_a_ticket_an_open_pr_works_on(tickets_repo, tmp_path):
+    tickets_repo.write("docs/tickets/T-1.md", "## Scope\n\n- `**`\n")
+    tickets_repo.commit("change a ticket under its builder")
+    path = stub_gh(tmp_path, pr_list="ticket/T-1-first")
+    proc, out = run_find(tickets_repo, tmp_path, "plan/replan", "example-bot", PATH=path, PR_NUMBER="9")
+    assert proc.returncode == 1 and "ticket/T-1-first" in proc.stdout and "To fix:" in proc.stdout
+    assert "skip=true" not in out
+
+
+def test_a_plan_pr_that_adds_tickets_is_not_stopped_by_other_open_prs(tickets_repo, tmp_path):
+    tickets_repo.write("docs/tickets/T-2.md", "# T-2\n\nStatus: open\n")
+    tickets_repo.commit("a new ticket")
+    path = stub_gh(tmp_path, pr_list="ticket/T-1-first")
+    proc, out = run_find(tickets_repo, tmp_path, "plan/more", "example-bot", PATH=path, PR_NUMBER="9")
+    assert proc.returncode == 0 and "skip=true" in out, proc.stdout + proc.stderr

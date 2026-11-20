@@ -45,7 +45,7 @@ stateDiagram-v2
   Fail --> Pending: new head
 ```
 
-Any FAIL on the head is final for that head, and an edited verdict comment is ignored. Plan and milestone PRs never get a passing verdict: the Owner merges them.
+A verdict is a comment that starts with the verdict heading and names the full head commit and the verifier's session, or a review from a separate verifier account. A FAIL is one-way: any FAIL on the head is final for that head, and it still counts when its comment is edited or deleted afterwards, because the `agent-merge` workflow records each FAIL it sees in a `verdict-fail` status on the commit. An edited PASS doesn't count, and neither does a PASS from a session the pull request names as a builder. At Level 3 a PASS carries over a merge of the base and nothing else, unless the ticket is `Risk: high`. Plan and milestone PRs never get a passing verdict: the Owner merges them.
 
 ## Autopilot run
 
@@ -66,12 +66,12 @@ stateDiagram-v2
 | Ticket open or done | its `Status:` line on `milestone/M<n>` (on `main` for a ticket outside any milestone); or whether its issue is closed | plan PR (open); the ticket's own PR (done) |
 | Ticket claimed | a remote branch `ticket/<id>-<slug>`, or an open PR from one | builder or `/autopilot` |
 | In review, fixing | the PR's state, its CI and its head commit | builder (pushes), CI |
-| Verdict | a verdict comment or review on the PR, for one head commit | verifier |
-| Fix rounds used | the number of FAIL verdicts on the PR | verifier |
+| Verdict | a verdict comment or review on the PR, for one head commit; with agent-merge, also the `verdict` and `verdict-fail` statuses on that commit | verifier; the `agent-merge` workflow |
+| Fix rounds used | the number of FAIL verdicts on the PR; with agent-merge, a FAIL whose comment was deleted still shows as the `verdict-fail` status on its commit | verifier; the `agent-merge` workflow |
 | Escalated | an open `needs-owner` issue linked from the PR or ticket | any role (`ask-owner`); the Owner closes it |
 | Milestone phase | `Status:` in `docs/milestones/M<n>.md`, plus the `milestone/M<n>` branch and its PR | plan PR; the first `/build` or `/autopilot` tick creates a missing branch; the Owner's merge closes it |
 | Milestone behind `main` | `main` isn't an ancestor of `milestone/M<n>` (a `plan/<slug>` PR merged since); an open PR from `sync/<slug>` brings it in | whoever starts the next ticket, or `/autopilot`, opens the sync PR; it merges like a ticket PR |
-| Autopilot progress, stop requests | the tracking issue `Autopilot: M<n>` | `/autopilot`; the Owner comments "stop" |
+| Autopilot progress, stop requests | the tracking issue `Autopilot: M<n>` | `/autopilot`; the Owner comments "stop" (only the Owner's own comment counts: [escalation](escalation.md#who-can-answer)) |
 | Decisions | `docs/decisions.md`, `docs/adr/` | Owner, Chief |
 | Handover of stopped work | `docs/handoff/<branch>.md` | `/handoff` |
 

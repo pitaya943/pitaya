@@ -254,3 +254,42 @@ def test_skip_rejects_an_unknown_path(tmp_path):
 def test_settings_deny_nested_env_files():
     deny = json.loads((TEMPLATES / ".claude/settings.json").read_text())["permissions"]["deny"]
     assert "Read(./**/.env)" in deny and "Read(./**/.env.*)" in deny
+
+
+# --- withdrawn allow rules are reported, never removed (noted by the verdicts on the 0.1.5 PR) ---
+
+@pytest.mark.parametrize("rule", ["Bash(git diff *)", "Bash(git fetch *)"])
+def test_a_withdrawn_allow_rule_is_reported_and_left_alone(tmp_path, rule):
+    """0.1.5 stopped allowing `git diff` and `git fetch`; a project set up before still has the rules."""
+    (tmp_path / ".claude").mkdir()
+    own = {"permissions": {"allow": [rule, "Bash(make *)"]}}
+    (tmp_path / ".claude/settings.json").write_text(json.dumps(own))
+    for extra in (["--check"], []):
+        proc = install(tmp_path, "--level", "1", "--test-command", "pytest -q", *extra)
+        assert proc.returncode == 0
+        line = next((l for l in proc.stdout.splitlines() if l.startswith("withdrawn")), "")
+        assert rule in line and ".claude/settings.json" in line and "by hand" in line, proc.stdout
+    assert rule in json.loads((tmp_path / ".claude/settings.json").read_text())["permissions"]["allow"]
+
+
+def test_no_withdrawn_rule_is_reported_for_a_fresh_install(tmp_path):
+    proc = install(tmp_path, "--level", "1", "--test-command", "pytest -q")
+    again = install(tmp_path, "--level", "1", "--test-command", "pytest -q")
+    assert not [l for l in (proc.stdout + again.stdout).splitlines() if l.startswith("withdrawn")]
+
+
+def test_the_template_allows_no_rule_it_has_withdrawn():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("install_templates", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    before, sys.dont_write_bytecode = sys.dont_write_bytecode, True
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = before
+    allow = json.loads((TEMPLATES / ".claude/settings.json").read_text())["permissions"]["allow"]
+    assert module.WITHDRAWN_ALLOW and not set(module.WITHDRAWN_ALLOW) & set(allow)
+
+
+def test_setup_says_what_to_do_with_a_withdrawn_rule():
+    assert "`withdrawn`" in (PLUGIN_ROOT / "skills/setup/SKILL.md").read_text()

@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.5 · .claude/hooks/no_destructive.py
+# pitaya template 0.1.6 · .claude/hooks/no_destructive.py
 """PreToolUse hook: stop the few shell commands that wipe work and can't be undone.
 
 What it guards against: one command destroying the working tree, the home
-directory or uncommitted changes: a recursive `rm` of `/`, `~`, `$HOME`, `.`
-or `..`; `git reset --hard`; and `git clean` that forces deletion of
-directories or ignored files.
+directory or uncommitted changes: a recursive `rm` of `/`, `~`, `$HOME`,
+`$PWD`, `.`, `..`, `*`, `./*` or `.git`; `find` with `-delete` over the whole
+tree and nothing to narrow it; `git reset --hard`; `git checkout` or
+`git restore` of `.`, which throws away every uncommitted change; and
+`git clean` that forces deletion of directories or ignored files.
 
 How it decides: it parses each Bash command into simple commands and checks
 each one. Quoted text (`echo 'rm -rf /'`) is not a command and is let through.
 
-Limits: it lists only the most common and least recoverable forms; it is not
-a sandbox. Only Claude Code runs hooks.
+Limits: it catches slips, the plainly accidental forms of the least
+recoverable commands. It doesn't follow variables, aliases, scripts or other
+tools, so it is not a sandbox and not a security boundary: the real protection
+is pushing work before risky steps and running where nothing else can be lost.
+Only Claude Code runs hooks.
 
 When to remove: when sessions run in a disposable sandbox or container where
 nothing outside the checkout can be lost, and transcripts show these commands
@@ -32,7 +37,16 @@ from pathlib import Path
 CONTROL = {"&&", "||", ";", "|", "&", "(", ")"}
 WRAPPERS = {"sudo", "command", "env", "time", "nohup", "exec"}
 GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
-RM_TARGETS = {"/", "/*", "~", "~/", "~/*", "$HOME", "$HOME/", "$HOME/*", "${HOME}", "${HOME}/", ".", "./", "..", "../"}
+RM_TARGETS = {"/", "/*", "~", "~/", "~/*", "$HOME", "$HOME/", "$HOME/*", "${HOME}", "${HOME}/", ".", "./", "..", "../",
+              "*", "./*", ".git", "./.git", ".git/", "./.git/", "$PWD", "$PWD/", "$PWD/*", "${PWD}", "${PWD}/", "${PWD}/*"}
+# Where `find ... -delete` with nothing to narrow it would empty the tree (no path at all means `.`).
+FIND_ROOTS = {".", "./", "..", "../", "/", "~", "~/", "$HOME", "$HOME/", "${HOME}", "$PWD", "$PWD/", "${PWD}", ".git", "./.git"}
+# Tests that narrow what `find` matches; `-type` and the depth options don't.
+FIND_NARROWS = {"-name", "-iname", "-path", "-ipath", "-wholename", "-iwholename", "-regex", "-iregex", "-lname", "-ilname",
+                "-newer", "-mtime", "-mmin", "-atime", "-amin", "-ctime", "-cmin", "-size", "-empty", "-user", "-group",
+                "-perm", "-samefile", "-inum", "-links"}
+# A pathspec that means "everything here" to `git checkout` and `git restore`.
+ALL_PATHS = {".", "./", ":/", "*", "./*"}
 
 
 def segments(command: str) -> list[list[str]]:
@@ -96,6 +110,21 @@ def check_rm(args: list[str]) -> str | None:
     return None
 
 
+def check_find(args: list[str]) -> str | None:
+    if "-delete" not in args or any(a in FIND_NARROWS for a in args):
+        return None
+    roots = []
+    for a in args:
+        if a.startswith("-") or a in ("(", "!"):
+            break
+        roots.append(a)
+    if not roots or any(r in FIND_ROOTS for r in roots):
+        return ("`find` with `-delete` and nothing to narrow it deletes everything under "
+                f"`{roots[0] if roots else '.'}`, the repository's own `.git` included. "
+                "Instead, name the directory to empty, or add a test such as `-name '*.pyc'`")
+    return None
+
+
 def check_git(words: list[str]) -> str | None:
     i = 1
     while i < len(words) and words[i].startswith("-"):
@@ -106,6 +135,16 @@ def check_git(words: list[str]) -> str | None:
     if sub == "reset" and "--hard" in args:
         return ("`git reset --hard` throws away uncommitted work. "
                 "Instead, use `git stash` to set changes aside, or `git restore <file>` for one file")
+    if sub == "checkout" and any(a in ALL_PATHS for a in args):
+        return ("`git checkout` of `.` overwrites every changed file with the committed version. "
+                "Instead, use `git stash` to set changes aside, or name the one file to restore")
+    if sub == "restore" and any(a in ALL_PATHS for a in args):
+        flags = short_flags(args)
+        staged = "S" in flags or "--staged" in args
+        worktree = "W" in flags or "--worktree" in args
+        if worktree or not staged:  # with --staged alone it only unstages; the files keep their content
+            return ("`git restore` of `.` throws away every uncommitted change in the working tree. "
+                    "Instead, use `git stash` to set changes aside, or name the one file to restore")
     if sub == "clean":
         flags = short_flags(args)
         if "n" in flags or "--dry-run" in args:
@@ -125,7 +164,9 @@ def decide(payload: dict) -> dict | None:
         if not words:
             continue
         program = Path(words[0]).name
-        reason = check_rm(words[1:]) if program == "rm" else check_git(words) if program == "git" else None
+        check = {"rm": lambda: check_rm(words[1:]), "find": lambda: check_find(words[1:]),
+                 "git": lambda: check_git(words)}.get(program)
+        reason = check() if check else None
         if reason:
             return {
                 "hookEventName": "PreToolUse",

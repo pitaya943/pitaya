@@ -1,4 +1,4 @@
-# pitaya template 0.1.5 · docs/guardrails/files/progress-file/progress-file.yml
+# pitaya template 0.1.6 · docs/guardrails/files/progress-file/progress-file.yml
 # Fails a pull request that changes the feature list beyond the "passes" flags.
 # Copy to .github/workflows/progress-file.yml, and check_feature_list.py to .github/guardrails/check_feature_list.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login, then

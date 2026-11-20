@@ -14,6 +14,7 @@ Verification is only worth something if it's independent. The verifier judges fr
 1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once, then continue with defaults: the document language is the conversation's, and there are no sensitive areas.
 2. Fetch the PR: its number, base branch, head commit and linked ticket. If there's no ticket, ask the user for the completion conditions. Don't infer them from the diff.
 3. Count earlier verdicts on the PR to get this verify round's number. A verify round checks; a fix round changes code. They alternate: verify 1, fix 1, verify 2, and so on.
+4. Note this session's ID for the verdict: `${CLAUDE_SESSION_ID}`. If that shows a placeholder instead of an ID, use the ID your tool gives the session (a cloud session's ID is in its link); if there is none, the verdict says `unavailable: <reason>`. Compare it with the `Builder session:` lines on the PR: with the agent-merge guardrail, a PASS from a builder's session, or from its subagent, doesn't count, so hand the PR to a separate session instead.
 
 ## 2. Dispatch a fresh verifier
 
@@ -34,8 +35,8 @@ Tell it to:
 
 ## 3. Post the verdict
 
-1. Read the returned verdict. Check that every checklist row has evidence. A row without evidence counts as fail, and you send it back to the same verifier once to fill the gap.
-2. Post the verdict as one PR comment, in the template, acting as the machine account from the harness file when there is one. Never edit a verdict after posting it: an edited verdict doesn't count, so post a new one. (Only when the harness lists the multi-account guardrail with a separate verifier account, post it as a review from that account instead: `gh pr review <n> --approve` or `--request-changes`, or the GitHub tool's review call.)
+1. Read the returned verdict. Check that every checklist row has evidence, and that it has an Attention section: rows, or "None". A row without evidence counts as fail, and you send it back to the same verifier once to fill the gap.
+2. Post the verdict as one PR comment, in the template, acting as the machine account from the harness file when there is one. The comment starts with the heading line, and names the full 40-character head commit and this session's ID: the agent-merge check reads exactly that. Never edit a verdict after posting it: an edited PASS doesn't count and a FAIL can't be taken back, so post a new one. (Only when the harness lists the multi-account guardrail with a separate verifier account, post it as a review from that account instead: `gh pr review <n> --approve` or `--request-changes`, or the GitHub tool's review call.)
 3. Tell the user the result in one line, with the PR link.
 
 ## After the verdict
@@ -48,5 +49,6 @@ Tell it to:
 ## Don't
 
 - Don't give PASS just because CI is green. CI is one row of the checklist.
+- Don't leave a loosened check out of Attention because it was justified. A PASS with a `gate-change` row is still a PASS; the row is how the Owner sees it.
 - Don't propose fix code in the verdict. Describe the problem, how to reproduce it, and what was expected.
 - Don't write the model name from memory (`evidence` skill).

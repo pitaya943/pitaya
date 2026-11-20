@@ -191,6 +191,26 @@ def test_git_log_and_show_accept_no_short_form_of_a_denied_option(sub, option, s
     assert "SECRET=demo" not in proc.stdout
 
 
+def test_ext_diff_runs_a_program_and_is_denied(secret_repo):
+    """`--ext-diff` makes `git log -p` and `git show` run the configured external diff program.
+
+    The rule lost its test when `git diff` left the allow list (noted by the verdicts on the 0.1.5 PR).
+    """
+    script = secret_repo / "ext.sh"
+    script.write_text("#!/bin/sh\ntouch PWNED\n")
+    script.chmod(0o755)
+    subprocess.run(["git", "config", "diff.external", "./ext.sh"], cwd=secret_repo, check=True)
+    for command in ("git show HEAD --ext-diff", "git log -1 -p --ext-diff"):
+        (secret_repo / "PWNED").unlink(missing_ok=True)
+        run(command, secret_repo)
+        assert (secret_repo / "PWNED").exists(), f"{command!r} didn't run the external program here"
+        for path in SETTINGS:
+            assert not unprompted(command, json.loads(path.read_text())), command
+    (secret_repo / "PWNED").unlink()
+    run("git show HEAD", secret_repo)  # without the option the program doesn't run
+    assert not (secret_repo / "PWNED").exists()
+
+
 def test_suggestion_says_the_allow_rules_are_narrowed():
     assert "--output" in read("docs/suggestion.md")
 

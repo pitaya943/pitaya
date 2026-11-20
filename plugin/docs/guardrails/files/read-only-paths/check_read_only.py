@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.5 · docs/guardrails/files/read-only-paths/check_read_only.py
+# pitaya template 0.1.6 · docs/guardrails/files/read-only-paths/check_read_only.py
 """Guardrail "read-only-paths": a ticket PR can't change rules, specs or CI.
 
 Usage (from the repository root, in CI)::
 
     python3 check_read_only.py --base <base sha> --head <head sha> --ticket ticket.md [--ticket-path docs/tickets/<id>.md] [--also "docs/spec/**,..."]
 
-Read-only by default: every AGENTS.md and CLAUDE.md, docs/agents/**, .claude/**,
-.github/**, docs/decisions.md, docs/adr/**, docs/tickets/** and docs/milestones/**. Add the project's specs with --also (comma
-separated globs) or the READ_ONLY_PATHS constant below.
+Read-only by default, in three groups (the READ_ONLY_PATHS constant below):
+
+- the harness: every AGENTS.md and CLAUDE.md, docs/agents/**, .claude/**, .github/**,
+  docs/decisions.md, docs/adr/**, docs/tickets/** and docs/milestones/**;
+- files another tool, git or a dev container loads or runs by itself: .mcp.json,
+  .gitattributes, .gitmodules, .githooks/**, .devcontainer/**, .cursor/**, .codex/**
+  and every GEMINI.md;
+- test configuration: conftest.py, pytest.ini, tox.ini, setup.cfg, pyproject.toml,
+  package.json, jest.config.*, vitest.config.* and Makefile, at any depth.
+
+Add the project's specs, and its other test or build configuration, with --also
+(comma separated globs) or in the constant.
 
 The one exception: a path the ticket's "## Scope" section lists **exactly**,
 with no wildcard, because the Owner approved changing that file. A glob in the
@@ -30,9 +39,17 @@ import sys
 from pathlib import Path
 
 READ_ONLY_PATHS = [
-    "AGENTS.md", "**/AGENTS.md", "CLAUDE.md", "**/CLAUDE.md",
+    # The harness: its rules, the plan and the record.
+    "**/AGENTS.md", "**/CLAUDE.md",
     "docs/agents/**", ".claude/**", ".github/**", "docs/decisions.md", "docs/tickets/**",
     "docs/milestones/**", "docs/adr/**",
+    # Files another tool, git or a dev container loads or runs by itself.
+    ".mcp.json", "**/.gitattributes", ".gitmodules", ".githooks/**", ".devcontainer/**",
+    ".cursor/**", ".codex/**", "**/GEMINI.md",
+    # Test configuration: it decides what a passing run means, so a change here can turn
+    # failures into passes without touching a test.
+    "**/conftest.py", "**/pytest.ini", "**/tox.ini", "**/setup.cfg", "**/pyproject.toml",
+    "**/package.json", "**/jest.config.*", "**/vitest.config.*", "**/Makefile",
 ]
 
 

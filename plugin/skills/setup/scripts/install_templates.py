@@ -41,6 +41,12 @@ DECISIONS = "docs/decisions.md"
 PLACEHOLDER = "<TEST_COMMAND>"
 HEADER_RE = re.compile(r"pitaya template (\S+)")
 TEMPLATE_DOC = "README.md"  # documents a templates folder; never copied
+# Allow rules an earlier version installed and a later one withdrew. Settings are merged by adding
+# only, so a project set up before still has them: they are reported, and the user removes them.
+WITHDRAWN_ALLOW = {
+    "Bash(git diff *)": "`git diff` prints any file once a path is outside the work tree",
+    "Bash(git fetch *)": "`git fetch --upload-pack` runs a program, and git accepts the option abbreviated",
+}
 
 
 def plugin_version() -> str:
@@ -80,6 +86,15 @@ def merge_settings(existing: dict, ours: dict) -> dict:
         commands = {h.get("command") for h in same.setdefault("hooks", [])}
         same["hooks"] += [h for h in group["hooks"] if h.get("command") not in commands]
     return merged
+
+
+def withdrawn_rules(dest: Path) -> list[str]:
+    """Allow rules in the project's settings that pitaya installed once and has since withdrawn."""
+    try:
+        allow = json.loads(dest.read_text()).get("permissions", {}).get("allow", [])
+    except (json.JSONDecodeError, AttributeError):
+        return []
+    return [rule for rule in WITHDRAWN_ALLOW if rule in allow]
 
 
 def plan_file(rel: str, wanted: str, dest: Path) -> tuple[str, str | None]:
@@ -140,6 +155,10 @@ def main(argv: list[str] | None = None) -> int:
         dest = args.target / rel
         wanted = render(rel, src.read_text(), args.test_command)
         status, payload = plan_file(rel, wanted, dest)
+        if rel == SETTINGS and dest.exists():
+            for rule in withdrawn_rules(dest):
+                print(f"withdrawn {rel}: permissions.allow still has {rule}, which pitaya no longer installs "
+                      f"({WITHDRAWN_ALLOW[rule]}). Remove it by hand unless you added it yourself.")
         if status == "stale":
             print(f"{status.ljust(8)} {rel} {payload}")
             continue

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.5 · docs/guardrails/files/agent-merge/check_verdict.py
+# pitaya template 0.1.6 · docs/guardrails/files/agent-merge/check_verdict.py
 """Guardrail "agent-merge": a PASS verdict exists for the pull request's current head commit.
 
 Usage (in CI)::
@@ -8,16 +8,32 @@ Usage (in CI)::
     gh api "repos/$REPO/pulls/$PR/reviews" --paginate > reviews.json
     python3 check_verdict.py --comments comments.json --reviews reviews.json \
         --head <head sha> --verifiers <logins> --branch <head branch> \
-        [--git-dir . --base origin/<base branch> --default origin/<default branch>]
+        [--git-dir . --base origin/<base branch> --default origin/<default branch>] \
+        [--failed <sha,sha>] [--record <file>] [--ticket <issue body file>]
 
 A verdict comes from an allowed verifier account, for the current head commit:
 
-- a comment that starts with "## Verification: PASS" or "## Verification: FAIL"
-  and names a "Head commit:" (the `/verify` template). With one machine account
-  the verifier posts as that account, and GitHub doesn't let an author approve
-  its own pull request, so this is the usual form. Edited comments don't count.
+- a comment that **starts** with "## Verification: PASS" or "## Verification: FAIL"
+  and has a "Head commit:" line with the full 40-character commit (the `/verify`
+  template). A comment that quotes a verdict further down isn't one, and neither
+  is a 7-character prefix. With one machine account the verifier posts as that
+  account, and GitHub doesn't let an author approve its own pull request, so this
+  is the usual form.
 - a pull request review from a verifier account on that commit: "Approve" is
   PASS, "Request changes" is FAIL. Dismissed reviews don't count.
+
+A PASS comment also needs a "Session:" line, and that session must not be one a
+"Builder session:" line on the pull request names (the builder's hand-off and
+fix-round comments carry it): the session that built the work, or a subagent of
+it, can't pass it. This catches an honest mistake. It doesn't stop a session
+that writes a false ID: pitaya trusts cooperating agents (see the recipe).
+
+A FAIL is one-way. An edited PASS doesn't count, but an edited FAIL still does,
+and `--failed` lists the commits whose FAIL the workflow recorded in a
+`verdict-fail` commit status when it first saw it, so a FAIL whose comment was
+edited or deleted afterwards still counts. `--record` writes the commits this run
+saw a FAIL for, for the workflow to record. A FAIL on a commit is final for that
+commit: fix, push, and get a PASS on the new head.
 
 Any new push voids earlier verdicts, with one exception that needs `--git-dir`:
 a PASS carries over to a head that adds only a merge of the base branch (GitHub's
@@ -26,16 +42,18 @@ git gets by merging the current base into the PASS head, and every commit added
 since must be a true merge: two parents, and the tree git gets by merging them.
 Anything else on top needs a new verdict: a change folded into the merge commit
 gives another tree, and `git merge -s ours` keeps the tree but records a commit as
-merged whose changes never arrived, so a later merge of that commit is dropped. A FAIL on this head, or on the PASS head being carried, is final.
+merged whose changes never arrived, so a later merge of that commit is dropped. A
+FAIL on the PASS head being carried stops the carry. So does `Risk: high` in the
+ticket (its file on the base branch, or `--ticket` for an issue's body): nobody
+verified the combined result, and a high-risk ticket is where that matters.
 
 A sync PR (`sync/<slug>` into `milestone/<id>`, with `--git-dir`) needs no
 verdict when its tree equals the base merged with the newest default-branch
 commit it contains, and every commit it adds is a true merge: everything in it
 was already merged into the default branch.
 
-A FAIL on this head is final until the
-next push. Plan PRs (`plan/<slug>`) and milestone PRs (`milestone/<id>`) never
-pass on a verdict: the Owner merges those.
+Plan PRs (`plan/<slug>`) and milestone PRs (`milestone/<id>`) never pass on a
+verdict: the Owner merges those.
 
 When to remove: when agents no longer merge on their own, and a person reads
 every verdict before merging.
@@ -52,8 +70,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-RESULT_RE = re.compile(r"^##\s*Verification:\s*(PASS|FAIL)\b", re.M)
-HEAD_RE = re.compile(r"Head commit:\s*`?([0-9a-f]{7,40})", re.I)
+# A verdict comment starts with the heading (blank lines before it are fine) and names the full commit.
+RESULT_RE = re.compile(r"\A\s*##[ \t]*Verification:[ \t]*(PASS|FAIL)\b")
+HEAD_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Head commit:[ \t]*`?([0-9a-f]{40})\b", re.I | re.M)
+SESSION_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Session:[ \t]*`?([^\s`]*)", re.I | re.M)
+BUILDER_RE = re.compile(r"^[ \t]*[-*]?[ \t]*Builder session:[ \t]*`?([^\s`]+)", re.I | re.M)
+RISK_HIGH_RE = re.compile(r"^Risk:[ \t]*high\b", re.I | re.M)
 MILESTONE_RE = re.compile(r"(^|/)milestone/[^/]+$")
 
 
@@ -110,22 +132,76 @@ def only_merges(repo: Path, head: str, base: str, other: str) -> bool:
             and true_merges(repo, head, base, other))
 
 
-def verdicts(comments: list[dict], reviews: list[dict], verifiers: set[str]) -> list[tuple[str, str]]:
-    """(named commit, PASS or FAIL) for each verdict that counts: an allowed author, not edited."""
-    out = []
+def real_session(value: str) -> bool:
+    """False for an empty value, "unavailable" or a placeholder nobody filled in."""
+    return bool(value) and not value.lower().startswith("unavailable") and not set(value) & set("<>${}")
+
+
+def builder_sessions(comments: list[dict], agents: set[str]) -> set[str]:
+    """Session IDs the builders recorded on the pull request ("Builder session: <id>").
+
+    Only comments from the agents' own accounts count: text from anyone else is information,
+    so an outsider can't void a verdict by naming the verifier's session as a builder's.
+    """
+    out = set()
+    for c in comments:
+        if ((c.get("user") or {}).get("login") or "").lower() in agents:
+            out.update(BUILDER_RE.findall(c.get("body") or ""))
+    return out
+
+
+def verdicts(comments: list[dict], reviews: list[dict], verifiers: set[str]) -> tuple[list[tuple[str, str]], list[str]]:
+    """((named commit, PASS or FAIL) for each verdict that counts, why each other PASS didn't).
+
+    A PASS counts when it comes from an allowed author, wasn't edited, and names a session that
+    isn't a builder's. A FAIL counts from an allowed author whatever else is true of it.
+    """
+    out, notes = [], []
+    builders = builder_sessions(comments, verifiers)
     for c in comments:
         login = ((c.get("user") or {}).get("login") or "").lower()
         body = c.get("body") or ""
-        result, named = RESULT_RE.search(body), HEAD_RE.search(body)
-        edited = c.get("updated_at") and c.get("updated_at") != c.get("created_at")
-        if login in verifiers and result and named and not edited:
-            out.append((named.group(1).lower(), result.group(1)))
+        result = RESULT_RE.search(body)
+        if login not in verifiers or not result:
+            continue
+        named = HEAD_RE.search(body)
+        if not named:
+            notes.append(f"a {result.group(1)} verdict has no \"Head commit:\" line with the full 40-character commit.")
+            continue
+        commit = named.group(1).lower()
+        if result.group(1) == "FAIL":
+            out.append((commit, "FAIL"))
+            continue
+        session = SESSION_RE.search(body)
+        session = session.group(1) if session else ""
+        if c.get("updated_at") and c.get("updated_at") != c.get("created_at"):
+            notes.append(f"the PASS for {commit[:7]} was edited after it was posted; an edited PASS doesn't count.")
+        elif not real_session(session):
+            notes.append(f"the PASS for {commit[:7]} has no \"Session:\" line naming the verifier's session.")
+        elif session in builders:
+            notes.append(f"the PASS for {commit[:7]} comes from session {session}, which a \"Builder session:\" "
+                         "line on this pull request names: a builder can't verify its own work.")
+        else:
+            out.append((commit, "PASS"))
     for r in reviews:
         login = ((r.get("user") or {}).get("login") or "").lower()
         result = {"APPROVED": "PASS", "CHANGES_REQUESTED": "FAIL"}.get(r.get("state"), "")
         if login in verifiers and result:
             out.append(((r.get("commit_id") or "").lower(), result))
-    return out
+    return out, notes
+
+
+def high_risk(repo: Path | None, base: str, branch: str, ticket: Path | None) -> bool:
+    """True when the branch's ticket says "Risk: high": `ticket` if given, else its file on the base branch."""
+    if ticket and ticket.exists():
+        return bool(RISK_HIGH_RE.search(ticket.read_text()))
+    if not (repo and base and branch.startswith("ticket/")):
+        return False
+    for path in (git(repo, "ls-tree", "--name-only", base, "docs/tickets/") or "").splitlines():
+        name = Path(path).stem
+        if path.endswith(".md") and (branch == f"ticket/{name}" or branch.startswith(f"ticket/{name}-")):
+            return bool(RISK_HIGH_RE.search(git(repo, "show", f"{base}:{path}") or ""))
+    return False
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -138,6 +214,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--git-dir", type=Path, help="a clone with the head, base and default commits")
     parser.add_argument("--base", default="", help="the base branch as a commit or ref, with --git-dir")
     parser.add_argument("--default", default="", help="the default branch as a commit or ref, with --git-dir")
+    parser.add_argument("--failed", default="", help="commits with a recorded FAIL (the verdict-fail status), "
+                                                     "comma separated full SHAs")
+    parser.add_argument("--record", type=Path, help="write the commits this run saw a FAIL verdict for, one per line")
+    parser.add_argument("--ticket", type=Path, help="the ticket's text when it is an issue, for its Risk line")
     args = parser.parse_args(argv)
 
     verifiers = {v.strip().lower() for v in args.verifiers.split(",") if v.strip()}
@@ -145,22 +225,28 @@ def main(argv: list[str] | None = None) -> int:
         return fail("no verifier accounts were given.",
                     "set the repository variable VERIFIER_ACCOUNTS, or MACHINE_ACCOUNT, to the login "
                     "the verifier posts as.")
+
+    head = args.head.lower()
+    repo = args.git_dir
+    found, notes = verdicts(load(args.comments), load(args.reviews), verifiers)
+    recorded = {s.strip().lower() for s in args.failed.split(",") if s.strip()}
+    failed = recorded | {named for named, result in found if result == "FAIL"}
+    if args.record:
+        # Only commits this repository has can carry a status: the head, and with a clone anything it resolves.
+        seen = sorted(c for c in failed - recorded
+                      if c == head or (repo and git(repo, "rev-parse", "--verify", "--quiet", f"{c}^{{commit}}")))
+        args.record.write_text("".join(f"{c}\n" for c in seen))
+
     if args.branch.startswith(("plan/", "milestone/")):
         return fail("this is a plan or milestone PR; it needs the Owner's review, not a verdict.",
                     "ask the Owner to review and merge it.")
 
-    head = args.head.lower()
-    repo = args.git_dir
-    found = verdicts(load(args.comments), load(args.reviews), verifiers)
-
-    def matches(named: str, commit: str) -> bool:
-        return bool(named) and commit.startswith(named)
-
-    on_head = [result for named, result in found if matches(named, head)]
-    if "FAIL" in on_head:
-        return fail(f"a verifier reported FAIL on head {args.head[:7]}.",
+    if head in failed:
+        how = "a verifier reported FAIL" if any(n == head and r == "FAIL" for n, r in found) \
+            else "a FAIL was recorded (its comment was edited or deleted since)"
+        return fail(f"{how} on head {args.head[:7]}.",
                     "fix what the verdict reports and push; the new head needs a new /verify.")
-    if "PASS" in on_head:
+    if any(named == head and result == "PASS" for named, result in found):
         print(f"PASS agent-merge: a verifier passed head {args.head[:7]}.")
         return 0
 
@@ -181,19 +267,25 @@ def main(argv: list[str] | None = None) -> int:
             if result != "PASS":
                 continue
             passed = git(repo, "rev-parse", "--verify", "--quiet", f"{named}^{{commit}}")
-            if not passed or passed == head:
-                continue
-            if any(r == "FAIL" and matches(n, passed) for n, r in found):
+            if not passed or passed == head or passed in failed:
                 continue
             ancestor = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", passed, head])
             if ancestor.returncode == 0 and only_merges(repo, head, args.base, passed):
+                if high_risk(repo, args.base, args.branch, args.ticket):
+                    return fail(f"head {args.head[:7]} is the PASS head {passed[:7]} with only the base merged in, "
+                                "but the ticket is Risk: high, and a high-risk ticket's PASS doesn't carry.",
+                                "run /verify on the current head: nobody has checked this ticket against the "
+                                "new base.")
                 print(f"PASS agent-merge: head {args.head[:7]} is the PASS head {passed[:7]} with only the "
                       f"base merged in since.")
                 return 0
 
+    for note in notes:
+        print(f"Note: {note}")
     return fail(f"no PASS verdict for head {args.head[:7]}.",
-                "run /verify on the current head (a new push voids earlier verdicts, except a merge of "
-                "the base alone) and fix what it reports.")
+                "run /verify on the current head, in a session that didn't build it (a new push voids earlier "
+                "verdicts, except a merge of the base alone). The verdict comment starts with the heading, and "
+                "names the full 40-character head commit and the verifier's session.")
 
 
 if __name__ == "__main__":
