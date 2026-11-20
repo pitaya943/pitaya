@@ -1,6 +1,6 @@
 # Recipe: project evals
 
-Level: 3. Files: [`task-template.md`](files/project-evals/task-template.md).
+Level: 4. Files: [`task-template.md`](files/project-evals/task-template.md).
 
 ## What it guards against
 

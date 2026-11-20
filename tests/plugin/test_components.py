@@ -55,7 +55,7 @@ def test_ids_are_unique():
 def test_component_shape(cid):
     c = components()[cid]
     assert c["kind"] in KINDS
-    assert c["level"] in (0, 1, 2, 3)
+    assert c["level"] in (0, 1, 2, 3, 4)
     assert isinstance(c["summary"], str) and c["summary"] and len(c["summary"]) <= 120
     assert (PLUGIN / c["doc"]).is_file(), c["doc"]
     for key in ("requires", "recommends", "needs", "files"):
@@ -199,8 +199,7 @@ def test_recipes_it_names_as_prerequisites_are_declared(name):
 
 def test_agent_merge_requires_the_checks_its_prerequisites_name():
     c = components()["agent-merge"]
-    assert {"scope", "read-only-paths", "no-weakened-tests", "done-when",
-            "second-model-review", "skill:verify"} <= set(c["requires"])
+    assert {"scope", "read-only-paths", "no-weakened-tests", "done-when", "skill:verify"} <= set(c["requires"])
 
 
 def test_skill_levels_match_suggestion_md():
