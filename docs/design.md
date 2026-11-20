@@ -227,7 +227,7 @@ Standard library and git only; one standalone file per check; configuration in h
 
 | Part | How users get it | How it updates |
 | --- | --- | --- |
-| Skills | The `pitaya` plugin: `/plugin marketplace add <owner>/pitaya`, then `/plugin install pitaya@pitaya`; or copy `skills/<name>/` | Automatically when the plugin version changes |
+| Skills | The `pitaya` plugin: `/plugin marketplace add <owner>/pitaya`, then `/plugin install pitaya@pitaya`; in cloud sessions, the same two commands (`claude plugin ...`) in the environment's setup script (D54); or copy `skills/<name>/` | Automatically when the plugin version changes; in the cloud, each time a container is built fresh |
 | Level 1 files | `/setup` copies `templates/` | Re-run `/setup`: it lists stale copies and diffs, and the user decides |
 | Recipe files | The user copies them | `CHANGELOG.md` flags recipe fixes; headers carry the version |
 
@@ -300,8 +300,9 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 | W6 | Trial: move the trial repository to Level 1 with `/setup`, add one Level 2 recipe and prove it blocks; run the hooks in a real Claude Code session; try `/plan` and `/handoff`; run `/setup` on this repository itself (D31) | A trial record with evidence |
 | W6+ | After the trial: per-level inventory and component manifest (D33), `retro`/`handoff` at Level 1 (D34), file tickets with an issue mirror (D35), plan PRs (D36), enforced Owner-only merges (D37), milestones (D38), `/autopilot` (D39) | Merged, CI green |
 | W6++ | The audit fixes (D40–D43), milestone branches with one machine account (D44), the Level 0–4 spectrum (D45), and the pstack-derived rigor: sharpen, decision log, blast radius, correct ladder (D46), `/design` and verify-app (D47), Level 4 deep verification (D48) | Merged, CI green |
-| W7 | Release `v0.1.0` | The Owner creates the release |
-| W8 | Trial on the trial repository: recopy the workflows, `protect-milestones`, `/plan --roadmap`, `/design M1`, `/plan M1`, `/autopilot`; check `pull_request_target`, artifacts and the milestone ruleset live | A trial record with evidence |
+| W6+++ | The architecture pages, decision options and ADRs, `/help` (D49), access per role (D50), the cloud route through the environment's setup script, tested live (D51–D54), and 0.1.1 with strict versions (D53) | Merged, CI green |
+| W7 | Release `v0.1.0` (done), then `v0.1.1` | The Owner creates each release |
+| W8 | Trial on the trial repository, in cloud sessions whose environment installs the plugin: re-run `/setup`, recopy the workflows, `protect-milestones`, `/plan --roadmap`, `/design M1`, `/plan M1`, `/autopilot`; check `pull_request_target`, artifacts, the milestone ruleset, hooks in a cloud session and `/help` live; once, also install and run `/setup` in the local CLI | A trial record with evidence |
 
 ## 14. Open questions
 

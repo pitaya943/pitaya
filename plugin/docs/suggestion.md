@@ -44,6 +44,7 @@ Install the plugin. Nothing in the repository changes.
 | **`evidence` skill** | Prose | Every "done" comes with the command, its real output and the model that did the work, so reviewers don't have to take claims on trust | It can't prove the output wasn't made up; only a re-run can |
 | **`build` skill** | Prose | One ticket, one branch, one PR, with a fixed description that also lists assertions stricter than the spec | It can't keep the agent inside the ticket's files |
 | **`verify` skill** (a fresh subagent reading cold) | Prose | A subagent that never saw the work re-runs the tests, mutates the code and probes the spec's edges, then gives PASS or FAIL with evidence. It catches tests that test nothing, and spec gaps: the trial run raised three spec questions | The verifier shares the builder's model and its blind spots; nothing stops a merge without verification |
+| **`help` skill** (read only) | Prose | Rebuilds where the project stands from the repository and GitHub, and names the one next step or the page that answers a "how do I" | It only reads; it can be wrong when a state lives somewhere it doesn't look |
 
 **Risk at this level:** an agent can push straight to `main`, read `.env`, and delete a failing test to turn the run green. Every guarantee rests on the agent's discipline.
 
