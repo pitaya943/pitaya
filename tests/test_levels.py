@@ -29,7 +29,7 @@ def test_levels_md_is_up_to_date():
 def test_every_component_appears_in_its_level_section():
     text = LEVELS.read_text()
     marks = list(re.finditer(r"^## Level (\d)\b", text, re.MULTILINE))
-    assert [int(m.group(1)) for m in marks] == [0, 1, 2, 3]
+    assert [int(m.group(1)) for m in marks] == [0, 1, 2, 3, 4]
     for i, m in enumerate(marks):
         body = text[m.start(): marks[i + 1].start() if i + 1 < len(marks) else len(text)]
         for c in MANIFEST["components"]:

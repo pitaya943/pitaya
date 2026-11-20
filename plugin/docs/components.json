@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "about": "Every part of the pitaya harness: its level, what it requires first, what it works better with, and what it needs from the project. Levels 0-3 are presets: every component up to that level. levels.md is generated from this file, and skills/setup/scripts/select_components.py reads it.",
+  "about": "Every part of the pitaya harness: its level, what it requires first, what it works better with, and what it needs from the project. A level includes every component at or below it; there is no custom selection. levels.md is generated from this file, and tests check the dependencies against the recipes.",
   "needs": {
     "github": "A GitHub repository, so rulesets and required checks exist",
     "tickets": "Every agent PR comes from a ticket, on a branch named ticket/<id>-<slug>: docs/tickets/T-<nnn>.md files (recommended, optionally mirrored by issues) or issues (/plan writes tickets, /build names branches)",
@@ -103,15 +103,15 @@
     {"id": "progress-file", "kind": "recipe", "level": 3, "doc": "docs/guardrails/progress-file.md",
      "requires": ["protect-main", "machine-account"], "recommends": ["skill:handoff"],
      "summary": "A start-up routine and a feature list where agents may only mark items as passing"},
-    {"id": "second-model-review", "kind": "recipe", "level": 3, "doc": "docs/guardrails/second-model-review.md",
-     "requires": ["skill:verify"],
+    {"id": "second-model-review", "kind": "recipe", "level": 4, "doc": "docs/guardrails/second-model-review.md",
+     "requires": ["skill:verify"], "recommends": ["agent-merge"],
      "summary": "Another model reviews sensitive or risky PRs"},
     {"id": "agent-merge", "kind": "recipe", "level": 3, "doc": "docs/guardrails/agent-merge.md",
      "requires": ["protect-main", "machine-account", "scope", "read-only-paths", "no-weakened-tests", "done-when",
-                  "second-model-review", "skill:verify"],
+                  "skill:verify"],
      "needs": ["verifier-account"],
      "summary": "Agents merge ticket PRs into milestone branches on a PASS for the current commit; the Owner merges main"},
-    {"id": "project-evals", "kind": "recipe", "level": 3, "doc": "docs/guardrails/project-evals.md",
+    {"id": "project-evals", "kind": "recipe", "level": 4, "doc": "docs/guardrails/project-evals.md",
      "summary": "A task set drawn from real failures, run before and after a harness change"}
   ]
 }

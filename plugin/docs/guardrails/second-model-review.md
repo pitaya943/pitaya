@@ -1,6 +1,6 @@
 # Recipe: second-model review
 
-Level: 3. No files to copy: a verification setting and a habit.
+Level: 4. No files to copy: a verification setting and a habit.
 
 ## What it guards against
 

@@ -26,7 +26,6 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 - New hook `ask_on_merge.py` asks before an agent merges a PR unless the harness file lets agents merge. `AGENTS.md` says so under "Never".
 
-- `setup/scripts/select_components.py` resolves a custom selection (a level plus or minus components): adds what is required, refuses to drop what is still required, warns about missing recommendations, prints the steps in order and the `--skip` arguments for `install_templates.py`. It only prints a plan.
 
 - Workflows use `actions/checkout@v6` and `actions/setup-python@v7` (Node 24).
 - Level 1: `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, three hooks (`no_push_main`, `no_destructive`, `ask_on_rule_files`), `.github/workflows/tests.yml`, `docs/decisions.md`, and the memory files `docs/agents/glossary.md`, `learnings.md` and `architecture.md`.
@@ -38,7 +37,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 - `docs/levels.md`: every skill, template and recipe, listed by the level it belongs to, with what each requires and works better with. Generated from `docs/components.json`.
 - `retro` and `handoff` are part of Level 1 (they were listed under Level 3 in `suggestion.md`).
-- `docs/components.json`: every component with its level, `requires`, `recommends` and project `needs`. Levels are presets you can add to or remove from.
+- `docs/components.json`: every component with its level, `requires`, `recommends` and project `needs`; it generates `levels.md`.
+- Levels 0-4 form one spectrum from close control (like Matt Pocock's skills) to the most agent authority (like pstack); `levels.md` opens with who holds authority at each level. There is no custom selection.
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes

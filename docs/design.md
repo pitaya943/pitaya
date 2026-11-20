@@ -50,14 +50,15 @@ pitaya therefore uses **levels**: a cheap, universally endorsed Level 1 installe
 
 ## 3. Levels
 
-One harness, four levels (D1). Each level includes the one before. Every part is a **component** in [`components.json`](../plugin/docs/components.json), with its level, what it requires first and what it works better with; [`levels.md`](../plugin/docs/levels.md) is generated from it, and tests derive each recipe's dependencies from its own files (D33). Levels are presets: a project may add or remove single components, and `setup/scripts/select_components.py` adds what's required, refuses to drop what's still required, and prints the plan.
+One harness, five levels (D1, D45). Each level includes the one before. Every part is a **component** in [`components.json`](../plugin/docs/components.json), with its level, what it requires first and what it works better with; [`levels.md`](../plugin/docs/levels.md) is generated from it, and tests derive each recipe's dependencies from its own files (D33). The levels form one spectrum (D45): each level up gives agents more authority and adds the safeguards it needs, from Level 0, closest to Matt Pocock's skills, to Level 4, closest to pstack. There is no custom selection; a project picks the level whose authority it wants to give.
 
 | Level | For | Components | How to get it |
 | --- | --- | --- | --- |
 | 0 | Trying it out | Skills: `tdd`, `evidence`, `plan`, `build`, `verify`, `report`, `ask-owner` | Install the plugin |
 | 1 (default) | One person with one or a few agents | AGENTS.md map, harness config, memory files, decision log, one test command, CI as a required check, `main` protection with one required approval, permissions, four hooks, a fresh verifier; skills `setup`, `handoff`, `retro`, `learning` (D34, D37) | `/setup` copies `templates/` |
 | 2 | Agents working in parallel | Machine accounts and author checks, scope, read-only paths, no weakened tests (JUnit comparison), done-when, append-only files, serial resources, evidence checks | Recipes |
-| 3 | Long-running autonomy | `/autopilot`, progress file and start-up routine, second-model review, an agent-merge policy, project evals (D39) | Recipes and the `autopilot` skill |
+| 3 | Milestone autonomy | `/autopilot`, progress file and start-up routine, an agent-merge policy into milestone branches (D39, D44) | Recipes and the `autopilot` skill |
+| 4 | Max | Second-model review, project evals; later the pstack-derived verification (D45) | Recipes |
 
 ## 4. Repo layout
 
@@ -89,7 +90,7 @@ Users install the plugin and run `/setup`; the copied files then belong to their
 
 | Skill | What it does | Role (D21) | Status |
 | --- | --- | --- | --- |
-| `/setup` | Explore the repo, ask a few questions, choose a level or a custom selection, install the Level 1 files without overwriting anything, write the harness config; re-runs report stale copies | Owner | Done |
+| `/setup` | Explore the repo, ask a few questions, choose a level, install the Level 1 files without overwriting anything, write the harness config; re-runs report stale copies | Owner | Done |
 | `/plan` | `--roadmap`: cut the project into milestones. `M<n>`: cut the active milestone into vertical-slice tickets with dependencies and scope. Written through a plan PR once the Owner agrees (D35, D36, D38) | Chief | Done |
 | `/build <ticket>` | Build one ticket red-then-green and open a PR with evidence | Builder | Done |
 | `/verify <PR>` | Dispatch a fresh subagent that re-runs everything cold and judges PASS or FAIL against a checklist | Verifier | Done |
@@ -115,7 +116,7 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 
 | Field | Default | Decision |
 | --- | --- | --- |
-| Level | 1, or a custom selection's label such as "Level 1 + scope, machine-account" | D1, D33 |
+| Level | 1 (0 to 4) | D1, D45 |
 | Templates | the version `/setup` installed | D20 |
 | Owner, machine account | asked by `/setup`; the machine account may be "none" | — |
 | Autonomy | only the Owner merges `main`; may become "agents merge after CI is green and the verdict is PASS" at Level 3 | D3 |
@@ -261,7 +262,7 @@ Semver; the plugin version matches the git tag; `CHANGELOG.md` lists changes to 
 | D29 | Agents commit to this repository as the machine account, with its GitHub noreply identity (display name equal to the login); the personal-data scan accepts that form and nothing else personal |
 | D32 | What ships lives in `plugin/`; the marketplace installs that folder alone, so development files never reach users |
 
-Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manifest and custom selections, D34 `retro` and `handoff` at Level 1, D35 ticket modes and the Status line, D36 plan PRs, D37 enforced Owner-only merges, D38 milestones, D39 `/autopilot`, D40–D43 the audit fixes, D44 milestone branches with one machine account.
+Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manifest, D34 `retro` and `handoff` at Level 1, D35 ticket modes and the Status line, D36 plan PRs, D37 enforced Owner-only merges, D38 milestones, D39 `/autopilot`, D40–D43 the audit fixes, D44 milestone branches with one machine account, D45 the Level 0-4 spectrum without custom selection.
 
 ## 12. Failure modes
 

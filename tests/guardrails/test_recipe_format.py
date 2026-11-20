@@ -37,8 +37,9 @@ RECIPES = {
     "evidence": 2,
     "progress-file": 3,
     "agent-merge": 3,
-    "second-model-review": 3,
-    "project-evals": 3,
+    "second-model-review": 4,
+    "project-evals": 4,
+    "multi-account": 2,
 }
 
 

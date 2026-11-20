@@ -4,11 +4,23 @@
 
 Every part of the harness by level: skills, files in your repository, guardrail recipes and the GitHub settings the Owner makes. Each level includes everything in the levels below it. **Requires** must be in place first; **Works better with** is optional. For what each part achieves and what it can't do, see [`suggestion.md`](suggestion.md).
 
-Every skill ships with the plugin, so all of them are installed from Level 0. A skill is listed at the level where it joins the recommended workflow.
+Every skill ships with the plugin, so all of them are installed from Level 0. A skill is listed at the level where it joins the recommended workflow. There is no custom mix: pick the level whose authority you want to give agents.
+
+## The spectrum
+
+Each level up gives agents more authority and adds the safeguards that authority needs. Level 0 is closest to Matt Pocock's skills, where a person decides and merges everything; Level 4 is closest to pstack, where agents run on their own. Pick a lower level for a project you want to keep close control of.
+
+| Level | Agent authority | What the Owner does | What keeps it safe |
+| --- | --- | --- | --- |
+| 0 | Writes code in your session | Every decision and every merge | Your own review |
+| 1 | Opens PRs, runs a fresh verifier | Approves plans, merges every PR | Hooks, CI, protected main |
+| 2 | A Chief dispatches parallel builders | Approves plans, merges every PR | Ticket checks: scope, tests, evidence |
+| 3 | Merges tickets into the milestone branch | Signs off each milestone, approves each cut | Verdict on the head, milestone branch as blast radius |
+| 4 | Most autonomy: cross-model review, measured by evals | Signs off each milestone | Second-model review, project evals |
 
 ## Level 0: skills only
 
-Install the plugin. Nothing in the repository changes. Without a harness file, the skills use safe defaults: the current account, the Owner merges, two fix rounds.
+Install the plugin. Nothing in the repository changes. Closest to Matt Pocock's skills: the agent works in your session and you decide and merge everything. Without a harness file, the skills use safe defaults: the current account, the Owner merges, two fix rounds.
 
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
@@ -40,7 +52,7 @@ Includes everything in Level 0. Run `/setup`; it copies the files and fills in t
 
 ## Level 2: parallel agents
 
-Includes everything in Level 1. Add the recipes you need, one at a time; each is a copyable check that becomes a required status.
+Includes everything in Level 1. Add the recipes one at a time; each is a copyable check that becomes a required status.
 
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
@@ -55,16 +67,23 @@ Includes everything in Level 1. Add the recipes you need, one at a time; each is
 | Recipe | [`multi-account`](guardrails/multi-account.md) | `protect-main`, `machine-account` | - | Only with several agent accounts: CODEOWNERS, so only the Owner's approval counts |
 | Recipe | [`evidence`](guardrails/evidence.md) | `protect-main`, `machine-account` | `skill:build`, `skill:evidence` | A PR without an evidence section, or a UI change without screenshots, can't merge |
 
-## Level 3: long-running autonomy
+## Level 3: milestone autonomy
 
-Includes everything in Level 2. `agent-merge` comes last: it requires the main Level 2 checks and a second-model review.
+Includes everything in Level 2. Agents merge ticket PRs into the milestone branch and `/autopilot` runs a milestone; the Owner signs off each milestone and approves each cut.
 
 | Kind | Component | Requires | Works better with | What it adds |
 | --- | --- | --- | --- | --- |
 | Skill | [`skill:autopilot`](../skills/autopilot/SKILL.md) | `skill:build`, `skill:verify`, `skill:report`, `protect-main`, `machine-account`, `scope` | `agent-merge`, `read-only-paths`, `no-weakened-tests`, `done-when` | Runs the active milestone: hands tickets to fresh builders and verifiers, merges when allowed, stops at Owner gates |
 | Recipe | [`progress-file`](guardrails/progress-file.md) | `protect-main`, `machine-account` | `skill:handoff` | A start-up routine and a feature list where agents may only mark items as passing |
-| Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | - | Another model reviews sensitive or risky PRs |
-| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `second-model-review`, `skill:verify` | - | Agents merge ticket PRs into milestone branches on a PASS for the current commit; the Owner merges main |
+| Recipe | [`agent-merge`](guardrails/agent-merge.md) | `protect-main`, `machine-account`, `scope`, `read-only-paths`, `no-weakened-tests`, `done-when`, `skill:verify` | - | Agents merge ticket PRs into milestone branches on a PASS for the current commit; the Owner merges main |
+
+## Level 4: max
+
+Includes everything in Level 3. Closest to pstack: the most agent authority, with the most verification. The Owner's gate is the milestone sign-off.
+
+| Kind | Component | Requires | Works better with | What it adds |
+| --- | --- | --- | --- | --- |
+| Recipe | [`second-model-review`](guardrails/second-model-review.md) | `skill:verify` | `agent-merge` | Another model reviews sensitive or risky PRs |
 | Recipe | [`project-evals`](guardrails/project-evals.md) | - | - | A task set drawn from real failures, run before and after a harness change |
 
 ## What the project needs
@@ -79,13 +98,3 @@ Some components need something from the project itself, not from another compone
 | `ticket-test-ids` | Each ticket names one test per completion condition under "## Test IDs" | `done-when` |
 | `junit-xml` | The test command can write JUnit XML | `no-weakened-tests`, `done-when` |
 | `verifier-account` | A verifier account the builder can't post as, in the repository variable VERIFIER_ACCOUNTS | `agent-merge` |
-
-## Choosing your own set
-
-Start from a level, then add or remove single components. [`select_components.py`](../skills/setup/scripts/select_components.py) adds whatever a component requires, refuses to remove something still required, warns about missing recommendations, and prints the steps in order. It only prints a plan; it copies nothing and changes no settings. Run it from the plugin's folder:
-
-```bash
-python3 skills/setup/scripts/select_components.py --level 1 --add scope --remove decisions
-```
-
-That run starts from Level 1, adds `scope` and the `machine-account` it requires, leaves out the decision log, and labels the result `Level 1 + scope, machine-account without decisions`. `/setup` records that label in the harness file.

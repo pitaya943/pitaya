@@ -22,15 +22,29 @@ OUT = PLUGIN / "docs" / "levels.md"
 
 KIND = {"skill": "Skill", "template": "Files", "filled": "File, filled in", "recipe": "Recipe"}
 LEVELS = {
-    0: ("Level 0: skills only", "Install the plugin. Nothing in the repository changes. Without a harness file, "
-        "the skills use safe defaults: the current account, the Owner merges, two fix rounds."),
+    0: ("Level 0: skills only", "Install the plugin. Nothing in the repository changes. Closest to Matt Pocock's "
+        "skills: the agent works in your session and you decide and merge everything. Without a harness file, the "
+        "skills use safe defaults: the current account, the Owner merges, two fix rounds."),
     1: ("Level 1: the default", "Includes everything in Level 0. Run `/setup`; it copies the files and fills in the "
         "harness file. The Owner then makes the GitHub settings in protect-main."),
-    2: ("Level 2: parallel agents", "Includes everything in Level 1. Add the recipes you need, one at a time; each is "
-        "a copyable check that becomes a required status."),
-    3: ("Level 3: long-running autonomy", "Includes everything in Level 2. `agent-merge` comes last: it requires the "
-        "main Level 2 checks and a second-model review."),
+    2: ("Level 2: parallel agents", "Includes everything in Level 1. Add the recipes one at a time; each is a "
+        "copyable check that becomes a required status."),
+    3: ("Level 3: milestone autonomy", "Includes everything in Level 2. Agents merge ticket PRs into the milestone "
+        "branch and `/autopilot` runs a milestone; the Owner signs off each milestone and approves each cut."),
+    4: ("Level 4: max", "Includes everything in Level 3. Closest to pstack: the most agent authority, with the most "
+        "verification. The Owner's gate is the milestone sign-off."),
 }
+
+# Who holds authority at each level: the spectrum from Matt Pocock's skills to pstack (D45).
+AUTHORITY = [
+    ("0", "Writes code in your session", "Every decision and every merge", "Your own review"),
+    ("1", "Opens PRs, runs a fresh verifier", "Approves plans, merges every PR", "Hooks, CI, protected main"),
+    ("2", "A Chief dispatches parallel builders", "Approves plans, merges every PR", "Ticket checks: scope, tests, evidence"),
+    ("3", "Merges tickets into the milestone branch", "Signs off each milestone, approves each cut",
+     "Verdict on the head, milestone branch as blast radius"),
+    ("4", "Most autonomy: cross-model review, measured by evals", "Signs off each milestone",
+     "Second-model review, project evals"),
+]
 
 
 def link(doc: str) -> str:
@@ -63,9 +77,18 @@ def render(manifest: dict) -> str:
         "[`suggestion.md`](suggestion.md).",
         "",
         "Every skill ships with the plugin, so all of them are installed from Level 0. A skill is listed at the "
-        "level where it joins the recommended workflow.",
+        "level where it joins the recommended workflow. There is no custom mix: pick the level whose authority "
+        "you want to give agents.",
         "",
-    ]
+        "## The spectrum",
+        "",
+        "Each level up gives agents more authority and adds the safeguards that authority needs. Level 0 is closest "
+        "to Matt Pocock's skills, where a person decides and merges everything; Level 4 is closest to pstack, where "
+        "agents run on their own. Pick a lower level for a project you want to keep close control of.",
+        "",
+        "| Level | Agent authority | What the Owner does | What keeps it safe |",
+        "| --- | --- | --- | --- |",
+    ] + [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in AUTHORITY] + [""]
     for level, (title, intro) in LEVELS.items():
         lines += [f"## {title}", "", intro, "",
                   "| Kind | Component | Requires | Works better with | What it adds |",
@@ -82,21 +105,6 @@ def render(manifest: dict) -> str:
         users = [c["id"] for c in manifest["components"] if need in c.get("needs", [])]
         lines.append(f"| `{need}` | {text} | {ids(users)} |")
     lines += [
-        "",
-        "## Choosing your own set",
-        "",
-        "Start from a level, then add or remove single components. "
-        "[`select_components.py`](../skills/setup/scripts/select_components.py) adds whatever a component requires, "
-        "refuses to remove something still required, warns about missing recommendations, and prints the steps in "
-        "order. It only prints a plan; it copies nothing and changes no settings. Run it from the plugin's folder:",
-        "",
-        "```bash",
-        "python3 skills/setup/scripts/select_components.py --level 1 --add scope --remove decisions",
-        "```",
-        "",
-        "That run starts from Level 1, adds `scope` and the `machine-account` it requires, leaves out the decision "
-        "log, and labels the result `Level 1 + scope, machine-account without decisions`. `/setup` records that label "
-        "in the harness file.",
         "",
     ]
     return "\n".join(lines)

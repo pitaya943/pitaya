@@ -21,14 +21,16 @@ Rule of thumb: enforce rules that have no exceptions with the cheapest mechanism
 | [Level 0](#level-0-skills-only) | Trying it out without touching the repo | Agents get good working habits, but nothing stops them |
 | [Level 1](#level-1-the-default) | One person with one or a few agents (**the recommended minimum for every project**) | Agents can't break `main` directly, tests always run, secrets stay unreadable, and "done" is verified independently |
 | [Level 2](#level-2-parallel-agents) | Several agents working at once | Each PR stays in its scope, tests can't be quietly removed, and every action traces back to an agent |
-| [Level 3](#level-3-long-running-autonomy) | Agents working for long stretches or unattended | `/autopilot` runs a milestone to its end, work continues across sessions, quality is measurable, and agents may merge when the policy allows |
+| [Level 3](#level-3-milestone-autonomy) | Agents working for long stretches or unattended | `/autopilot` runs a milestone to its end, work continues across sessions, and agents merge into the milestone branch; the Owner signs off each milestone |
+| [Level 4](#level-4-max) | Projects where agents should run as far as they can | The most agent authority, with the most verification: another model reviews risky work, and evals measure the harness |
+
+The levels form one spectrum: Level 0 is closest to Matt Pocock's skills, where a person decides and merges everything, and Level 4 to pstack, where agents run on their own. Each level up gives agents more authority and adds the safeguards that authority needs. Pick a lower level for a project you want to keep close control of; [`levels.md`](levels.md#the-spectrum) has the table.
 
 When to move up:
 
 - **To Level 2:** a second agent works in the same repo, or an agent once changed files outside its scope, or a deleted test left CI green.
 - **To Level 3:** one piece of work spans several sessions, or agents should keep working while nobody watches (overnight, for example).
-
-You don't have to take a level whole: start from one and add or remove single components with `select_components.py` ([`levels.md`](levels.md#choosing-your-own-set)).
+- **To Level 4:** Level 3 runs smoothly, and waiting for the Owner is still the bottleneck; or a wrong merge costs enough to want a second model on risky work.
 
 ---
 
@@ -95,19 +97,28 @@ Added from recipes in `docs/guardrails/`. These are the earlier template's CI ch
 
 ---
 
-## Level 3: long-running autonomy
+## Level 3: milestone autonomy
 
-Added from recipes. This level lets work continue across sessions and makes the harness itself measurable.
+Added from recipes. This level lets work continue across sessions, and lets agents merge inside a milestone while the Owner keeps `main`.
 
 | Component | Enforcement | What it achieves | What it can't do |
 | --- | --- | --- | --- |
 | **Progress file and start-up routine** (read the progress, read the git log, run the tests once, then pick the next item) | Prose | A new session takes over in minutes without redoing finished work or building on a broken state. Anthropic's long-running harness relies on exactly this | A wrong progress file misleads the next session |
 | **A JSON feature list** (agents may change only the "passes" field) | Prose, checkable | Agents can't delete or rewrite unfinished requirements, only mark them passing, so long work doesn't quietly shrink its scope | A machine guarantee needs an extra check that only that field changed |
-| **Second-model review** (another vendor or model) | Prose | Another model catches the first one's blind spots on sensitive or risky PRs | It adds cost and time; two models can still be wrong together |
 | **`autopilot` skill** (runs the active milestone; stateless ticks woken by events, a loop or a schedule) | Prose | One command runs a milestone to its end: fresh builders and verifiers per ticket, merges when the harness allows, a line per tick on a tracking issue | It stops at every Owner gate (plan, sensitive areas, fix rounds, sign-off, budget); it plans nothing itself and needs something to wake it |
 | **Agent-merge policy** (agents merge ticket PRs into the milestone branch after CI is green and the verdict is PASS) | Merge | A milestone runs to its end without waiting for a person; `main` changes only when the Owner merges the milestone | Ticket PRs reach the milestone branch unread; the Owner reviews the milestone as a whole, and a bad one costs that milestone |
-| **Project evals** (20–50 tasks drawn from real failures) | Tool | Before and after changing a skill, a prompt or a model, run the set and compare numbers instead of impressions | The set takes time to build and maintain; too few tasks give noisy numbers |
 | **"When to remove" reviews** | Prose | Every component states what evidence shows it's no longer needed, so as models improve the harness can shrink on evidence instead of only growing | It works only if retros actually happen |
+
+---
+
+## Level 4: max
+
+Added from recipes. The most agent authority pitaya offers, closest to pstack, with the verification that authority needs.
+
+| Component | Enforcement | What it achieves | What it can't do |
+| --- | --- | --- | --- |
+| **Second-model review** (another vendor or model) | Prose | Another model catches the first one's blind spots on sensitive or risky PRs | It adds cost and time; two models can still be wrong together |
+| **Project evals** (20–50 tasks drawn from real failures) | Tool | Before and after changing a skill, a prompt or a model, run the set and compare numbers instead of impressions | The set takes time to build and maintain; too few tasks give noisy numbers |
 
 ---
 
