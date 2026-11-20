@@ -1,4 +1,4 @@
-# pitaya template 0.1.2 · docs/guardrails/files/multi-account/CODEOWNERS
+# pitaya template 0.1.3 · docs/guardrails/files/multi-account/CODEOWNERS
 # Copy to .github/CODEOWNERS and replace @example-owner with the Owner's login.
 # With "Require review from Code Owners" on in the ruleset, only the Owner's
 # approval lets a pull request merge: a second agent account's doesn't count.

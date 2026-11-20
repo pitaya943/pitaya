@@ -20,7 +20,7 @@ When the verifier says FAIL:
 2. **Round 2:** a fresh session fixes what's left, reading only the ticket, the diff and the verdicts. A fresh context avoids repeating the first session's blind spots.
 3. **Still FAIL:** escalate to the Owner with the open problems and options.
 
-The number of rounds is the `Fix rounds` field in the harness file (default 2).
+The number of rounds is the `Fix rounds` field in the harness file (default 2). Two kinds of round alternate: a **verify round** checks and posts a verdict, a **fix round** changes code. With the default, the sequence is verify 1, fix 1, verify 2, fix 2, verify 3, escalate. A verdict says which verify round it is and the next step.
 
 The Owner may answer an escalation by authorising an extra round. Only the Owner can: the answer on the escalation issue is the authorisation, and the extra round runs in a fresh session like round 2. Its verdict names the round and links the authorisation, so a reader can see why a ticket had more rounds than the harness allows.
 

@@ -39,7 +39,7 @@ Issue: #<n>
 
 ## Test IDs
 
-<one test ID per done-when condition, in order>
+<one test ID per done-when condition, in order, as JUnit reports it (`classname::name`, for pytest `tests.test_cli::test_x`) or as a pytest path (`tests/test_cli.py::test_x`). An ID without `[...]` covers every parametrized case of that test; all of them must pass.>
 
 ## Serial resources
 

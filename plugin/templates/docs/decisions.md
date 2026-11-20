@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.2 · docs/decisions.md -->
+<!-- pitaya template 0.1.3 · docs/decisions.md -->
 # Decisions
 
 The Owner's decisions. Append only: add a new row, never edit or delete an old one. To change a decision, add a row that supersedes it and name the old number.

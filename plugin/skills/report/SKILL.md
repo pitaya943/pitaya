@@ -11,7 +11,7 @@ argument-hint: "<what to cover: a milestone, a list of PRs or tickets, or a date
 
 1. Read `docs/agents/harness.md` for the document language and whether "Learning" is on. If it's missing, suggest `/setup` once and write in the language of the conversation.
 2. Settle the range with the user if the argument doesn't make it exact: which PRs or tickets, from when to when.
-3. For a milestone (`/report M<n>`), the range is the tickets listed in `docs/milestones/M<n>.md`. Check each exit criterion with evidence, and say which ones aren't met. When `docs/milestones/M<n>-design.md` exists, also check every scenario: the test it names passes, or it's listed as not met. At Level 4, add the swarm and the decision-log audit in [milestone-level4.md](milestone-level4.md). If all are met, propose the plan PR that sets the milestone to `Status: done`; the Owner's merge is the sign-off.
+3. For a milestone (`/report M<n>`), the range is the tickets listed in `docs/milestones/M<n>.md`. Check each exit criterion with evidence, and say which ones aren't met. When `docs/milestones/M<n>-design.md` exists, also check every scenario: the test it names passes, or it's listed as not met. At Level 4, add the swarm and the decision-log audit in [milestone-level4.md](milestone-level4.md). If all are met, propose the closing plan PR that sets the milestone to `Status: done` and adds the report as `docs/reports/M<n>.md`; the Owner's merge of the milestone PR is the sign-off. In the milestone PR's description, write `Closes #<n>` for the issue mirror of every done ticket in the milestone: ticket PRs merge into the milestone branch, where GitHub ignores closing keywords, so the sign-off merge into `main` is what closes them.
 
 ## Gather, don't remember
 
@@ -41,6 +41,6 @@ Markdown by default; HTML if the Owner asks for it.
 
 ## Deliver
 
-Show the report in the conversation, then ask where it should live: a comment on a tracking issue, or a file under `docs/reports/` added through a pull request.
+Show the report in the conversation, then ask where it should live: a comment on a tracking issue, or a file under `docs/reports/` added through a pull request (for a milestone, the closing plan PR, which may add `docs/reports/*.md`).
 
 If "Learning" is on in the harness file, end by offering the `learning` review.
