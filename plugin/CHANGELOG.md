@@ -2,7 +2,7 @@
 
 Changes are grouped by what users copy or install: skills, templates and recipes.
 
-## Unreleased (0.1.0)
+## 0.1.0 (2026-11-20)
 
 ### Skills
 
