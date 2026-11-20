@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -489,3 +491,147 @@ def test_this_repositorys_hooks_are_the_templates():
     assert sorted(p.name for p in own.iterdir()) == sorted(p.name for p in HOOKS.iterdir())
     for path in HOOKS.iterdir():
         assert (own / path.name).read_bytes() == path.read_bytes(), path.name
+
+
+# --- 0.1.10, F11 (D63 c): with no machine account the session is the Owner ------
+
+def write_harness(repo: Path, machine: str | None, autonomy: str) -> None:
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    lines = ["# Harness", "", "- Owner: example-owner."]
+    if machine is not None:
+        lines.append(f"- Machine account: {machine}")
+    lines.append(f"- Autonomy: {autonomy}")
+    (repo / "docs" / "agents" / "harness.md").write_text("\n".join(lines) + "\n")
+
+
+AGENTS_MERGE = "Agents merge ticket PRs into milestone branches; only the Owner merges main."
+
+
+@pytest.mark.parametrize("machine", [
+    "none.",
+    "None. Agents use the current session's account.",
+    '"none"',
+    "`none`. Unattended work is off.",
+    "",
+])
+@pytest.mark.parametrize("command", ["gh pr merge 12 --squash", "gh api -X PUT repos/o/r/pulls/12/merge"])
+def test_merge_hook_asks_when_agents_may_merge_but_there_is_no_machine_account(repo, machine, command):
+    """The Autonomy line lets agents merge because a `verdict` status and a ruleset gate them. With no machine
+    account the session holds the Owner's bypass, so neither gates anything: the hook asks all the same."""
+    write_harness(repo, machine, AGENTS_MERGE)
+    out = run_hook("ask_on_merge.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "ask", machine
+    assert "machine account" in out["permissionDecisionReason"]
+    assert "Owner" in out["permissionDecisionReason"]
+
+
+def test_merge_hook_asks_for_the_merge_tool_with_no_machine_account(repo):
+    write_harness(repo, "none.", AGENTS_MERGE)
+    payload = {"hook_event_name": "PreToolUse", "tool_name": "mcp__github__merge_pull_request",
+               "tool_input": {"pullNumber": 12}, "cwd": str(repo)}
+    out = run_hook("ask_on_merge.py", payload)
+    assert out and out["permissionDecision"] == "ask"
+    assert "machine account" in out["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("machine", [
+    "example-bot. Agents push, open PRs and comment as this account.",
+    "`example-bot`",
+    "nonesuch-bot.",  # a login that only starts with the word
+    "none-of-your-business-bot",
+])
+def test_merge_hook_still_allows_agent_merges_with_a_machine_account(repo, machine):
+    write_harness(repo, machine, AGENTS_MERGE)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo)) is None, machine
+
+
+def test_merge_hook_leaves_a_harness_without_the_line_as_it_was(repo):
+    """A harness file with no "Machine account" line is not read as "none": the older tests above write one."""
+    write_harness(repo, None, AGENTS_MERGE)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo)) is None
+
+
+def test_merge_hook_reads_the_shipped_template_as_having_a_machine_account(repo):
+    """The template's own line explains what "none" means; that explanation must not read as the value."""
+    text = TEMPLATE_HARNESS.read_text()
+    assert '"none"' in text  # the explanation is there to be misread
+    text = re.sub(r"(?m)^- Autonomy: .*$", f"- Autonomy: {AGENTS_MERGE}", text)
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(text)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 5 --squash", repo)) is None
+
+
+@pytest.mark.parametrize("command", [
+    "gh pr merge 12 --admin",
+    "gh pr merge --admin --squash 12",
+    "gh pr merge 12 --admin=true",
+    "gh -R owner/repo pr merge 12 --squash --admin",
+    "sh -c 'gh pr merge 12 --admin'",
+    "cd x && sudo gh pr merge 12 --admin",
+])
+def test_merge_hook_asks_for_an_admin_merge_even_when_agents_may_merge(repo, command):
+    """`--admin` merges a pull request that doesn't meet the rules: it is the Owner's bypass, never an agent's."""
+    write_harness(repo, "example-bot.", AGENTS_MERGE)
+    out = run_hook("ask_on_merge.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "ask", command
+    assert "--admin" in out["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("command", [
+    "gh pr merge 12 --squash --subject 'Remove --admin from the docs'",
+    "gh pr merge 12 --admin=false",
+    "gh pr merge 12 --squash && echo --admin",
+    "gh pr view 12 --admin",
+])
+def test_merge_hook_allows_near_misses_of_an_admin_merge(repo, command):
+    write_harness(repo, "example-bot.", AGENTS_MERGE)
+    assert run_hook("ask_on_merge.py", bash(command, repo)) is None, command
+
+
+def test_gh_itself_takes_no_shorter_spelling_of_admin():
+    """The hook matches the flag by name, which holds only while gh refuses abbreviations (git doesn't: D63 a)."""
+    gh = shutil.which("gh")
+    if gh is None:
+        pytest.skip("gh is not installed here")
+    proc = subprocess.run([gh, "pr", "merge", "1", "--adm", "-R", "example-owner/none"],
+                          capture_output=True, text=True, timeout=30)
+    assert proc.returncode != 0 and "unknown flag" in proc.stderr, proc.stderr
+
+
+# Found by the audit before the 0.1.10 PR: the skills read "names none" as prose, the hook read one word.
+@pytest.mark.parametrize("machine", [
+    "n/a", "N/A.", "-", "(none yet)", "nobody", "No machine account", "not yet", "TBD", "Owner's account", "?",
+])
+def test_merge_hook_asks_for_every_way_of_writing_no_account(repo, machine):
+    write_harness(repo, machine, AGENTS_MERGE)
+    out = run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo))
+    assert out and out["permissionDecision"] == "ask", machine
+    assert "machine account" in out["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("line", ["- **Machine account:** none", "* Machine account: none", "- **Machine account**: none."])
+def test_merge_hook_reads_the_line_however_it_is_marked_up(repo, line):
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(f"# Harness\n\n{line}\n- Autonomy: {AGENTS_MERGE}\n")
+    out = run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo))
+    assert out and out["permissionDecision"] == "ask", line
+
+
+@pytest.mark.parametrize("machine", [
+    "example-bot[bot]. A GitHub App.",
+    "the agents' machine account (see the repository's collaborators).",  # this repository's own harness file
+    "**example-bot**",
+    "no-reply-bot",
+    "nobody-bot.",
+])
+def test_merge_hook_still_reads_a_named_account_as_one(repo, machine):
+    write_harness(repo, machine, AGENTS_MERGE)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 12 --squash", repo)) is None, machine
+
+
+def test_merge_hook_reads_this_repositorys_harness_as_naming_an_account(repo):
+    text = (REPO_ROOT / "docs" / "agents" / "harness.md").read_text()
+    text = re.sub(r"(?m)^- Autonomy: .*$", f"- Autonomy: {AGENTS_MERGE}", text)
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(text)
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 5 --squash", repo)) is None

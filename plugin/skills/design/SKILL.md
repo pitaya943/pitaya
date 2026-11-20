@@ -11,7 +11,7 @@ Adapted from pstack's `/architect`, with behaviour-driven scenarios. The design 
 
 ## Before you start
 
-1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once and continue.
+1. Read `docs/agents/harness.md`. If it's missing, suggest `/setup` once and continue. Unattended (nobody in the conversation), the harness file must name a machine account and you must act as it: otherwise stop and say so (the plugin's `docs/concepts/autonomy.md`, "Unattended work needs a machine account").
 2. Read `docs/milestones/M<n>.md` (goal, exit criteria, what's left out), `docs/agents/architecture.md`, the glossary and `learnings.md`.
 3. Explore how and why the code the milestone touches works today, as in the `plan` skill's `sharpen.md`.
 
@@ -27,7 +27,7 @@ Use [design-template.md](design-template.md); save it as `docs/milestones/M<n>-d
 
 ## Hand over
 
-Show the Owner the scenarios and the chosen shape, and change them until the Owner agrees. Then commit the design on a `plan/<slug>` branch with the milestone's ticket cut (the `plan` skill, `milestones.md`), so one plan PR carries both. The Owner's merge approves the design and the cut together. In an unattended session (one `/autopilot` started) there is nobody to show: write each open question and the answer you assumed into the design, and go on to the cut. The model can't start the `plan` skill by its command, so read the plan skill's file, `../plan/SKILL.md` from this file, and follow it for the same milestone. The Owner then judges the design in the plan PR, or at Level 4 at the milestone's sign-off.
+Show the Owner the scenarios and the chosen shape, and change them until the Owner agrees. Then commit the design on a `plan/<slug>` branch with the milestone's ticket cut (the `plan` skill, `milestones.md`), so one plan PR carries both. The Owner's merge approves the design and the cut together. In an unattended session (nobody in the conversation: `/autopilot` or another session started it) there is nobody to show: write each open question and the answer you assumed into the design, and go on to the cut. The model can't start the `plan` skill by its command, so read the plan skill's file, `../plan/SKILL.md` from this file, and follow it for the same milestone. The Owner then judges the design in the plan PR, or at Level 4 at the milestone's sign-off.
 
 ## Don't
 

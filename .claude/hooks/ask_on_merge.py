@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.9 · .claude/hooks/ask_on_merge.py
+# pitaya template 0.1.10 · .claude/hooks/ask_on_merge.py
 """PreToolUse hook: ask a person before an agent merges a pull request.
 
 What it guards against: an agent merging its own PR while the project's
@@ -15,12 +15,21 @@ called. It lets the call through when the
 "Autonomy" line in docs/agents/harness.md says agents merge (Level 3 with
 the agent-merge recipe), because then the `verdict` status guards the merge.
 
+Two merges it asks about whatever the Autonomy line says, because they use
+the Owner's bypass of the rulesets, which no status guards: `gh pr merge
+--admin`, and any merge while the harness file's "Machine account" line
+names no account: "none", an empty value, or anything that doesn't start
+with a login (the session then acts as the account it is signed in with,
+usually the Owner's). A harness file with no such line is read as before.
+
 Limits: only Claude Code runs hooks, and a determined script can still reach
 the API another way. The ruleset's required approval on `main` is
 the guarantee; this hook stops the usual attempts early and explains why.
 
-When to remove: when the ruleset requires an approval the agents can't give
-themselves and transcripts show agents no longer try to merge.
+When to remove: when the agents act as a machine account, the ruleset
+requires an approval they can't give themselves, and transcripts show they
+no longer try to merge. Never while "Machine account" is "none": the
+session then holds the Owner's bypass, and this hook is all there is.
 
 Protocol: reads PreToolUse JSON on stdin; prints a hookSpecificOutput
 decision to stdout, or nothing to let the call through. Exits 1 with a
@@ -49,6 +58,12 @@ MERGE_API = re.compile(r"(^|/)pulls/\d+/merge$")
 HARNESS = Path("docs") / "agents" / "harness.md"
 MERGE_MUTATIONS = ("mergePullRequest", "enablePullRequestAutoMerge")
 AUTONOMY = re.compile(r"^\s*-\s*Autonomy:\s*(.*)$")
+MACHINE = re.compile(r"^\s*[-*]\s*(?:\*\*)?Machine account:?(?:\*\*)?:?\s*(.*)$")
+# The value names an account when it starts with a word shaped like a GitHub login that isn't one of
+# the ways people write "nobody". Anything else ("n/a", "-", "(none yet)") is no account.
+LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\[bot\])?(?=$|[\s.,;:)\"`*_])")
+NO_ACCOUNT = ("none", "no", "nobody", "not", "na", "nil", "null", "tbd", "todo", "unknown")
+FALSE_VALUES = ("0", "f", "false")  # what gh reads as "off" in `--admin=<value>`
 
 
 def gh_args(words: list[str]) -> list[str]:
@@ -71,40 +86,87 @@ def is_merge(words: list[str]) -> bool:
     return False
 
 
-def agents_may_merge(cwd: Path) -> bool:
-    """True when the harness file's Autonomy line lets agents merge."""
+def is_admin_merge(words: list[str]) -> bool:
+    """`gh pr merge --admin`: a merge that doesn't meet the rules, through the Owner's bypass.
+    gh takes no shorter spelling of the flag, so matching it by name holds."""
+    if not is_merge(words) or gh_args(words)[:2] != ["pr", "merge"]:
+        return False
+    for word in gh_args(words)[2:]:
+        flag, _, value = word.partition("=")
+        if flag == "--admin" and value.lower() not in FALSE_VALUES:
+            return True
+    return False
+
+
+def harness_lines(cwd: Path) -> list[str]:
+    """The harness file's lines, from the project root or the nearest folder above `cwd` that has one."""
     roots = [Path(os.environ["CLAUDE_PROJECT_DIR"])] if os.environ.get("CLAUDE_PROJECT_DIR") else []
     roots += [cwd, *cwd.parents]
     for root in roots:
         path = root / HARNESS
         if path.is_file():
-            for line in path.read_text(errors="replace").splitlines():
-                match = AUTONOMY.match(line)
-                if match:  # the field's value, not the whole line: notes may mention the alternative
-                    return match.group(1).strip().lower().startswith("agents merge")
-            return False
-    return False
+            return path.read_text(errors="replace").splitlines()
+    return []
+
+
+def field(lines: list[str], pattern: re.Pattern) -> str | None:
+    """The value of the first line the pattern matches: the field's value, not the whole line,
+    because the notes after it may mention the alternative."""
+    for line in lines:
+        match = pattern.match(line)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def agents_may_merge(lines: list[str]) -> bool:
+    """True when the harness file's Autonomy line lets agents merge."""
+    return (field(lines, AUTONOMY) or "").lower().startswith("agents merge")
+
+
+def no_machine_account(lines: list[str]) -> bool:
+    """True when the harness file has a "Machine account" line that names no account: "none", an
+    empty value, or anything that doesn't start with a login. No such line at all is not "none":
+    a harness file written by hand may leave it out."""
+    value = field(lines, MACHINE)
+    if value is None:
+        return False
+    match = LOGIN.match(value.lstrip("\"'`*_( "))
+    return match is None or match.group(0).lower() in NO_ACCOUNT
+
+
+def ask(reason: str) -> dict:
+    return {"hookEventName": "PreToolUse", "permissionDecision": "ask",
+            "permissionDecisionReason": "Asked by .claude/hooks/ask_on_merge.py: " + reason}
 
 
 def decide(payload: dict) -> dict | None:
     tool = payload.get("tool_name") or ""
     cwd = Path(payload.get("cwd") or ".")
+    admin = False
     if tool == "Bash":
         command = (payload.get("tool_input") or {}).get("command") or ""
-        merging = any(is_merge(c) for c in commands(command))
+        runs = commands(command)
+        merging = any(is_merge(c) for c in runs)
+        admin = any(is_admin_merge(c) for c in runs)
     else:
         merging = "merge_pull_request" in tool or "auto_merge" in tool
-    if not merging or agents_may_merge(cwd):
+    if not merging:
         return None
-    return {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "ask",
-        "permissionDecisionReason": (
-            "Asked by .claude/hooks/ask_on_merge.py: this merges a pull request, and the "
-            "Autonomy line in docs/agents/harness.md doesn't let agents merge. "
-            "Approve only if the Owner asked for this merge; otherwise leave the PR for the Owner."
-        ),
-    }
+    lines = harness_lines(cwd)
+    if admin:
+        return ask("`gh pr merge --admin` merges a pull request that doesn't meet the rules, through the "
+                   "Owner's bypass. That is the Owner's call, never an agent's, whatever the Autonomy line in "
+                   "docs/agents/harness.md says. Approve only if the Owner asked for exactly this merge.")
+    if no_machine_account(lines):
+        return ask("this merges a pull request, and docs/agents/harness.md names no machine account, so this "
+                   "session acts as the account it is signed in with, usually the Owner's, whose bypass skips "
+                   "the rulesets and their required checks. Approve only if the Owner asked for this merge.")
+    if agents_may_merge(lines):
+        return None
+    return ask("this merges a pull request, and the Autonomy line in docs/agents/harness.md doesn't let "
+               "agents merge. Approve only if the Owner asked for this merge; otherwise leave the PR for "
+               "the Owner.")
 
 
 def main() -> int:

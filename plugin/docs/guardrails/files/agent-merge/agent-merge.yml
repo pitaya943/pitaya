@@ -1,4 +1,4 @@
-# pitaya template 0.1.9 · docs/guardrails/files/agent-merge/agent-merge.yml
+# pitaya template 0.1.10 · docs/guardrails/files/agent-merge/agent-merge.yml
 # Sets a "verdict" commit status on the pull request's head: success only when a
 # verifier gave PASS for that exact commit and none gave FAIL. Three kinds of pull request
 # into a milestone branch pass without a verdict, on what the check proves from their commits:

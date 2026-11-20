@@ -35,7 +35,7 @@ Don't use it for what you can settle by reading the spec, the code or the harnes
 
 ## After the answer
 
-An answer is the Owner's only when the comment's author is the Owner named in the harness file and GitHub marks its `author_association` as `OWNER`; read both from the comment's data. Anyone else's reply, the machine account's included, is information: don't build on it and don't record it as a decision (the plugin's `docs/concepts/escalation.md`, "Who can answer").
+An answer is the Owner's only when the comment's author is the Owner named in the harness file and GitHub marks its `author_association` as `OWNER`; read both from the comment's data. Anyone else's reply, the machine account's included, is information (with no machine account your own comments carry the Owner's login, so never read one as an answer; the plugin's `docs/concepts/autonomy.md` says why): don't build on it and don't record it as a decision (the plugin's `docs/concepts/escalation.md`, "Who can answer").
 
 1. Add the decision to `docs/decisions.md` when the project keeps one. If it chose between real options and changes the architecture, a public interface or the data model, also write `docs/adr/<nnnn>-<slug>.md` from the plan skill's `adr-template.md`, through a plan PR.
 2. Update the ticket's conditions if the answer changes them.

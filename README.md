@@ -2,23 +2,23 @@
 
 Small, composable skills for developing with coding agents under human review: plan a roadmap of milestones and cut each into tickets, build red-then-green, verify cold in a fresh session, and report. Protection grows by **level** instead of a gate: `/setup` installs a cheap Level 1 default (an AGENTS.md map, permissions, four hooks and a tests workflow), and higher levels come from guardrail recipes when a project needs them. The levels form a spectrum, from close control like Matt Pocock's skills (Level 0) to the most agent authority like pstack (Level 4).
 
-> **Status: 0.1.9.** Fourteen skills and seventeen guardrail recipes ([`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md)). Progress: [design, section 13](docs/design.md#13-implementation-plan). Everything each level includes: [`plugin/docs/levels.md`](plugin/docs/levels.md); what each part achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
+> **Status: 0.1.10.** Fourteen skills and seventeen guardrail recipes ([`plugin/docs/guardrails/`](plugin/docs/guardrails/README.md)). Progress: [design, section 13](docs/design.md#13-implementation-plan). Everything each level includes: [`plugin/docs/levels.md`](plugin/docs/levels.md); what each part achieves: [`plugin/docs/suggestion.md`](plugin/docs/suggestion.md).
 
 ## Install
 
 The plugin is named `pitaya`; once installed, skills appear as `/pitaya:setup`, `/pitaya:build` and so on. Pick one route.
 
-**As a plugin.** In Claude Code, add this repository as a marketplace at a release tag, then install. Replace `<owner>` with this repository's owner on GitHub. The `#v0.1.9` pins the release tag: without it you follow the default branch, which changes with every merge. To upgrade, add the marketplace again with the newer tag.
+**As a plugin.** In Claude Code, add this repository as a marketplace at a release tag, then install. Replace `<owner>` with this repository's owner on GitHub. The `#v0.1.10` pins the release tag: without it you follow the default branch, which changes with every merge. To upgrade, add the marketplace again with the newer tag.
 
 ```text
-/plugin marketplace add <owner>/pitaya#v0.1.9
+/plugin marketplace add <owner>/pitaya#v0.1.10
 ```
 
 ```text
 /plugin install pitaya@pitaya
 ```
 
-**In cloud sessions** (claude.ai/code, or the desktop app's cloud sessions), which have no `/plugin`: add `claude plugin marketplace add <owner>/pitaya#v0.1.9` and `claude plugin install pitaya@pitaya` to the environment's setup script, under Settings → Environments. Every new session there has the plugin; check with `/pitaya:help`. Details: [`plugin/README.md`](plugin/README.md#cloud-sessions).
+**In cloud sessions** (claude.ai/code, or the desktop app's cloud sessions), which have no `/plugin`: add `claude plugin marketplace add <owner>/pitaya#v0.1.10` and `claude plugin install pitaya@pitaya` to the environment's setup script, under Settings → Environments. Every new session there has the plugin; check with `/pitaya:help`. Details: [`plugin/README.md`](plugin/README.md#cloud-sessions).
 
 **By copying (yours to edit).** Copy the `plugin/` folder somewhere on your machine and point Claude Code at it, or copy single `plugin/skills/<name>/` directories into your project's `.claude/skills/`. You pick up later changes yourself. `/setup` needs `plugin/templates/` next to its skill.
 

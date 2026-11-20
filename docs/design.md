@@ -1,6 +1,6 @@
 # pitaya design
 
-- Status: 0.1.8, ready to release (0.1.0 to 0.1.7 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D68 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
+- Status: 0.1.10, ready to release (0.1.0 to 0.1.9 were released). Steps W0–W7 are done, plus the additions decided after W6 (D33–D71 in [`decisions.md`](decisions.md)); W8, the trial, is under way: parts 1 (Level 1) and 2 (Level 2) are in [`trials/w8.md`](trials/w8.md) (section 13).
 - What users read instead: [`levels.md`](../plugin/docs/levels.md) lists every component by level, generated from [`components.json`](../plugin/docs/components.json); [`suggestion.md`](../plugin/docs/suggestion.md) explains what each one achieves.
 
 ## Contents
@@ -120,7 +120,7 @@ Every skill reads `docs/agents/harness.md` first; if it's missing, it suggests `
 | --- | --- | --- |
 | Level | 1 (0 to 4) | D1, D45 |
 | Templates | the version `/setup` installed | D20 |
-| Owner, machine account | asked by `/setup`; the machine account may be "none" | — |
+| Owner, machine account | asked by `/setup`; the machine account may be "none" only while a person watches every step, and is required before agents act unattended (D63 c, D71) | — |
 | Autonomy | only the Owner merges `main`; may become "agents merge after CI is green and the verdict is PASS" at Level 3 | D3 |
 | Tickets | `docs/tickets/T-<nnn>.md` files mirrored by issues labelled `ticket`; or files only; or issues only | D9, D35 |
 | Milestones | `docs/milestones/M<n>.md`, one active at a time | D38 |
@@ -164,7 +164,7 @@ A milestone (`docs/milestones/M<n>.md`) has a goal, demoable exit criteria, its 
 | `.claude/hooks/no_push_main.py` | Deny pushes to the default branch (read from `origin/HEAD` too), force pushes, remote deletes, `--all` and `--mirror` | D6 |
 | `.claude/hooks/no_destructive.py` | Deny recursive `rm` of `/`, `~`, `$HOME`, `.` or `..`; `git reset --hard`; forced `git clean` with `-d` or `-x`; and from 0.1.6 the accidental wipes in D64 (f): `.git`, `*`, `./*`, `$PWD`, an unnarrowed `find . -delete`, `git checkout` and `git restore` of `.` | D6, D64 |
 | `.claude/hooks/ask_on_rule_files.py` | Ask before a file tool or a shell write touches AGENTS.md, CLAUDE.md, the harness config, `.claude/` or `.github/workflows/` | D6 |
-| `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge | D37 |
+| `.claude/hooks/ask_on_merge.py` | Ask before `gh pr merge`, the merge API or a GitHub merge tool, unless the harness file's Autonomy line lets agents merge; always before `gh pr merge --admin`, and while the harness file names no machine account | D37, D71 |
 | `.claude/hooks/shell_words.py` | Not a hook: the parser the four hooks import, so they split a command the same way (D70) | D70 |
 | `.github/scripts/test.sh` | The project's test command, the one place it is written; the workflow, `AGENTS.md`, the harness file and the allow rule run it (D70) | D70 |
 | `.github/workflows/tests.yml` | One job running the test script; `/setup` adds the runtime setup steps and hands the Owner the ruleset steps | D7 |
@@ -285,7 +285,7 @@ Later decisions are in [`docs/decisions.md`](decisions.md): D33 component manife
 | Copied files go stale | Fixed bugs stay in the project | Version headers; re-running `/setup` lists stale copies |
 | A plugin update changes skill behaviour | Work in progress changes | Semver; breaking changes only in major versions, in the changelog |
 | Autonomy set to agent merging | Unreviewed code reaches `main` | The recipe lists prerequisites; never the default |
-| An agent merges its own PR at Levels 1–2 | Unreviewed code reaches `main` | One required approval the agent can't give itself, and the `ask_on_merge.py` hook (D37) |
+| An agent merges its own PR at Levels 1–2 | Unreviewed code reaches `main` | One required approval the agent can't give itself, and the `ask_on_merge.py` hook (D37). With no machine account the agent is the Owner and only the hook is left, so unattended work needs the account (D63 c, D71) |
 | A plan PR carries code | Code reaches `main` without ticket checks | Plan PRs may change only ticket, milestone and planning files; only the Owner merges them (D36) |
 | `/autopilot` runs unattended | It keeps merging past what the Owner would accept | It merges only into the milestone branch, never `main`; stops at plan approval, fix rounds, milestone sign-off, a budget and an Owner "stop"; one tracking-issue line per tick (D39, D44) |
 | The personal-data exception is read broadly | Other personal data creeps in | The scan still runs; the exception covers only the plugin name |

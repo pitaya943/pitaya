@@ -1,4 +1,4 @@
-# pitaya template 0.1.9 · docs/guardrails/files/read-only-paths/read-only-paths.yml
+# pitaya template 0.1.10 · docs/guardrails/files/read-only-paths/read-only-paths.yml
 # Fails a pull request that changes rule files, specs or CI, unless its ticket lists the exact file.
 # Copy to .github/workflows/read-only-paths.yml, and check_read_only.py to .github/guardrails/check_read_only.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then

@@ -5,12 +5,12 @@ Read by every pitaya skill before it plans, builds, verifies or reports. Written
 ## Level
 
 - Level: 1. What it includes: `docs/levels.md` in the pitaya plugin; what each part achieves: `docs/suggestion.md`. Raise it by adding guardrail recipes; record each under "Guardrails" below.
-- Templates: pitaya 0.1.9. The version `/setup` installed; re-run `/setup` to find stale copies.
+- Templates: pitaya 0.1.10. The version `/setup` installed; re-run `/setup` to find stale copies.
 
 ## People and accounts
 
 - Owner: example-owner.
-- Machine account: example-bot. Agents push, open PRs and comment as this account. If it's "none", agents use the current session's account.
+- Machine account: example-bot. Agents push, open PRs and comment as this account. Required before agents act unattended (`/autopilot`, a schedule, another session starting them, permission prompts off) and from Level 2. The other value is "none", only while a person watches every step: agents then act as the session's own account, usually the Owner's, whose bypass skips the rulesets, so merge protection is the hooks alone and `ask_on_merge.py` asks before every merge (the plugin's `docs/concepts/autonomy.md`, "Unattended work needs a machine account").
 - Autonomy: Only the Owner merges `main`.
   The alternatives: at Level 3 with the agent-merge recipe, "Agents merge ticket PRs into milestone branches; only the Owner merges main"; at Level 4, "Agents merge ticket and plan PRs into milestone branches; only the Owner merges main". Either value also covers the PRs the `verdict` check proves need no verifier: a sync PR and a milestone's report PR. The `ask_on_merge.py` hook reads only the value after "Autonomy:", and the `verdict` check reads the Level 4 value word for word, so copy it rather than rephrase it.
 

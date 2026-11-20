@@ -1,5 +1,5 @@
 #!/bin/sh
-# pitaya template 0.1.9 · .github/scripts/test.sh
+# pitaya template 0.1.10 · .github/scripts/test.sh
 # The project's test command, in the one place it is written. Run it as
 #   sh .github/scripts/test.sh
 # The tests workflow, the JUnit checks (no-weakened-tests, done-when), AGENTS.md, the harness file

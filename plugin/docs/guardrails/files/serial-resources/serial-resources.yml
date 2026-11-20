@@ -1,4 +1,4 @@
-# pitaya template 0.1.9 · docs/guardrails/files/serial-resources/serial-resources.yml
+# pitaya template 0.1.10 · docs/guardrails/files/serial-resources/serial-resources.yml
 # Fails a pull request whose ticket claims a serial resource that the ticket of an open pull request
 # with a lower number also claims: the one opened first goes first.
 # Copy to .github/workflows/serial-resources.yml, and check_serial.py to .github/guardrails/check_serial.py.

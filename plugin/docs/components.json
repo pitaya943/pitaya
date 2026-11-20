@@ -1,5 +1,5 @@
 {
-  "version": "0.1.9",
+  "version": "0.1.10",
   "about": "Every part of the pitaya harness: its level, what it requires first, what it works better with, and what it needs from the project. A level includes every component at or below it; there is no custom selection. levels.md is generated from this file, and tests check the dependencies against the recipes.",
   "needs": {
     "github": "A GitHub repository, so rulesets and required checks exist",

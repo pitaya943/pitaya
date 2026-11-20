@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.9 · docs/agents/glossary.md -->
+<!-- pitaya template 0.1.10 · docs/agents/glossary.md -->
 # Glossary
 
 The project's own words, so people, agents and code use the same name for the same thing. Use these terms in tickets, code, tests and PRs. When a word under "Avoid" comes up, use the term instead.
@@ -24,3 +24,4 @@ The project's own words, so people, agents and code use the same name for the sa
 | roadmap | The ordered list of milestones, written by `/plan --roadmap` | backlog |
 | Attention row | One line in a verdict's Attention section: a `gate-change`, `role`, `unproven-claim` or `undisclosed` item for the Owner, rolled up by `/report` (D60) | incident, finding, warning |
 | milestone branch | `milestone/M<n>`: where a milestone's tickets merge; the Owner merges it into `main` as the sign-off | feature branch, release branch |
+| unattended | A session where nobody in the conversation approves the steps: one that `/autopilot`, a schedule, a GitHub Action or another session started, or one with permission prompts off. It needs a machine account (D63 c, D71) | autonomous, headless |

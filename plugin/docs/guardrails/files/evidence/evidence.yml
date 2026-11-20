@@ -1,4 +1,4 @@
-# pitaya template 0.1.9 · docs/guardrails/files/evidence/evidence.yml
+# pitaya template 0.1.10 · docs/guardrails/files/evidence/evidence.yml
 # Fails a pull request whose description has no evidence, or no screenshots when its ticket requires them.
 # Copy to .github/workflows/evidence.yml, and check_evidence.py to .github/guardrails/check_evidence.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then

@@ -1,4 +1,4 @@
-<!-- pitaya template 0.1.9 · AGENTS.md -->
+<!-- pitaya template 0.1.10 · AGENTS.md -->
 # AGENTS.md
 
 A short map for coding agents. Details live in the files it points to; read them when you need them.
