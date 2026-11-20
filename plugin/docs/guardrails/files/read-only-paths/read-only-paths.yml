@@ -74,10 +74,12 @@ jobs:
       - name: Check read-only paths
         if: steps.ticket.outputs.skip != 'true'
         # Add the project's spec paths to --also, comma separated, e.g. "docs/spec/**".
+        env:
+          TICKET_PATH: ${{ steps.ticket.outputs.ticket_path }}
         run: >-
           python3 .github/guardrails/check_read_only.py
           --base "${{ github.event.pull_request.base.sha }}"
           --head "${{ github.event.pull_request.head.sha }}"
           --ticket "$RUNNER_TEMP/ticket.md"
-          --ticket-path "${{ steps.ticket.outputs.ticket_path }}"
+          --ticket-path "$TICKET_PATH"
           --also ""

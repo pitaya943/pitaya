@@ -73,9 +73,11 @@ jobs:
           fi
       - name: Check append-only files
         # List the project's append-only files in --files, comma separated.
+        env:
+          SKIP_TICKET: ${{ steps.ticket.outputs.skip }}
         run: |
           ticket=()
-          if [ "${{ steps.ticket.outputs.skip }}" != "true" ]; then ticket=(--ticket "$RUNNER_TEMP/ticket.md"); fi
+          if [ "$SKIP_TICKET" != "true" ]; then ticket=(--ticket "$RUNNER_TEMP/ticket.md"); fi
           python3 .github/guardrails/check_append_only.py \
             --base "${{ github.event.pull_request.base.sha }}" \
             --head "${{ github.event.pull_request.head.sha }}" \

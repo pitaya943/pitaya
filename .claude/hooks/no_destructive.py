@@ -64,6 +64,23 @@ def strip_prefix(words: list[str]) -> list[str]:
     return words[i:]
 
 
+SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
+
+
+def expand(words: list[str], depth: int = 0) -> list[list[str]]:
+    """The simple commands in `words`, looking inside `sh -c '...'` and `eval '...'`."""
+    name = Path(words[0]).name if words else ""
+    if depth < 4 and name in SHELLS:
+        for i, word in enumerate(words[1:], 1):
+            if word == "-c" or (word.startswith("-") and not word.startswith("--") and "c" in word[1:]):
+                if i + 1 < len(words):
+                    return [c for seg in segments(words[i + 1]) for c in expand(seg, depth + 1)]
+                break
+    if depth < 4 and name == "eval":
+        return [c for seg in segments(" ".join(words[1:])) for c in expand(seg, depth + 1)]
+    return [words]
+
+
 def short_flags(args: list[str]) -> str:
     return "".join(a[1:] for a in args if a.startswith("-") and not a.startswith("--"))
 
@@ -104,7 +121,7 @@ def decide(payload: dict) -> dict | None:
     if payload.get("tool_name") != "Bash":
         return None
     command = (payload.get("tool_input") or {}).get("command") or ""
-    for words in segments(command):
+    for words in (c for seg in segments(command) for c in expand(seg)):
         if not words:
             continue
         program = Path(words[0]).name

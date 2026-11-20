@@ -92,7 +92,8 @@ def test_find_step_reports_the_ticket_file(tickets_repo, tmp_path):
 @pytest.mark.parametrize("recipe", ["scope", "read-only-paths"])
 def test_ticket_path_is_passed_to_the_check(recipe):
     text = (FILES / recipe / f"{recipe}.yml").read_text()
-    assert '--ticket-path "${{ steps.ticket.outputs.ticket_path }}"' in text
+    assert "TICKET_PATH: ${{ steps.ticket.outputs.ticket_path }}" in text
+    assert '--ticket-path "$TICKET_PATH"' in text
 
 
 # --- plan PRs: ticket files reach main through a plan/<slug> branch (D36) --------
@@ -130,3 +131,11 @@ def test_plan_branch_may_add_milestone_files(tickets_repo, tmp_path):
     proc, out = run_find(tickets_repo, tmp_path, "plan/roadmap", "example-bot")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "skip=true" in out
+
+
+def test_step_outputs_never_go_inline_into_run_scripts():
+    # A branch or file name can carry shell metacharacters; pass outputs through env (D40).
+    for path in WORKFLOWS:
+        for line in path.read_text().splitlines():
+            if "${{ steps." in line:
+                assert re.match(r"\s+[A-Z_]+: \$\{\{ steps\.", line) or line.strip().startswith("if:"), f"{path.name}: {line.strip()}"

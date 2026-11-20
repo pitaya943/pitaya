@@ -7,14 +7,17 @@ policy is that only the Owner merges. With "Required approvals: 0" a
 machine account with Write access can merge a green PR, so the policy needs
 something that acts before the merge.
 
-How it decides: it asks when a Bash command runs `gh pr merge` or calls the
-merge API (`gh api ... /pulls/<n>/merge`), and when the GitHub tool
-`merge_pull_request` is called. It lets the call through when the
+How it decides: it asks when a Bash command runs `gh pr merge` (also inside
+`sh -c` or `eval`, and after gh's `-R` flag), calls the merge API
+(`gh api .../pulls/<n>/merge`, or the GraphQL merge and auto-merge
+mutations), and when a GitHub tool that merges or enables auto-merge is
+called. It lets the call through when the
 "Autonomy" line in docs/agents/harness.md says agents merge (Level 3 with
 the agent-merge recipe), because then the `verdict` status guards the merge.
 
-Limits: only Claude Code runs hooks. The ruleset's required approval is the
-guarantee; this hook stops the attempt early and explains why.
+Limits: only Claude Code runs hooks, and a determined script can still reach
+the API another way. The ruleset's required approval (from a code owner) is
+the guarantee; this hook stops the usual attempts early and explains why.
 
 When to remove: when the ruleset requires an approval the agents can't give
 themselves and transcripts show agents no longer try to merge.
@@ -37,6 +40,8 @@ CONTROL = {"&&", "||", ";", "|", "&", "(", ")"}
 WRAPPERS = {"sudo", "command", "env", "time", "nohup", "exec"}
 MERGE_API = re.compile(r"(^|/)pulls/\d+/merge$")
 HARNESS = Path("docs") / "agents" / "harness.md"
+MERGE_MUTATIONS = ("mergePullRequest", "enablePullRequestAutoMerge")
+AUTONOMY = re.compile(r"^\s*-\s*Autonomy:\s*(.*)$")
 
 
 def segments(command: str) -> list[list[str]]:
@@ -68,12 +73,41 @@ def strip_prefix(words: list[str]) -> list[str]:
     return words[i:]
 
 
+SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
+
+
+def expand(words: list[str], depth: int = 0) -> list[list[str]]:
+    """The simple commands in `words`, looking inside `sh -c '...'` and `eval '...'`."""
+    name = Path(words[0]).name if words else ""
+    if depth < 4 and name in SHELLS:
+        for i, word in enumerate(words[1:], 1):
+            if word == "-c" or (word.startswith("-") and not word.startswith("--") and "c" in word[1:]):
+                if i + 1 < len(words):
+                    return [c for seg in segments(words[i + 1]) for c in expand(seg, depth + 1)]
+                break
+    if depth < 4 and name == "eval":
+        return [c for seg in segments(" ".join(words[1:])) for c in expand(seg, depth + 1)]
+    return [words]
+
+
+def gh_args(words: list[str]) -> list[str]:
+    """gh's arguments after its global flags, such as `-R owner/repo`."""
+    i = 1
+    while i < len(words) and words[i].startswith("-"):
+        i += 2 if words[i] in ("-R", "--repo") else 1
+    return words[i:]
+
+
 def is_merge(words: list[str]) -> bool:
     if not words or Path(words[0]).name != "gh":
         return False
-    if words[1:3] == ["pr", "merge"]:
+    args = gh_args(words)
+    if args[:2] == ["pr", "merge"]:
         return True
-    return len(words) > 1 and words[1] == "api" and any(MERGE_API.search(w.split("?")[0]) for w in words[2:])
+    if args[:1] == ["api"]:
+        rest = args[1:]
+        return any(MERGE_API.search(w.split("?")[0]) or any(m in w for m in MERGE_MUTATIONS) for w in rest)
+    return False
 
 
 def agents_may_merge(cwd: Path) -> bool:
@@ -84,8 +118,9 @@ def agents_may_merge(cwd: Path) -> bool:
         path = root / HARNESS
         if path.is_file():
             for line in path.read_text(errors="replace").splitlines():
-                if "Autonomy:" in line:
-                    return "agents merge" in line.lower()
+                match = AUTONOMY.match(line)
+                if match:  # the field's value, not the whole line: notes may mention the alternative
+                    return match.group(1).strip().lower().startswith("agents merge")
             return False
     return False
 
@@ -95,9 +130,9 @@ def decide(payload: dict) -> dict | None:
     cwd = Path(payload.get("cwd") or ".")
     if tool == "Bash":
         command = (payload.get("tool_input") or {}).get("command") or ""
-        merging = any(is_merge(words) for words in segments(command))
+        merging = any(is_merge(c) for seg in segments(command) for c in expand(seg))
     else:
-        merging = tool.endswith("merge_pull_request")
+        merging = "merge_pull_request" in tool or "auto_merge" in tool
     if not merging or agents_may_merge(cwd):
         return None
     return {

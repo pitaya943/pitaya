@@ -10,6 +10,8 @@
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
       "Read(./secrets/**)",
       "Read(./**/*.pem)",
       "Read(./**/*.key)",
@@ -31,7 +33,7 @@
         ]
       },
       {
-        "matcher": "mcp__.*merge_pull_request",
+        "matcher": "mcp__.*(merge_pull_request|auto_merge)",
         "hooks": [
           {"type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ask_on_merge.py\""}
         ]

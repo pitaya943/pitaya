@@ -73,9 +73,11 @@ jobs:
           fi
       - name: Check the scope
         if: steps.ticket.outputs.skip != 'true'
+        env:
+          TICKET_PATH: ${{ steps.ticket.outputs.ticket_path }}
         run: >-
           python3 .github/guardrails/check_scope.py
           --base "${{ github.event.pull_request.base.sha }}"
           --head "${{ github.event.pull_request.head.sha }}"
           --ticket "$RUNNER_TEMP/ticket.md"
-          --ticket-path "${{ steps.ticket.outputs.ticket_path }}"
+          --ticket-path "$TICKET_PATH"

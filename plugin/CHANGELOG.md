@@ -16,6 +16,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 
 ### Templates
 
+- Hooks look inside `sh -c` and `eval`; `ask_on_merge.py` reads only the Autonomy value and also catches `gh -R ... pr merge`, GraphQL merge and auto-merge mutations and auto-merge tools; `no_push_main.py` handles `--repo`; `ask_on_rule_files.py` covers all of `.github/` and inline scripts that name a rule file. `settings.json` also denies nested `.env` files.
+
 - New hook `ask_on_merge.py` asks before an agent merges a PR unless the harness file lets agents merge. `AGENTS.md` says so under "Never".
 
 - `setup/scripts/select_components.py` resolves a custom selection (a level plus or minus components): adds what is required, refuses to drop what is still required, warns about missing recommendations, prints the steps in order and the `--skip` arguments for `install_templates.py`. It only prints a plan.
@@ -34,6 +36,8 @@ Changes are grouped by what users copy or install: skills, templates and recipes
 - `templates/docs/agents/README.md` explains why `harness.md` is filled in by `/setup` rather than copied. Template `README.md` files are never copied.
 
 ### Recipes
+
+- Workflows pass step outputs to scripts through `env:`, never inline, so a branch or file name can't inject shell code.
 
 - `docs/milestones/**` is read-only for ticket PRs; plan PRs may change `docs/milestones/*.md`.
 

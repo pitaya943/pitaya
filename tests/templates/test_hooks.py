@@ -9,6 +9,7 @@ near-miss it must allow.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -258,3 +259,82 @@ def test_merge_hook_allows_when_agents_may_merge(repo):
 @pytest.mark.parametrize("command", ["gh pr view 12", "gh pr list", "git merge feature", "echo gh pr merge"])
 def test_merge_hook_allows_other_commands(repo, command):
     assert run_hook("ask_on_merge.py", bash(command, repo)) is None
+
+
+# --- audit batch A (D40): bypasses and the shipped template ----------------------
+
+TEMPLATE_HARNESS = PLUGIN_ROOT / "skills" / "setup" / "harness-template.md"
+
+
+def test_merge_hook_asks_with_the_shipped_harness_template(repo):
+    (repo / "docs" / "agents").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "agents" / "harness.md").write_text(TEMPLATE_HARNESS.read_text())
+    out = run_hook("ask_on_merge.py", bash("gh pr merge 5 --squash", repo))
+    assert out and out["permissionDecision"] == "ask"
+
+
+def test_merge_hook_reads_the_field_value_not_the_whole_line(repo):
+    write_autonomy(repo, 'Only the Owner merges `main`. (Alternative: "Agents merge after CI is green".)')
+    assert run_hook("ask_on_merge.py", bash("gh pr merge 5", repo))["permissionDecision"] == "ask"
+
+
+@pytest.mark.parametrize("command", [
+    'bash -c "gh pr merge 5"',
+    "sh -c 'cd x && gh pr merge 5'",
+    'eval "gh pr merge 5"',
+    "gh -R owner/repo pr merge 5",
+    "gh --repo owner/repo pr merge 5",
+    "gh --repo=owner/repo pr merge 5",
+    "gh api graphql -f query='mutation { mergePullRequest(input: {pullRequestId: \"x\"}) { clientMutationId } }'",
+    "gh api graphql -f query='mutation { enablePullRequestAutoMerge(input: {}) { clientMutationId } }'",
+])
+def test_merge_hook_sees_through_wrappers_and_flags(repo, command):
+    out = run_hook("ask_on_merge.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "ask", command
+
+
+@pytest.mark.parametrize("tool", ["mcp__github__enable_pr_auto_merge", "mcp__github__merge_pull_request"])
+def test_merge_hook_asks_for_merge_tools(repo, tool):
+    payload = {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": {}, "cwd": str(repo)}
+    assert run_hook("ask_on_merge.py", payload)["permissionDecision"] == "ask"
+
+
+def test_settings_route_auto_merge_tools_to_the_merge_hook():
+    settings = json.loads((PLUGIN_ROOT / "templates" / ".claude" / "settings.json").read_text())
+    import re as _re
+    matchers = [g["matcher"] for g in settings["hooks"]["PreToolUse"]
+                if any("ask_on_merge.py" in h["command"] for h in g["hooks"]) and g["matcher"] != "Bash"]
+    assert any(_re.fullmatch(m, "mcp__github__enable_pr_auto_merge") for m in matchers), matchers
+
+
+@pytest.mark.parametrize("command", [
+    'bash -c "git push origin main"',
+    "sh -c 'git push -f origin feature'",
+    "git push --repo=origin main",
+    "git push --repo origin main",
+])
+def test_push_hook_sees_through_wrappers_and_repo_option(repo, command):
+    out = run_hook("no_push_main.py", bash(command, repo))
+    assert out and out["permissionDecision"] == "deny", command
+
+
+def test_destructive_hook_sees_through_wrappers(repo):
+    out = run_hook("no_destructive.py", bash('bash -c "git reset --hard HEAD~1"', repo))
+    assert out and out["permissionDecision"] == "deny"
+
+
+@pytest.mark.parametrize("rel", [".github/guardrails/check_scope.py", ".github/CODEOWNERS"])
+def test_rule_hook_covers_all_of_github(repo, rel):
+    payload = {"hook_event_name": "PreToolUse", "tool_name": "Edit",
+               "tool_input": {"file_path": str(repo / rel)}, "cwd": str(repo)}
+    assert run_hook("ask_on_rule_files.py", payload, env=dict(os.environ, CLAUDE_PROJECT_DIR=str(repo)))["permissionDecision"] == "ask"
+
+
+@pytest.mark.parametrize("command", [
+    "python3 -c \"open('.claude/settings.json', 'w').write('{}')\"",
+    "node -e \"require('fs').writeFileSync('AGENTS.md', '')\"",
+    'bash -c "echo x > .claude/settings.json"',
+])
+def test_rule_hook_asks_when_a_script_names_a_rule_file(repo, command):
+    out = run_hook("ask_on_rule_files.py", bash(command, repo), env=dict(os.environ, CLAUDE_PROJECT_DIR=str(repo)))
+    assert out and out["permissionDecision"] == "ask", command
