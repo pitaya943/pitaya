@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pitaya template 0.1.0 · .claude/hooks/ask_on_rule_files.py
+# pitaya template 0.1.1 · .claude/hooks/ask_on_rule_files.py
 """PreToolUse hook: ask the user before an agent changes the harness's own rules.
 
 What it guards against: an agent loosening its own rules to get past them,

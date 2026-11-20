@@ -1,4 +1,4 @@
-# pitaya template 0.1.0 · docs/guardrails/files/serial-resources/serial-resources.yml
+# pitaya template 0.1.1 · docs/guardrails/files/serial-resources/serial-resources.yml
 # Fails a pull request whose ticket claims a serial resource another open pull request's ticket also claims.
 # Copy to .github/workflows/serial-resources.yml, and check_serial.py to .github/guardrails/check_serial.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then

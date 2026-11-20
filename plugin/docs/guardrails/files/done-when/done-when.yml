@@ -1,4 +1,4 @@
-# pitaya template 0.1.0 · docs/guardrails/files/done-when/done-when.yml
+# pitaya template 0.1.1 · docs/guardrails/files/done-when/done-when.yml
 # Fails a pull request when a test its ticket lists under "## Test IDs" is missing or not passing.
 # Copy to .github/workflows/done-when.yml, and check_done_when.py to .github/guardrails/check_done_when.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then

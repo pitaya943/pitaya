@@ -66,10 +66,5 @@ def test_changelog_has_a_dated_section_for_the_plugin_version():
     import re
     version = json.loads((REPO_ROOT / "plugin" / ".claude-plugin" / "plugin.json").read_text())["version"]
     text = (REPO_ROOT / "plugin" / "CHANGELOG.md").read_text()
-    released = re.search(rf"^## {re.escape(version)} \(\d{{4}}-\d{{2}}-\d{{2}}\)$", text, re.M)
-    assert released, version
-    # Work after the release goes under one "## Unreleased" heading above it, never under the released version.
-    unreleased = [m.start() for m in re.finditer(r"Unreleased", text)]
-    assert len(unreleased) <= 1
-    if unreleased:
-        assert re.search(r"^## Unreleased$", text, re.M) and unreleased[0] < released.start()
+    assert re.search(rf"^## {re.escape(version)} \(\d{{4}}-\d{{2}}-\d{{2}}\)$", text, re.M), version
+    assert "Unreleased" not in text

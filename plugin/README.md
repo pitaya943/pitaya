@@ -11,10 +11,10 @@ This folder is what the `pitaya` plugin installs. Once installed, the skills app
 
 ## Cloud sessions
 
-Claude Code cloud sessions (claude.ai/code, or the desktop app's cloud sessions) don't load plugins: they use only what the repository commits, such as `.claude/skills/`. Project hooks in `.claude/settings.json` still run. To use pitaya there, commit a copy of the plugin into `.claude/` once, from any session that can reach GitHub (replace `<owner>` with the pitaya repository's owner). The script ships from the release after 0.1.0; add `--branch v<version>` to the clone to pin a release once one includes it.
+Claude Code cloud sessions (claude.ai/code, or the desktop app's cloud sessions) don't load plugins: they use only what the repository commits, such as `.claude/skills/`. Project hooks in `.claude/settings.json` still run. To use pitaya there, commit a copy of the plugin into `.claude/` once, from any session that can reach GitHub (replace `<owner>` with the pitaya repository's owner). The script ships from 0.1.1; to upgrade later, clone the newer release tag.
 
 ```bash
-git clone --depth 1 https://github.com/<owner>/pitaya /tmp/pitaya
+git clone --depth 1 --branch v0.1.1 https://github.com/<owner>/pitaya /tmp/pitaya
 python3 /tmp/pitaya/plugin/skills/setup/scripts/vendor_plugin.py --target . --check
 python3 /tmp/pitaya/plugin/skills/setup/scripts/vendor_plugin.py --target .
 ```

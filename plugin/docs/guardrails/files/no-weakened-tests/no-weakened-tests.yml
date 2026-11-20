@@ -1,4 +1,4 @@
-# pitaya template 0.1.0 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
+# pitaya template 0.1.1 · docs/guardrails/files/no-weakened-tests/no-weakened-tests.yml
 # Fails a pull request when a test that passes on the base is missing, skipped or failing on the PR.
 # Copy to .github/workflows/no-weakened-tests.yml, and compare_junit.py to .github/guardrails/compare_junit.py.
 # Set the repository variable MACHINE_ACCOUNT to the agents' login (comma separated for several), then
