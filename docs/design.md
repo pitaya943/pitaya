@@ -302,7 +302,7 @@ Done before the move to this repository: W0 (design and `suggestion.md`), W1 (pl
 | W6++ | The audit fixes (D40–D43), milestone branches with one machine account (D44), the Level 0–4 spectrum (D45), and the pstack-derived rigor: sharpen, decision log, blast radius, correct ladder (D46), `/design` and verify-app (D47), Level 4 deep verification (D48) | Merged, CI green |
 | W6+++ | The architecture pages, decision options and ADRs, `/help` (D49), access per role (D50), the cloud route through the environment's setup script, tested live (D51–D54), and 0.1.1 with strict versions (D53) | Merged, CI green |
 | W7 | Release `v0.1.0` (done), then `v0.1.1` | The Owner creates each release |
-| W8 | Trial on the trial repository, in cloud sessions whose environment installs the plugin: re-run `/setup`, recopy the workflows, `protect-milestones`, `/plan --roadmap`, `/design M1`, `/plan M1`, `/autopilot`; check `pull_request_target`, artifacts, the milestone ruleset, hooks in a cloud session and `/help` live; once, also install and run `/setup` in the local CLI | A trial record with evidence |
+| W8 | Trial on a new repository, in cloud sessions whose environment installs the plugin: `/setup` from scratch, then one milestone per level (M1 at Level 1, M2 at Level 2, M3 at Level 3); check `pull_request_target`, artifacts, the milestone ruleset, hooks in a cloud session and `/help` live; once, also install and run `/setup` in the local CLI; the upgrade path gets a short check on the old trial repository | A trial record with evidence: [`trials/w8.md`](trials/w8.md) (M1 done) |
 
 ## 14. Open questions
 
